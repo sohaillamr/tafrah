@@ -1,0 +1,532 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState } from "react";
+import TopBar from "../components/TopBar";
+import { useLanguage } from "../components/LanguageProvider";
+
+type Message = {
+  role: "user" | "assistant";
+  text: string;
+};
+
+type Chat = {
+  id: string;
+  title: string;
+  messages: Message[];
+  updatedAt: number;
+};
+
+type Language = "ar" | "en";
+
+const getInitialMessages = (language: Language): Message[] => [
+  {
+    role: "assistant",
+    text:
+      language === "ar"
+        ? "مرحباً بك في طفرة. أنا نور، مساعدك الذكي.\nكيف يمكنني مساعدتك؟"
+        : "Welcome to Tafrah. I'm Nour, your AI assistant.\nHow can I help you?",
+  },
+];
+
+const createChat = (language: Language): Chat => ({
+  id: `${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+  title: language === "ar" ? "محادثة جديدة" : "New chat",
+  messages: getInitialMessages(language),
+  updatedAt: Date.now(),
+});
+
+const normalizeMessages = (items: any[]): Message[] => {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item) => {
+      const role = item?.role;
+      if (role !== "user" && role !== "assistant") return null;
+      const text = typeof item?.text === "string" ? item.text : "";
+      if (!text) return null;
+      return { role, text } as Message;
+    })
+    .filter(Boolean) as Message[];
+};
+
+const normalizeChats = (items: any[], language: Language): Chat[] => {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item) => {
+      const messages = normalizeMessages(item?.messages || []);
+      if (messages.length === 0) return null;
+      return {
+        id: typeof item?.id === "string" ? item.id : `${Date.now()}-${Math.random()}`,
+        title:
+          typeof item?.title === "string"
+            ? item.title
+            : language === "ar"
+              ? "محادثة جديدة"
+              : "New chat",
+        messages,
+        updatedAt: typeof item?.updatedAt === "number" ? item.updatedAt : Date.now(),
+      } as Chat;
+    })
+    .filter(Boolean) as Chat[];
+};
+
+export default function AssistantPage() {
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [activeChatId, setActiveChatId] = useState("");
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { language } = useLanguage();
+  const endRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  const chatsKey = "tafrah_assistant_chats";
+  const activeKey = "tafrah_assistant_active_chat";
+
+  const labels =
+    language === "ar"
+      ? {
+          title: "نور",
+          subtitle: "مساعدك الذكي في طفرة",
+          placeholder: "اكتب رسالتك هنا...",
+          send: "إرسال",
+          newChat: "محادثة جديدة",
+          chats: "المحادثات",
+          noChats: "لا توجد محادثات سابقة",
+          loading: "نور يكتب...",
+          missingKey: "المساعد غير مفعل. تواصل مع الدعم الفني.",
+          error: "حدث خطأ. حاول مرة أخرى.",
+          noReply: "لا يوجد رد.",
+          deleteChat: "حذف",
+          suggestion1: "ما هي الدورات المتاحة؟",
+          suggestion2: "اشرح لي مهمة بشكل أبسط",
+          suggestion3: "كيف أبدأ التدريب؟",
+        }
+      : {
+          title: "Nour",
+          subtitle: "Your AI assistant at Tafrah",
+          placeholder: "Type your message here...",
+          send: "Send",
+          newChat: "New chat",
+          chats: "Chats",
+          noChats: "No previous chats",
+          loading: "Nour is typing...",
+          missingKey: "Assistant is not enabled. Contact support.",
+          error: "Something went wrong. Try again.",
+          noReply: "No reply available.",
+          deleteChat: "Delete",
+          suggestion1: "What courses are available?",
+          suggestion2: "Explain a task more simply",
+          suggestion3: "How do I start training?",
+        };
+
+  const activeChat = useMemo(() => {
+    return chats.find((chat) => chat.id === activeChatId) || chats[0];
+  }, [chats, activeChatId]);
+
+  const activeMessages: Message[] = activeChat?.messages ?? getInitialMessages(language);
+  const isNewChat = activeMessages.length <= 1;
+
+  useEffect(() => {
+    const stored = typeof window !== "undefined" ? localStorage.getItem(chatsKey) : null;
+    const storedActive = typeof window !== "undefined" ? localStorage.getItem(activeKey) : null;
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        const normalized = normalizeChats(parsed, language);
+        if (normalized.length > 0) {
+          setChats(normalized);
+          setActiveChatId(storedActive || normalized[0]?.id || "");
+          return;
+        }
+      } catch {
+        setChats([]);
+      }
+    }
+    const newChat = createChat(language);
+    setChats([newChat]);
+    setActiveChatId(newChat.id);
+  }, [language]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(chatsKey, JSON.stringify(chats));
+    if (activeChatId) {
+      localStorage.setItem(activeKey, activeChatId);
+    }
+  }, [chats, activeChatId]);
+
+  useEffect(() => {
+    if (!endRef.current) return;
+    endRef.current.scrollIntoView({ block: "end", behavior: "smooth" });
+  }, [activeMessages, isLoading]);
+
+  useEffect(() => {
+    if (activeChatId && !activeChat) {
+      setActiveChatId(chats[0]?.id || "");
+    }
+  }, [activeChatId, activeChat, chats]);
+
+  const updateChatMessages = (chatId: string, nextMessages: Message[]) => {
+    setChats((prev) =>
+      prev.map((chat) => {
+        if (chat.id !== chatId) return chat;
+        const firstUser = nextMessages.find((message) => message.role === "user");
+        const isDefaultTitle =
+          chat.title === "محادثة جديدة" || chat.title === "New chat";
+        const title = !isDefaultTitle
+          ? chat.title
+          : firstUser?.text?.slice(0, 40) || chat.title;
+        return { ...chat, title, messages: nextMessages, updatedAt: Date.now() };
+      })
+    );
+  };
+
+  const createNewChat = () => {
+    const newChat = createChat(language);
+    setChats((prev) => [newChat, ...prev]);
+    setActiveChatId(newChat.id);
+    setInput("");
+    setErrorMessage("");
+    setSidebarOpen(false);
+    setTimeout(() => inputRef.current?.focus(), 100);
+  };
+
+  const deleteChat = (chatId: string) => {
+    setChats((prev) => {
+      const filtered = prev.filter((c) => c.id !== chatId);
+      if (filtered.length === 0) {
+        const newChat = createChat(language);
+        setActiveChatId(newChat.id);
+        return [newChat];
+      }
+      if (activeChatId === chatId) {
+        setActiveChatId(filtered[0].id);
+      }
+      return filtered;
+    });
+  };
+
+  const sendToAssistant = async (nextMessages: Message[]) => {
+    /* Ensure we have an active chat — create one if somehow missing */
+    let chatId = activeChat?.id;
+    if (!chatId) {
+      const fallback = createChat(language);
+      setChats((prev) => (prev.length === 0 ? [fallback] : prev));
+      setActiveChatId(fallback.id);
+      chatId = fallback.id;
+    }
+    setErrorMessage("");
+    updateChatMessages(chatId, nextMessages);
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          language: "fusha",
+          messages: nextMessages.map((message) => ({
+            role: message.role,
+            content: message.text,
+          })),
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        const errorCode = typeof data?.error === "string" ? data.error : "request_failed";
+        setErrorMessage(errorCode === "missing_api_key" ? labels.missingKey : labels.error);
+        updateChatMessages(chatId, nextMessages);
+        return;
+      }
+      const reply = typeof data?.message === "string" ? data.message : labels.noReply;
+      updateChatMessages(chatId, [...nextMessages, { role: "assistant", text: reply }]);
+    } catch {
+      setErrorMessage(labels.error);
+      updateChatMessages(chatId, nextMessages);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSend = (text?: string) => {
+    const trimmed = (text ?? input).trim();
+    if (!trimmed || isLoading) return;
+    const msgs: Message[] = [...activeMessages, { role: "user", text: trimmed }];
+    setInput("");
+    if (inputRef.current) {
+      inputRef.current.style.height = "auto";
+    }
+    sendToAssistant(msgs);
+  };
+
+  const handleFormSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    handleSend();
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      handleSend();
+    }
+  };
+
+  const autoResize = (element: HTMLTextAreaElement) => {
+    element.style.height = "auto";
+    element.style.height = `${Math.min(element.scrollHeight, 160)}px`;
+  };
+
+  /* BetaNote in layout is ~2.375rem tall (py-2 + text-sm + border-b).
+     Subtract that so the chat container fits inside the remaining viewport. */
+  return (
+    <div
+      className="flex flex-col bg-[#F8FAFB] overflow-hidden"
+      style={{ height: "calc(100dvh - 2.375rem)" }}
+    >
+      <TopBar />
+
+      {/* Sidebar overlay — mobile only */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <div className="flex flex-1 overflow-hidden min-h-0">
+        {/* Sidebar — always visible on desktop, slide-in drawer on mobile */}
+        <aside className="hidden md:flex w-72 shrink-0 flex-col bg-white border-e border-[#E2E8F0]">
+          <div className="flex items-center justify-between gap-3 border-b border-[#E2E8F0] p-4">
+            <h2 className="font-semibold text-[#2E5C8A]">{labels.chats}</h2>
+            <button
+              type="button"
+              onClick={createNewChat}
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2E5C8A] text-white hover:bg-[#24496E] transition-colors"
+              title={labels.newChat}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3 sim-scroll">
+            <div className="flex flex-col gap-1">
+              {chats
+                .slice()
+                .sort((a, b) => b.updatedAt - a.updatedAt)
+                .map((chat) => (
+                  <div
+                    key={chat.id}
+                    className={`group flex items-center gap-2 rounded-xl px-3 py-2.5 cursor-pointer transition-all ${
+                      chat.id === activeChat?.id
+                        ? "bg-[#E3EEF9] text-[#2E5C8A]"
+                        : "text-[#495057] hover:bg-[#F5F9FF]"
+                    }`}
+                    onClick={() => setActiveChatId(chat.id)}
+                  >
+                    <span className="text-sm opacity-60 text-[#2E5C8A]">--</span>
+                    <span className="flex-1 truncate text-sm font-medium">{chat.title}</span>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); deleteChat(chat.id); }}
+                      className="hidden group-hover:flex h-6 w-6 items-center justify-center rounded-md text-[#ADB5BD] hover:bg-[#FFE0E0] hover:text-[#D32F2F] transition-colors"
+                      title={labels.deleteChat}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                ))}
+              {chats.length === 0 && (
+                <p className="px-3 py-6 text-center text-sm text-[#6C757D]">{labels.noChats}</p>
+              )}
+            </div>
+          </div>
+        </aside>
+
+        {/* Mobile sidebar drawer */}}
+        <aside
+          className={`fixed inset-y-0 start-0 z-50 flex w-72 flex-col bg-white border-e border-[#E2E8F0] shadow-xl transition-transform duration-300 ease-in-out md:hidden ${
+            sidebarOpen ? "translate-x-0 rtl:translate-x-0" : "ltr:-translate-x-full rtl:translate-x-full"
+          }`}
+        >
+          <div className="flex items-center justify-between gap-3 border-b border-[#E2E8F0] p-4">
+            <h2 className="font-semibold text-[#2E5C8A]">{labels.chats}</h2>
+            <button
+              type="button"
+              onClick={createNewChat}
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2E5C8A] text-white hover:bg-[#24496E] transition-colors"
+              title={labels.newChat}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3 sim-scroll">
+            <div className="flex flex-col gap-1">
+              {chats
+                .slice()
+                .sort((a, b) => b.updatedAt - a.updatedAt)
+                .map((chat) => (
+                  <div
+                    key={chat.id}
+                    className={`group flex items-center gap-2 rounded-xl px-3 py-2.5 cursor-pointer transition-all ${
+                      chat.id === activeChat?.id
+                        ? "bg-[#E3EEF9] text-[#2E5C8A]"
+                        : "text-[#495057] hover:bg-[#F5F9FF]"
+                    }`}
+                    onClick={() => {
+                      setActiveChatId(chat.id);
+                      setSidebarOpen(false);
+                    }}
+                  >
+                    <span className="text-sm opacity-60 text-[#2E5C8A]">--</span>
+                    <span className="flex-1 truncate text-sm font-medium">{chat.title}</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteChat(chat.id);
+                      }}
+                      className="hidden group-hover:flex h-6 w-6 items-center justify-center rounded-md text-[#ADB5BD] hover:bg-[#FFE0E0] hover:text-[#D32F2F] transition-colors"
+                      title={labels.deleteChat}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                ))}
+              {chats.length === 0 && (
+                <p className="px-3 py-6 text-center text-sm text-[#6C757D]">{labels.noChats}</p>
+              )}
+            </div>
+          </div>
+        </aside>
+
+        {/* Main chat area — takes remaining space */}
+        <div className="flex flex-1 flex-col min-h-0 min-w-0">
+          {/* Chat header */}
+          <div className="flex items-center gap-3 border-b border-[#E2E8F0] bg-white px-4 py-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-[#F5F9FF] transition-colors md:hidden"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#495057" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            </button>
+            <div className="flex flex-1 items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#2E5C8A] to-[#4A90C4] text-white font-bold shadow-sm">
+                ن
+              </div>
+              <div className="flex-1">
+                <h1 className="font-semibold text-[#212529]">{labels.title}</h1>
+                <p className="text-xs text-[#6C757D]">{labels.subtitle}</p>
+              </div>
+              <button
+                type="button"
+                onClick={createNewChat}
+                className="flex h-9 items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-3 text-sm font-medium text-[#495057] hover:bg-[#F5F9FF] transition-colors md:hidden"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                {labels.newChat}
+              </button>
+            </div>
+          </div>
+
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto sim-scroll">
+            <div className="mx-auto flex max-w-3xl flex-col gap-1 px-4 py-6">
+              {activeMessages.map((message, index) => (
+                <div
+                  key={`${message.role}-${index}`}
+                  className={`flex gap-3 py-3 ${message.role === "user" ? "flex-row-reverse" : ""}`}
+                >
+                  {message.role === "assistant" ? (
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#2E5C8A] to-[#4A90C4] text-sm font-bold text-white mt-1">
+                      ن
+                    </div>
+                  ) : null}
+                  <div
+                    className={`max-w-[80%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed whitespace-pre-wrap ${
+                      message.role === "user"
+                        ? "bg-[#2E5C8A] text-white rounded-ee-md"
+                        : "bg-white border border-[#E2E8F0] text-[#212529] rounded-es-md shadow-sm"
+                    }`}
+                  >
+                    {message.text}
+                  </div>
+                </div>
+              ))}
+              {isLoading && (
+                <div className="flex gap-3 py-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#2E5C8A] to-[#4A90C4] text-sm font-bold text-white mt-1">
+                    ن
+                  </div>
+                  <div className="rounded-2xl rounded-es-md border border-[#E2E8F0] bg-white px-5 py-4 shadow-sm">
+                    <div className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-[#2E5C8A]" style={{ animationDelay: "0ms" }} />
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-[#2E5C8A]" style={{ animationDelay: "150ms" }} />
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-[#2E5C8A]" style={{ animationDelay: "300ms" }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+              <div ref={endRef} />
+            </div>
+          </div>
+
+          {/* Suggestions — only on new chats */}
+          {isNewChat && !isLoading && (
+            <div className="mx-auto flex max-w-3xl flex-wrap justify-center gap-2 px-4 pb-3">
+              {[labels.suggestion1, labels.suggestion2, labels.suggestion3].map((text) => (
+                <button
+                  key={text}
+                  type="button"
+                  onClick={() => handleSend(text)}
+                  className="rounded-full border border-[#E2E8F0] bg-white px-4 py-2 text-sm text-[#495057] hover:bg-[#F5F9FF] hover:border-[#CBD5E1] transition-all shadow-sm"
+                >
+                  {text}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Error */}
+          {errorMessage && (
+            <div className="mx-auto max-w-3xl px-4 pb-2">
+              <div className="flex items-center gap-2 rounded-xl border border-[#FF9800]/30 bg-[#FFF3E0] px-4 py-2.5 text-sm text-[#212529]">
+                <span className="shrink-0 text-[#FF9800] font-bold">!</span>
+                {errorMessage}
+              </div>
+            </div>
+          )}
+
+          {/* Input area */}
+          <form onSubmit={handleFormSubmit} className="shrink-0 border-t border-[#E2E8F0] bg-white px-4 py-4">
+            <div className="mx-auto flex max-w-3xl items-end gap-3">
+              <div className="relative flex-1">
+                <textarea
+                  ref={inputRef}
+                  value={input}
+                  onChange={(event) => {
+                    setInput(event.target.value);
+                    autoResize(event.target);
+                  }}
+                  onKeyDown={handleKeyDown}
+                  rows={1}
+                  className="w-full resize-none rounded-2xl border border-[#E2E8F0] bg-[#F8FAFB] px-4 py-3 pe-12 text-[15px] placeholder:text-[#ADB5BD] focus:border-[#2E5C8A] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2E5C8A]/20 transition-all"
+                  placeholder={labels.placeholder}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isLoading || !input.trim()}
+                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition-all ${
+                  isLoading || !input.trim()
+                    ? "bg-[#E2E8F0] text-[#ADB5BD] cursor-not-allowed"
+                    : "bg-[#2E5C8A] text-white shadow-md hover:bg-[#24496E] hover:shadow-lg"
+                }`}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}

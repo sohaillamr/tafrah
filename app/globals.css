@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #f8f9fa;
+  color: #212529;
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+@layer base {
+  h1 {
+    font-size: 32px;
+    line-height: 1.6;
+    color: #2e5c8a;
+  }
+  h2 {
+    font-size: 24px;
+    line-height: 1.6;
+    color: #2e5c8a;
+  }
+  h3 {
+    font-size: 20px;
+    line-height: 1.6;
+    color: #2e5c8a;
+  }
+  a {
+    color: #2e5c8a;
+  }
+  input,
+  textarea,
+  select {
+    border-color: #d9e6f2;
+    background-color: #f5f9ff;
+  }
+
+  /* Accessibility: focus indicators for all interactive elements */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid #2e5c8a;
+    outline-offset: 2px;
+  }
+
+  /* Accessibility: ensure minimum contrast for placeholder text */
+  input::placeholder,
+  textarea::placeholder {
+    color: #6c757d;
+  }
+}
+
+
+
+/* Simulator scrollbar */
+.sim-scroll::-webkit-scrollbar {
+  height: 5px;
+  width: 5px;
+}
+.sim-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+.sim-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.sim-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

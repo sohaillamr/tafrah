@@ -1,0 +1,19 @@
+TAFRAH PLATFORM CONSTRAINTS AND DESIGN SYSTEM (2026)
+
+1. VISUAL & SENSORY RULES (STRICT):
+- NO ANIMATIONS: Do not use CSS transitions, hover effects, fading, or keyframes.
+- NO POP-UPS: Never use modals, overlays, or toast notifications. Content must be inline.
+- COLORS: Background: #F8F9FA (Off-white); Primary: #2E5C8A (Deep Blue); Text: #212529.
+- TYPOGRAPHY: Font family: 'Cairo' (Google Fonts). Base size: 18px. Line height: 1.8.
+- CLICKABLES: Buttons/Links must be static. Minimum height: 48px. 
+
+2. LANGUAGE & COMMUNICATION RULES:
+- DIRECT & LITERAL: Use simple Arabic. Avoid metaphors (e.g., don't say "Expand your horizons").
+- NO EMOJIS: Zero emojis allowed as they can be visually distracting or misinterpreted.
+- NO "YAPPING": Each sentence must serve a functional purpose. Maximum 3 sentences per paragraph.
+- RTL LOGIC: All layouts must be Right-to-Left.
+
+3. TECHNICAL STACK:
+- Framework: Next.js 14 (App Router).
+- Styling: Tailwind CSS.
+- Component Logic: Functional, clean, and accessible (ARIA roles).
