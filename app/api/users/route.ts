@@ -22,8 +22,8 @@ export async function GET(req: NextRequest) {
     if (status) where.status = status;
     if (search) {
       where.OR = [
-        { name: { contains: search } },
-        { email: { contains: search } },
+        { name: { contains: search, mode: "insensitive" } },
+        { email: { contains: search, mode: "insensitive" } },
       ];
     }
 

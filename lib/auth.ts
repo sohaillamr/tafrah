@@ -2,11 +2,13 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
 const jwtSecret = process.env.JWT_SECRET;
-if (!jwtSecret) {
-  console.error("[TAFRAH] CRITICAL: JWT_SECRET environment variable is not set!");
+if (!jwtSecret && process.env.NODE_ENV === "production") {
+  throw new Error("[TAFRAH] CRITICAL: JWT_SECRET must be set in production!");
+} else if (!jwtSecret) {
+  console.error("[TAFRAH] WARNING: JWT_SECRET not set — using insecure fallback for development only");
 }
 const SECRET = new TextEncoder().encode(
-  jwtSecret || "FALLBACK-INSECURE-DO-NOT-USE-IN-PRODUCTION"
+  jwtSecret || "DEV-ONLY-FALLBACK-DO-NOT-USE-IN-PRODUCTION"
 );
 
 const IS_PRODUCTION = process.env.NODE_ENV === "production";

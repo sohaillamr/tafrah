@@ -1,5 +1,5 @@
 // Environment validation — imported at app startup
-const requiredVars = ["DATABASE_URL", "JWT_SECRET"];
+const requiredVars = ["DATABASE_URL", "DIRECT_URL", "JWT_SECRET"];
 
 export function validateEnv() {
   const missing = requiredVars.filter((v) => !process.env[v]);
