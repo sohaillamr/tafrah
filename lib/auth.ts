@@ -2,15 +2,25 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 
-const jwtSecret = process.env.JWT_SECRET;
-if (!jwtSecret && process.env.NODE_ENV === "production") {
-  throw new Error("[TAFRAH] CRITICAL: JWT_SECRET must be set in production!");
-} else if (!jwtSecret) {
-  console.error("[TAFRAH] WARNING: JWT_SECRET not set — using insecure fallback for development only");
+/**
+ * Lazy-load JWT secret at runtime (not build time).
+ * Vercel doesn't inject env vars during `next build` page data collection,
+ * so we must defer the check to when a route actually runs.
+ */
+let _secret: Uint8Array | null = null;
+function getSecret(): Uint8Array {
+  if (_secret) return _secret;
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret && process.env.NODE_ENV === "production") {
+    throw new Error("[TAFRAH] CRITICAL: JWT_SECRET must be set in production!");
+  } else if (!jwtSecret) {
+    console.warn("[TAFRAH] WARNING: JWT_SECRET not set — using insecure fallback for development only");
+  }
+  _secret = new TextEncoder().encode(
+    jwtSecret || "DEV-ONLY-FALLBACK-DO-NOT-USE-IN-PRODUCTION"
+  );
+  return _secret;
 }
-const SECRET = new TextEncoder().encode(
-  jwtSecret || "DEV-ONLY-FALLBACK-DO-NOT-USE-IN-PRODUCTION"
-);
 
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
@@ -26,12 +36,12 @@ export async function signToken(payload: JWTPayload): Promise<string> {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d")
-    .sign(SECRET);
+    .sign(getSecret());
 }
 
 export async function verifyToken(token: string): Promise<JWTPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, SECRET);
+    const { payload } = await jwtVerify(token, getSecret());
     return payload as unknown as JWTPayload;
   } catch {
     return null;
