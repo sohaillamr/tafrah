@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { sanitize, clamp } from "@/lib/sanitize";
 
 // POST /api/applications — apply for a job
 export async function POST(req: NextRequest) {
@@ -12,6 +13,22 @@ export async function POST(req: NextRequest) {
 
     const { jobId, coverNote } = await req.json();
 
+    if (!jobId || typeof jobId !== "number") {
+      return NextResponse.json({ error: "Valid jobId is required" }, { status: 400 });
+    }
+
+    // Verify job exists and is open
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      select: { id: true, status: true },
+    });
+    if (!job) {
+      return NextResponse.json({ error: "Job not found" }, { status: 404 });
+    }
+    if (job.status !== "open") {
+      return NextResponse.json({ error: "This job is no longer accepting applications" }, { status: 400 });
+    }
+
     const existing = await prisma.application.findUnique({
       where: { userId_jobId: { userId: session.userId, jobId } },
     });
@@ -19,8 +36,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Already applied" }, { status: 409 });
     }
 
+    const safeCoverNote = coverNote ? sanitize(clamp(String(coverNote), 3000)) : null;
+
     const application = await prisma.application.create({
-      data: { userId: session.userId, jobId, coverNote },
+      data: { userId: session.userId, jobId, coverNote: safeCoverNote },
     });
 
     await prisma.activityLog.create({
@@ -38,20 +57,23 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET /api/applications — get applications (admin sees all, user sees own)
-export async function GET() {
+// GET /api/applications — get applications with pagination
+export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const url = new URL(req.url);
+    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
+    const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get("limit") || "20")));
+
     let where: Record<string, unknown> = {};
 
     if (session.role === "admin") {
       where = {};
     } else if (session.role === "hr") {
-      // HR sees applications for jobs they posted
       const hrJobs = await prisma.job.findMany({
         where: { postedById: session.userId },
         select: { id: true },
@@ -62,16 +84,21 @@ export async function GET() {
       where = { userId: session.userId };
     }
 
-    const applications = await prisma.application.findMany({
-      where,
-      include: {
-        job: { select: { id: true, titleAr: true, titleEn: true, companyName: true, salary: true } },
-        user: { select: { id: true, name: true, email: true, quizScore: true } },
-      },
-      orderBy: { appliedAt: "desc" },
-    });
+    const [applications, total] = await Promise.all([
+      prisma.application.findMany({
+        where,
+        include: {
+          job: { select: { id: true, titleAr: true, titleEn: true, companyName: true, salary: true } },
+          user: { select: { id: true, name: true, email: true, quizScore: true } },
+        },
+        orderBy: { appliedAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.application.count({ where }),
+    ]);
 
-    return NextResponse.json({ applications });
+    return NextResponse.json({ applications, total, page, limit });
   } catch (error: unknown) {
     console.error("Applications list error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

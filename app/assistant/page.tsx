@@ -340,7 +340,7 @@ export default function AssistantPage() {
           </div>
         </aside>
 
-        {/* Mobile sidebar drawer */}}
+        {/* Mobile sidebar drawer */}
         <aside
           className={`fixed inset-y-0 start-0 z-50 flex w-72 flex-col bg-white border-e border-[#E2E8F0] shadow-xl transition-transform duration-300 ease-in-out md:hidden ${
             sidebarOpen ? "translate-x-0 rtl:translate-x-0" : "ltr:-translate-x-full rtl:translate-x-full"

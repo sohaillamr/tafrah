@@ -1,12 +1,25 @@
 import { NextResponse } from "next/server";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { getSession } from "@/lib/auth";
 
 export const runtime = "nodejs";
 
+const MAX_MESSAGE_LENGTH = 2000;
+const MAX_CONVERSATION_MESSAGES = 20;
+
 export async function POST(request: Request) {
-  // Rate limit: 30 requests per minute per IP
+  // Require authentication
+  const session = await getSession();
+  if (!session) {
+    return NextResponse.json(
+      { error: "unauthorized" },
+      { status: 401 }
+    );
+  }
+
+  // Rate limit: 30 requests per minute per user
   const ip = getClientIp(request);
-  const rl = checkRateLimit(`assistant:${ip}`, { maxRequests: 30, windowSeconds: 60 });
+  const rl = await checkRateLimit(`assistant:${session.userId}:${ip}`, { maxRequests: 30, windowSeconds: 60 });
   if (!rl.allowed) {
     return NextResponse.json(
       { error: "rate_limited" },
@@ -34,8 +47,11 @@ export async function POST(request: Request) {
     )
     .map((message: any) => ({
       role: message.role,
-      content: typeof message.content === "string" ? message.content : message.text,
-    }));
+      content: typeof message.content === "string"
+        ? message.content.slice(0, MAX_MESSAGE_LENGTH)
+        : (message.text || "").slice(0, MAX_MESSAGE_LENGTH),
+    }))
+    .slice(-MAX_CONVERSATION_MESSAGES); // Cap conversation history
 
   if (messages.length === 0) {
     return NextResponse.json(

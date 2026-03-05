@@ -5,18 +5,15 @@ import { useEffect } from "react";
 /**
  * Assistant layout — hides the global Footer on this full-screen chat page
  * and prevents the body from scrolling so the chat fills the viewport.
+ * Uses a CSS class on <html> so the Footer component can hide itself.
  */
 export default function AssistantLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    /* Hide the footer rendered by the root layout */
-    const footer = document.querySelector("footer");
-    if (footer) (footer as HTMLElement).style.display = "none";
-
-    /* Prevent body scroll so the chat container controls its own scroll */
+    document.documentElement.classList.add("assistant-active");
     document.body.style.overflow = "hidden";
 
     return () => {
-      if (footer) (footer as HTMLElement).style.display = "";
+      document.documentElement.classList.remove("assistant-active");
       document.body.style.overflow = "";
     };
   }, []);

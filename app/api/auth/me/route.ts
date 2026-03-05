@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth";
+import { getSession, clearAuthCookie } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function GET() {
@@ -26,8 +26,11 @@ export async function GET() {
       },
     });
 
-    if (!user) {
-      return NextResponse.json({ user: null });
+    if (!user || user.status === "banned") {
+      // Clear the auth cookie if user doesn't exist or is banned
+      const response = NextResponse.json({ user: null });
+      response.headers.set("Set-Cookie", clearAuthCookie());
+      return response;
     }
 
     return NextResponse.json({ user });

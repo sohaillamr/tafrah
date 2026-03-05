@@ -8,9 +8,10 @@ import { useLanguage } from "../../components/LanguageProvider";
 export default function RecoveryPage() {
   const { language } = useLanguage();
   const [email, setEmail] = useState("");
+  const [token, setToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [status, setStatus] = useState<"idle" | "reset" | "success">("idle");
+  const [step, setStep] = useState<"email" | "token" | "success">("email");
   const [submitting, setSubmitting] = useState(false);
   const [apiError, setApiError] = useState("");
 
@@ -20,15 +21,21 @@ export default function RecoveryPage() {
           home: "الرئيسية",
           login: "تسجيل الدخول",
           title: "استعادة كلمة المرور",
-          intro: "أدخل بريدك الإلكتروني وكلمة المرور الجديدة.",
+          introEmail: "أدخل بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين.",
+          introToken: "أدخل رمز التحقق الذي تلقيته وكلمة المرور الجديدة.",
           email: "البريد الإلكتروني",
+          token: "رمز التحقق",
           newPassword: "كلمة المرور الجديدة",
-          submit: "إعادة تعيين كلمة المرور",
+          submitEmail: "إرسال رمز التحقق",
+          submitToken: "إعادة تعيين كلمة المرور",
           submitting: "جاري الإرسال...",
           emailRequired: "يرجى إدخال البريد الإلكتروني.",
           emailInvalid: "صيغة البريد الإلكتروني غير صحيحة.",
+          tokenRequired: "يرجى إدخال رمز التحقق.",
           passwordRequired: "يرجى إدخال كلمة المرور الجديدة.",
-          passwordShort: "كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
+          passwordShort: "كلمة المرور يجب أن تكون 8 أحرف على الأقل.",
+          passwordComplexity: "يجب أن تحتوي على حرف كبير وحرف صغير ورقم.",
+          emailSent: "تم إرسال رمز التحقق إلى بريدك الإلكتروني (تحقق من صندوق الوارد والبريد غير المرغوب).",
           successMsg: "تم إعادة تعيين كلمة المرور بنجاح. يمكنك تسجيل الدخول الآن.",
           breadcrumbAria: "مسار التنقل",
           backToLogin: "العودة لتسجيل الدخول",
@@ -37,34 +44,52 @@ export default function RecoveryPage() {
           home: "Home",
           login: "Login",
           title: "Password Recovery",
-          intro: "Enter your email and a new password.",
+          introEmail: "Enter your email and we'll send you a reset code.",
+          introToken: "Enter the verification code you received and your new password.",
           email: "Email",
+          token: "Verification Code",
           newPassword: "New Password",
-          submit: "Reset Password",
-          submitting: "Resetting...",
+          submitEmail: "Send Reset Code",
+          submitToken: "Reset Password",
+          submitting: "Sending...",
           emailRequired: "Please enter your email.",
           emailInvalid: "Invalid email format.",
+          tokenRequired: "Please enter the verification code.",
           passwordRequired: "Please enter a new password.",
-          passwordShort: "Password must be at least 6 characters.",
+          passwordShort: "Password must be at least 8 characters.",
+          passwordComplexity: "Must contain uppercase, lowercase, and a number.",
+          emailSent: "A verification code has been sent to your email (check inbox and spam).",
           successMsg: "Password has been reset successfully. You can now log in.",
           breadcrumbAria: "Breadcrumb",
           backToLogin: "Back to Login",
         };
 
-  function validate() {
+  function validateEmail() {
     const errs: Record<string, string> = {};
     if (!email.trim()) errs.email = labels.emailRequired;
     else if (!/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/.test(email.trim()))
       errs.email = labels.emailInvalid;
-    if (!newPassword) errs.newPassword = labels.passwordRequired;
-    else if (newPassword.length < 6) errs.newPassword = labels.passwordShort;
     return errs;
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function validateToken() {
+    const errs: Record<string, string> = {};
+    if (!token.trim()) errs.token = labels.tokenRequired;
+    if (!newPassword) errs.newPassword = labels.passwordRequired;
+    else if (newPassword.length < 8) errs.newPassword = labels.passwordShort;
+    else {
+      const hasUpper = /[A-Z]/.test(newPassword);
+      const hasLower = /[a-z]/.test(newPassword);
+      const hasNum = /[0-9]/.test(newPassword);
+      if (!hasUpper || !hasLower || !hasNum) errs.newPassword = labels.passwordComplexity;
+    }
+    return errs;
+  }
+
+  async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault();
     setApiError("");
-    const errs = validate();
+    const errs = validateEmail();
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
@@ -73,13 +98,40 @@ export default function RecoveryPage() {
       const res = await fetch("/api/auth/recovery", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim().toLowerCase(), newPassword }),
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+      if (res.ok) {
+        setStep("token");
+      } else {
+        const data = await res.json();
+        setApiError(data.error || "Error");
+      }
+    } catch {
+      setApiError("Network error");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleTokenSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setApiError("");
+    const errs = validateToken();
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/auth/recovery", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: token.trim(), newPassword }),
       });
       const data = await res.json();
       if (!res.ok) {
         setApiError(data.error || "Error");
       } else {
-        setStatus("success");
+        setStep("success");
       }
     } catch {
       setApiError("Network error");
@@ -102,9 +154,16 @@ export default function RecoveryPage() {
         />
         <section className="flex flex-col gap-3">
           <h1 className="font-semibold">{labels.title}</h1>
-          <p>{labels.intro}</p>
+          <p>{step === "email" ? labels.introEmail : step === "token" ? labels.introToken : ""}</p>
         </section>
-        {status === "success" ? (
+
+        {apiError && (
+          <p role="alert" className="rounded-sm border border-[#DC3545] bg-[#FFEBEE] p-3 text-[#DC3545]">
+            {apiError}
+          </p>
+        )}
+
+        {step === "success" ? (
           <div className="flex flex-col gap-4">
             <p className="rounded-sm border border-[#28A745] bg-[#E8F5E9] p-3 text-[#212529]">
               {labels.successMsg}
@@ -116,8 +175,8 @@ export default function RecoveryPage() {
               {labels.backToLogin}
             </a>
           </div>
-        ) : (
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
+        ) : step === "email" ? (
+          <form className="flex flex-col gap-4" onSubmit={handleEmailSubmit} noValidate>
             <label className="flex flex-col gap-2">
               {labels.email}
               <input
@@ -131,6 +190,33 @@ export default function RecoveryPage() {
               />
               {errors.email && (
                 <span className="text-sm text-[#FF9800]">{errors.email}</span>
+              )}
+            </label>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="min-h-12 rounded-sm bg-[#2E5C8A] px-6 text-white disabled:opacity-50"
+            >
+              {submitting ? labels.submitting : labels.submitEmail}
+            </button>
+          </form>
+        ) : (
+          <form className="flex flex-col gap-4" onSubmit={handleTokenSubmit} noValidate>
+            <p className="rounded-sm border border-[#2E5C8A] bg-[#E3F2FD] p-3 text-[#212529]">
+              {labels.emailSent}
+            </p>
+            <label className="flex flex-col gap-2">
+              {labels.token}
+              <input
+                type="text"
+                name="token"
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                className="min-h-12 rounded-sm border border-[#DEE2E6] bg-white px-4 font-mono"
+                aria-label={labels.token}
+              />
+              {errors.token && (
+                <span className="text-sm text-[#FF9800]">{errors.token}</span>
               )}
             </label>
             <label className="flex flex-col gap-2">
@@ -147,17 +233,12 @@ export default function RecoveryPage() {
                 <span className="text-sm text-[#FF9800]">{errors.newPassword}</span>
               )}
             </label>
-            {apiError && (
-              <p className="rounded-sm border border-[#DC3545] bg-[#FFEBEE] p-3 text-[#DC3545]">
-                {apiError}
-              </p>
-            )}
             <button
               type="submit"
               disabled={submitting}
               className="min-h-12 rounded-sm bg-[#2E5C8A] px-6 text-white disabled:opacity-50"
             >
-              {submitting ? labels.submitting : labels.submit}
+              {submitting ? labels.submitting : labels.submitToken}
             </button>
           </form>
         )}

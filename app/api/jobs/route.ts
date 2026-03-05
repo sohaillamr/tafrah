@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { sanitize, clamp } from "@/lib/sanitize";
 
-// GET /api/jobs — list jobs
+// GET /api/jobs — list jobs with pagination
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
@@ -12,6 +12,8 @@ export async function GET(req: NextRequest) {
     const status = url.searchParams.get("status");
     const postedById = url.searchParams.get("postedById");
     const all = url.searchParams.get("all");
+    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
+    const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get("limit") || "20")));
 
     const where: Record<string, unknown> = {};
     if (status) where.status = status;
@@ -20,13 +22,18 @@ export async function GET(req: NextRequest) {
     if (category) where.category = category;
     if (postedById) where.postedById = parseInt(postedById);
 
-    const jobs = await prisma.job.findMany({
-      where,
-      include: { _count: { select: { applications: true } } },
-      orderBy: { createdAt: "desc" },
-    });
+    const [jobs, total] = await Promise.all([
+      prisma.job.findMany({
+        where,
+        include: { _count: { select: { applications: true } } },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.job.count({ where }),
+    ]);
 
-    return NextResponse.json({ jobs });
+    return NextResponse.json({ jobs, total, page, limit });
   } catch (error: unknown) {
     console.error("Jobs list error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

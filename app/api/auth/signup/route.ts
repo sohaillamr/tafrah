@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   try {
     // Rate limit: 5 signups per hour per IP
     const ip = getClientIp(req);
-    const rl = checkRateLimit(`signup:${ip}`, { maxRequests: 5, windowSeconds: 3600 });
+    const rl = await checkRateLimit(`signup:${ip}`, { maxRequests: 5, windowSeconds: 3600 });
     if (!rl.allowed) {
       return NextResponse.json(
         { error: "Too many signup attempts. Please try again later." },
@@ -36,9 +36,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (password.length < 6) {
+    if (password.length < 8) {
       return NextResponse.json(
-        { error: "Password must be at least 6 characters" },
+        { error: "Password must be at least 8 characters" },
+        { status: 400 }
+      );
+    }
+
+    const hasUpper = /[A-Z]/.test(password);
+    const hasLower = /[a-z]/.test(password);
+    const hasNum = /[0-9]/.test(password);
+    if (!hasUpper || !hasLower || !hasNum) {
+      return NextResponse.json(
+        { error: "Password must contain uppercase, lowercase, and a number" },
         { status: 400 }
       );
     }

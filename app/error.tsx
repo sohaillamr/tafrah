@@ -1,13 +1,20 @@
 "use client";
 
+import { useEffect } from "react";
+import Link from "next/link";
 import TopBar from "./components/TopBar";
 import { useLanguage } from "./components/LanguageProvider";
 
 export default function Error({
+  error,
   reset,
 }: {
+  error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    console.error("[TAFRAH] Unhandled error:", error);
+  }, [error]);
   const { language } = useLanguage();
   const labels =
     language === "ar"
@@ -39,12 +46,12 @@ export default function Error({
             >
               {labels.retry}
             </button>
-            <a
+            <Link
               href="/"
               className="inline-flex min-h-12 items-center justify-center rounded-md border border-[#DEE2E6] px-6"
             >
               {labels.home}
-            </a>
+            </Link>
           </div>
         </section>
       </main>

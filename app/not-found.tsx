@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import TopBar from "./components/TopBar";
 import { useLanguage } from "./components/LanguageProvider";
 
@@ -28,12 +29,12 @@ export default function NotFound() {
           <div className="text-4xl text-[#2E5C8A]">404</div>
           <h1 className="text-xl font-semibold">{labels.title}</h1>
           <p className="text-[#6C757D]">{labels.message}</p>
-          <a
+          <Link
             href="/"
             className="min-h-12 inline-flex items-center justify-center rounded-sm bg-[#2E5C8A] px-6 text-white"
           >
             {labels.home}
-          </a>
+          </Link>
         </section>
       </main>
     </div>

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { sanitize, clamp } from "@/lib/sanitize";
+
+const VALID_ROLES = ["student", "hr", "admin"];
+const VALID_STATUSES = ["pending", "verified", "banned"];
 
 // PATCH /api/users/[id] — update user (admin: status change; self: profile update)
 export async function PATCH(
@@ -14,13 +18,31 @@ export async function PATCH(
     }
 
     const userId = parseInt(params.id);
+    if (isNaN(userId)) {
+      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
+    }
+
     const body = await req.json();
 
     // Admin can change status, role
     if (session.role === "admin") {
       const data: Record<string, unknown> = {};
-      if (body.status) data.status = body.status;
-      if (body.role) data.role = body.role;
+      if (body.status) {
+        if (!VALID_STATUSES.includes(body.status)) {
+          return NextResponse.json({ error: "Invalid status value" }, { status: 400 });
+        }
+        data.status = body.status;
+      }
+      if (body.role) {
+        if (!VALID_ROLES.includes(body.role)) {
+          return NextResponse.json({ error: "Invalid role value" }, { status: 400 });
+        }
+        data.role = body.role;
+      }
+
+      if (Object.keys(data).length === 0) {
+        return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+      }
 
       const user = await prisma.user.update({
         where: { id: userId },
@@ -45,10 +67,10 @@ export async function PATCH(
     }
 
     const data: Record<string, unknown> = {};
-    if (body.name) data.name = body.name;
-    if (body.bio !== undefined) data.bio = body.bio;
-    if (body.jobTitle !== undefined) data.jobTitle = body.jobTitle;
-    if (body.available !== undefined) data.available = body.available;
+    if (body.name) data.name = sanitize(clamp(body.name, 100));
+    if (body.bio !== undefined) data.bio = sanitize(clamp(body.bio || "", 2000));
+    if (body.jobTitle !== undefined) data.jobTitle = sanitize(clamp(body.jobTitle || "", 200));
+    if (body.available !== undefined) data.available = Boolean(body.available);
 
     const user = await prisma.user.update({
       where: { id: userId },
@@ -66,31 +88,41 @@ export async function PATCH(
   }
 }
 
-// GET /api/users/[id] — get user profile
+// GET /api/users/[id] — get user profile (requires auth, strips sensitive data for non-self/non-admin)
 export async function GET(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const userId = parseInt(params.id);
+    if (isNaN(userId)) {
+      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
+    }
+
+    const isSelfOrAdmin = session.userId === userId || session.role === "admin";
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
         name: true,
-        email: true,
+        email: isSelfOrAdmin, // Only show email to self/admin
         role: true,
-        status: true,
+        status: isSelfOrAdmin, // Only show status to self/admin
         bio: true,
         jobTitle: true,
         available: true,
         companyName: true,
         createdAt: true,
-        enrollments: {
+        enrollments: isSelfOrAdmin ? {
           include: { course: { select: { titleAr: true, titleEn: true, slug: true } } },
-        },
-        _count: { select: { enrollments: true, applications: true } },
+        } : false,
+        _count: { select: { enrollments: true, applications: isSelfOrAdmin } },
       },
     });
 
@@ -117,6 +149,10 @@ export async function DELETE(
     }
 
     const userId = parseInt(params.id);
+    if (isNaN(userId)) {
+      return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
+    }
+
     await prisma.user.delete({ where: { id: userId } });
 
     await prisma.activityLog.create({

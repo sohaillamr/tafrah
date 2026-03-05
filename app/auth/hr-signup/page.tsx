@@ -38,7 +38,7 @@ export default function HrSignupPage() {
           emailInvalid: "صيغة البريد الإلكتروني غير صحيحة.",
           commercialRequired: "يرجى إدخال رقم السجل التجاري.",
           passwordRequired: "يرجى إدخال كلمة المرور.",
-          passwordShort: "كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
+          passwordShort: "كلمة المرور يجب أن تكون 8 أحرف على الأقل.",
           successMsg: "تم إنشاء حساب الشركة بنجاح.",
           breadcrumbAria: "مسار التنقل",
         }
@@ -58,7 +58,7 @@ export default function HrSignupPage() {
           emailInvalid: "Invalid email format.",
           commercialRequired: "Please enter the commercial registration number.",
           passwordRequired: "Please enter a password.",
-          passwordShort: "Password must be at least 6 characters.",
+          passwordShort: "Password must be at least 8 characters.",
           successMsg: "Company account created successfully.",
           breadcrumbAria: "Breadcrumb",
         };
@@ -72,7 +72,7 @@ export default function HrSignupPage() {
     if (!commercialNumber.trim())
       errs.commercialNumber = labels.commercialRequired;
     if (!password) errs.password = labels.passwordRequired;
-    else if (password.length < 6) errs.password = labels.passwordShort;
+    else if (password.length < 8) errs.password = labels.passwordShort;
     return errs;
   }
 
@@ -85,7 +85,7 @@ export default function HrSignupPage() {
     if (Object.keys(errs).length > 0) return;
     setIsLoading(true);
     try {
-      const result = await signup({ name: companyName.trim(), email: companyEmail.trim(), password, role: "hr", companyName: companyName.trim() });
+      const result = await signup({ name: companyName.trim(), email: companyEmail.trim(), password, role: "hr", companyName: companyName.trim(), commercialReg: commercialNumber.trim() });
       if (result.error) {
         setStatus("error");
         setServerError(result.error);

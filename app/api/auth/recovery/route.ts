@@ -1,16 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
-// POST /api/auth/recovery — reset password with token, or request reset
+// POST /api/auth/recovery — request reset or reset with token
 export async function POST(req: NextRequest) {
   try {
+    // Rate limit: 5 recovery attempts per hour per IP
+    const ip = getClientIp(req);
+    const rl = await checkRateLimit(`recovery:${ip}`, { maxRequests: 5, windowSeconds: 3600 });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many recovery attempts. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const body = await req.json();
     const { email, newPassword, token } = body;
 
-    // Step 1: Request reset — in a real system this would send an email
+    // Step 1: Request reset — generate token (would send via email in production)
     if (email && !token && !newPassword) {
-      // Verify the user exists
       const user = await prisma.user.findUnique({
         where: { email: email.toLowerCase().trim() },
         select: { id: true },
@@ -18,9 +29,27 @@ export async function POST(req: NextRequest) {
 
       // Always return success to prevent email enumeration
       if (user) {
-        // In production: generate a token, store it, and send email
-        // For now, we log it
-        console.log(`[TAFRAH] Password reset requested for user #${user.id}`);
+        // Invalidate any existing tokens for this user
+        await prisma.passwordResetToken.updateMany({
+          where: { userId: user.id, used: false },
+          data: { used: true },
+        });
+
+        // Generate secure token with 1-hour expiry
+        const resetToken = crypto.randomUUID();
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+        await prisma.passwordResetToken.create({
+          data: {
+            userId: user.id,
+            token: resetToken,
+            expiresAt,
+          },
+        });
+
+        // In production: send email with reset link containing the token
+        // For now, log it (remove in production)
+        console.log(`[TAFRAH] Password reset token for user #${user.id}: ${resetToken}`);
       }
 
       return NextResponse.json({
@@ -28,38 +57,63 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Step 2: Reset password with email + new password (simplified for beta)
-    if (email && newPassword) {
-      if (newPassword.length < 6) {
+    // Step 2: Reset password with token verification
+    if (token && newPassword) {
+      if (typeof token !== "string" || token.length < 10) {
         return NextResponse.json(
-          { error: "Password must be at least 6 characters" },
+          { error: "Invalid or expired reset token" },
           { status: 400 }
         );
       }
 
-      const user = await prisma.user.findUnique({
-        where: { email: email.toLowerCase().trim() },
-        select: { id: true },
-      });
-
-      if (!user) {
+      if (newPassword.length < 8) {
         return NextResponse.json(
-          { error: "Account not found" },
-          { status: 404 }
+          { error: "Password must be at least 8 characters" },
+          { status: 400 }
         );
       }
 
+      // Validate password complexity
+      const hasUppercase = /[A-Z]/.test(newPassword);
+      const hasLowercase = /[a-z]/.test(newPassword);
+      const hasNumber = /[0-9]/.test(newPassword);
+      if (!hasUppercase || !hasLowercase || !hasNumber) {
+        return NextResponse.json(
+          { error: "Password must contain uppercase, lowercase, and a number" },
+          { status: 400 }
+        );
+      }
+
+      // Find and validate the token
+      const resetEntry = await prisma.passwordResetToken.findUnique({
+        where: { token },
+      });
+
+      if (!resetEntry || resetEntry.used || new Date() > resetEntry.expiresAt) {
+        return NextResponse.json(
+          { error: "Invalid or expired reset token" },
+          { status: 400 }
+        );
+      }
+
+      // Mark token as used
+      await prisma.passwordResetToken.update({
+        where: { id: resetEntry.id },
+        data: { used: true },
+      });
+
+      // Update password
       const passwordHash = await bcrypt.hash(newPassword, 12);
       await prisma.user.update({
-        where: { id: user.id },
+        where: { id: resetEntry.userId },
         data: { passwordHash },
       });
 
       await prisma.activityLog.create({
         data: {
-          userId: user.id,
+          userId: resetEntry.userId,
           action: "password_reset",
-          details: "Password was reset",
+          details: "Password was reset via recovery token",
         },
       });
 

@@ -32,7 +32,6 @@ export async function GET(req: NextRequest) {
       openTickets,
       recentUsers,
       recentLogs,
-      enrollmentsByDay,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.user.count({ where: { role: "student" } }),
@@ -59,21 +58,24 @@ export async function GET(req: NextRequest) {
         orderBy: { createdAt: "desc" },
         take: 20,
       }),
-      prisma.enrollment.groupBy({
-        by: ["enrolledAt"],
-        _count: true,
-        where: { enrolledAt: { gte: since } },
-        orderBy: { enrolledAt: "asc" },
-      }),
     ]);
 
-    // Build daily signups for chart
-    const signupsByDay = await prisma.user.groupBy({
-      by: ["createdAt"],
-      _count: true,
-      where: { createdAt: { gte: since } },
-      orderBy: { createdAt: "asc" },
-    });
+    // Use raw SQL for proper daily aggregation on PostgreSQL
+    const signupsByDay = await prisma.$queryRaw`
+      SELECT DATE_TRUNC('day', "createdAt") AS day, COUNT(*)::int AS count
+      FROM "User"
+      WHERE "createdAt" >= ${since}
+      GROUP BY day
+      ORDER BY day ASC
+    `;
+
+    const enrollmentsByDay = await prisma.$queryRaw`
+      SELECT DATE_TRUNC('day', "enrolledAt") AS day, COUNT(*)::int AS count
+      FROM "Enrollment"
+      WHERE "enrolledAt" >= ${since}
+      GROUP BY day
+      ORDER BY day ASC
+    `;
 
     return NextResponse.json({
       overview: {

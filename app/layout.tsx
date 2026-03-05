@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import { Cairo } from "next/font/google";
 import BetaNote from "./components/BetaNote";
@@ -14,9 +14,17 @@ const cairo = Cairo({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
-  title: "طفرة",
-  description: "منصة طفرة: بيئة عمل وتدريب متخصصة لذوي التوحد.",
+  title: {
+    default: "طفرة | Tafrah",
+    template: "%s | طفرة",
+  },
+  description: "منصة طفرة: بيئة عمل وتدريب متخصصة لذوي التوحد. Tafrah: A specialised work & training platform for individuals with autism.",
 };
 
 export default function RootLayout({

@@ -3,29 +3,52 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { sanitize, clamp } from "@/lib/sanitize";
 
-// GET /api/messages — get conversations
-export async function GET() {
+// GET /api/messages — get conversations with pagination
+export async function GET(req: NextRequest) {
   try {
     const session = await getSession();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const messages = await prisma.message.findMany({
-      where: {
-        OR: [
-          { senderId: session.userId },
-          { receiverId: session.userId },
-        ],
-      },
-      include: {
-        sender: { select: { id: true, name: true, role: true } },
-        receiver: { select: { id: true, name: true, role: true } },
-      },
-      orderBy: { createdAt: "asc" },
-    });
+    const url = new URL(req.url);
+    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
+    const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get("limit") || "50")));
+    const contactId = url.searchParams.get("contactId");
 
-    return NextResponse.json({ messages });
+    const where: Record<string, unknown> = {
+      OR: [
+        { senderId: session.userId },
+        { receiverId: session.userId },
+      ],
+    };
+
+    // Filter by specific conversation partner
+    if (contactId) {
+      const cId = parseInt(contactId);
+      if (!isNaN(cId)) {
+        where.OR = [
+          { senderId: session.userId, receiverId: cId },
+          { senderId: cId, receiverId: session.userId },
+        ];
+      }
+    }
+
+    const [messages, total] = await Promise.all([
+      prisma.message.findMany({
+        where,
+        include: {
+          sender: { select: { id: true, name: true, role: true } },
+          receiver: { select: { id: true, name: true, role: true } },
+        },
+        orderBy: { createdAt: "asc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.message.count({ where }),
+    ]);
+
+    return NextResponse.json({ messages, total, page, limit });
   } catch (error: unknown) {
     console.error("Messages list error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
