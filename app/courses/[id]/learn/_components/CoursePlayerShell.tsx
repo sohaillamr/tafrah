@@ -78,10 +78,12 @@ const buildSteps = (unit: { chapters: { steps: Record<string, unknown>[]; [key: 
 type CourseState = {
   currentStep: number;
   validatedSteps: Record<number, boolean>;
+  needsSync: boolean;
   markStepValid: (step: number) => void;
   nextStep: (totalSteps: number) => void;
   prevStep: () => void;
   reset: () => void;
+  markSynced: () => void;
 };
 
 const useCourseStore = create<CourseState>()(
@@ -89,22 +91,31 @@ const useCourseStore = create<CourseState>()(
     (set) => ({
       currentStep: 0,
       validatedSteps: {},
+      needsSync: false,
       markStepValid: (step) =>
         set((state) => ({
           validatedSteps: { ...state.validatedSteps, [step]: true },
+          needsSync: true,
         })),
       nextStep: (totalSteps) =>
         set((state) => ({
           currentStep: Math.min(state.currentStep + 1, totalSteps - 1),
+          needsSync: true,
         })),
       prevStep: () =>
         set((state) => ({
           currentStep: Math.max(state.currentStep - 1, 0),
+          needsSync: true,
         })),
       reset: () =>
         set({
           currentStep: 0,
           validatedSteps: {},
+          needsSync: true,
+        }),
+      markSynced: () =>
+        set({
+          needsSync: false,
         }),
     }),
     {
@@ -137,6 +148,44 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const [folderName, setFolderName] = useState("");
   const [folderCreated, setFolderCreated] = useState(false);
   const [openTabs, setOpenTabs] = useState(initialTabs.map((tab) => tab.id));
+
+  const { language } = useLanguage();
+  const { user } = useAuth();
+  
+  const { 
+    currentStep, validatedSteps, nextStep, prevStep, markStepValid, reset, 
+    needsSync, markSynced 
+  } = useCourseStore();
+
+  const unitIndexFromUrl = searchParams.get("unit");
+  const unitIndex = unitIndexFromUrl ? parseInt(unitIndexFromUrl) : 0;
+
+  // Background Sync to API Endpoint (30s delay)
+  useEffect(() => {
+    if (!needsSync || !user) return;
+    
+    const syncProgress = async () => {
+      try {
+        const payload = {
+          courseSlug,
+          unitIndex,
+          stepIndex: currentStep,
+          quizPassed: validatedSteps[currentStep] || false,
+        };
+        await fetch("/api/progress", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        markSynced();
+      } catch (err) {
+        console.error("Delayed progression sync failed:", err);
+      }
+    };
+
+    const timer = setTimeout(syncProgress, 30000);
+    return () => clearTimeout(timer);
+  }, [currentStep, validatedSteps, needsSync, user, courseSlug, unitIndex, markSynced]);
   const [activeTab, setActiveTab] = useState(initialTabs[0].id);
   const [selectedPassword, setSelectedPassword] = useState("");
   const [showHint, setShowHint] = useState(false);

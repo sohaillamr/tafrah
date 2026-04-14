@@ -22,17 +22,12 @@ export function LanguageProvider({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const stored = localStorage.getItem("tafrah_lang");
-    if (stored === "en" || stored === "ar") {
-      setLanguage(stored);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    localStorage.setItem("tafrah_lang", language);
+    
+    // Apply changes instantly to DOM (eliminating CLS, matching server HTML output)
     document.documentElement.lang = language === "ar" ? "ar" : "en";
     document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
+    
+    // Store preference purely in cookies for Next.js to read instantly
     document.cookie = `tafrah_lang=${language}; path=/; max-age=31536000`;
   }, [language]);
 
