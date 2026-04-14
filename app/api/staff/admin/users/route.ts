@@ -13,14 +13,14 @@ export async function POST(req: NextRequest) {
     let user;
     if (action === 'ban') {
       user = await prisma.user.update({ where: { id: userId }, data: { status: 'banned', available: false } });
-      await logAdminAction('ban_user', \Banned user \\);
+      await logAdminAction('ban_user', 'Banned user ' + userId);
     } else if (action === 'unban') {
       user = await prisma.user.update({ where: { id: userId }, data: { status: 'verified', available: true } });
-      await logAdminAction('unban_user', \Unbanned user \\);
+      await logAdminAction('unban_user', 'Unbanned user ' + userId);
     } else if (action === 'make_hr' || action === 'make_admin' || action === 'make_student') {
       const roleMap: any = { make_hr: 'hr', make_admin: 'admin', make_student: 'student' };
       user = await prisma.user.update({ where: { id: userId }, data: { role: roleMap[action] } });
-      await logAdminAction('change_role', \Changed user \ role to \\);
+      await logAdminAction('change_role', 'Changed user ' + userId + ' role to ' + roleMap[action]);
     }
 
     return NextResponse.json({ user });

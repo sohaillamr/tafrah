@@ -41,12 +41,12 @@ export default function UserManagementClient({ initialUsers }: { initialUsers: a
                 <div className='text-xs opacity-70'>{u.name}</div>
               </td>
               <td className='p-3 text-xs uppercase'>
-                 <span className={\px-2 py-1 bg-gray-900 border \ rounded\}>
+                 <span className={'px-2 py-1 bg-gray-900 border rounded ' + (u.role==='admin' ? 'border-red-500 text-red-500' : u.role==='hr' ? 'border-purple-500 text-purple-500' : 'border-green-500 text-green-500')}>
                    {u.role}
                  </span>
               </td>
               <td className='p-3 text-xs uppercase'>
-                <span className={\lex items-center gap-1 \\}>
+                <span className={'flex items-center gap-1 ' + ((u.status==='banned'||!u.available) ? 'text-red-500' : 'text-green-500')}>
                   {(u.status==='banned'||!u.available) ? <Ban className='w-3 h-3' /> : <CheckCircle className='w-3 h-3' />}
                   {u.status}
                 </span>
