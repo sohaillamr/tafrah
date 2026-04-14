@@ -87,6 +87,13 @@ export async function middleware(req: NextRequest) {
     }
   }
 
+  if (pathname.startsWith("/staff/dashboard") || pathname.startsWith("/api/staff/admin")) {
+    const adminCookie = req.cookies.get("__tafrah_admin_vault")?.value;
+    if (!adminCookie) {
+      return NextResponse.redirect(new URL("/staff/login", req.url));
+    }
+  }
+
   // --- Server-side route protection for authenticated pages ---
   const protectedRoutes = ["/admin", "/dashboard", "/messages", "/assistant"];
   const isProtectedPage = protectedRoutes.some((r) => pathname.startsWith(r));
@@ -141,5 +148,6 @@ export const config = {
     "/dashboard/:path*",
     "/messages/:path*",
     "/assistant/:path*",
+    "/staff/dashboard/:path*"
   ],
 };

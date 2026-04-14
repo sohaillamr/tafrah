@@ -9,51 +9,51 @@ datasource db {
 }
 
 model User {
-  id            Int       @id @default(autoincrement())
-  email         String    @unique
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
   passwordHash  String
   name          String
-  role          String    @default("student") // student | hr | admin
-  status        String    @default("pending") // pending | verified | banned
+  role          String   @default("student") // student | hr | admin
+  status        String   @default("pending") // pending | verified | banned
   companyName   String?
   commercialReg String?
   quizScore     Int?
   avatarUrl     String?
   bio           String?
   jobTitle      String?
-  available     Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  available     Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  enrollments   Enrollment[]
-  progress      Progress[]
-  applications  Application[]
-  sentMessages  Message[]     @relation("SentMessages")
-  receivedMessages Message[]  @relation("ReceivedMessages")
-  tickets       Ticket[]
-  activityLogs  ActivityLog[]
-  jobsPosted    Job[]         @relation("JobPoster")
+  enrollments      Enrollment[]
+  progress         Progress[]
+  applications     Application[]
+  sentMessages     Message[]     @relation("SentMessages")
+  receivedMessages Message[]     @relation("ReceivedMessages")
+  tickets          Ticket[]
+  activityLogs     ActivityLog[]
+  jobsPosted       Job[]         @relation("JobPoster")
 
   @@index([status])
   @@index([role])
 }
 
 model Course {
-  id          Int       @id @default(autoincrement())
-  slug        String    @unique
-  titleAr     String
-  titleEn     String
-  descAr      String
-  descEn      String
-  category    String
-  difficulty  String    // beginner | intermediate | advanced
-  hours       Int
-  modules     Int
-  available   Boolean   @default(false)
-  isArchived  Boolean   @default(false)
-  imageUrl    String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id         Int      @id @default(autoincrement())
+  slug       String   @unique
+  titleAr    String
+  titleEn    String
+  descAr     String
+  descEn     String
+  category   String
+  difficulty String // beginner | intermediate | advanced
+  hours      Int
+  modules    Int
+  available  Boolean  @default(false)
+  isArchived Boolean  @default(false)
+  imageUrl   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   enrollments Enrollment[]
 
@@ -65,14 +65,14 @@ model Course {
 model Enrollment {
   id          Int       @id @default(autoincrement())
   userId      Int
-  courseId     Int
+  courseId    Int
   progress    Float     @default(0) // 0-100
   completed   Boolean   @default(false)
   enrolledAt  DateTime  @default(now())
   completedAt DateTime?
 
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course      Course    @relation(fields: [courseId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id])
 
   @@unique([userId, courseId])
   @@index([userId])
@@ -80,16 +80,16 @@ model Enrollment {
 }
 
 model Progress {
-  id          Int       @id @default(autoincrement())
-  userId      Int
-  courseSlug   String
-  unitIndex   Int
-  stepIndex   Int
-  quizPassed  Boolean   @default(false)
-  quizScore   Float?
-  updatedAt   DateTime  @updatedAt
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  courseSlug String
+  unitIndex  Int
+  stepIndex  Int
+  quizPassed Boolean  @default(false)
+  quizScore  Float?
+  updatedAt  DateTime @updatedAt
 
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, courseSlug, unitIndex])
   @@index([userId])
@@ -97,24 +97,24 @@ model Progress {
 }
 
 model Job {
-  id            Int       @id @default(autoincrement())
-  titleAr       String
-  titleEn       String
-  descAr        String
-  descEn        String
-  type          String    // task | fulltime
-  category      String    // excel | qa | editing | design | data-entry
-  salary        Float
-  currency      String    @default("EGP")
-  companyName   String
-  requiredSkills String   // comma-separated
-  status        String    @default("open") // open | closed | filled
-  postedById    Int?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id             Int      @id @default(autoincrement())
+  titleAr        String
+  titleEn        String
+  descAr         String
+  descEn         String
+  type           String // task | fulltime
+  category       String // excel | qa | editing | design | data-entry
+  salary         Float
+  currency       String   @default("EGP")
+  companyName    String
+  requiredSkills String // comma-separated
+  status         String   @default("open") // open | closed | filled
+  postedById     Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  postedBy      User?     @relation("JobPoster", fields: [postedById], references: [id], onDelete: SetNull)
-  applications  Application[]
+  postedBy     User?         @relation("JobPoster", fields: [postedById], references: [id], onDelete: SetNull)
+  applications Application[]
 
   @@index([status])
   @@index([postedById])
@@ -123,16 +123,16 @@ model Job {
 }
 
 model Application {
-  id          Int       @id @default(autoincrement())
-  userId      Int
-  jobId       Int
-  status      String    @default("pending") // pending | accepted | rejected
-  coverNote   String?
-  appliedAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  jobId     Int
+  status    String   @default("pending") // pending | accepted | rejected
+  coverNote String?
+  appliedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  job         Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   @@unique([userId, jobId])
   @@index([userId])
@@ -141,15 +141,15 @@ model Application {
 }
 
 model Message {
-  id          Int       @id @default(autoincrement())
-  senderId    Int
-  receiverId  Int
-  content     String
-  read        Boolean   @default(false)
-  createdAt   DateTime  @default(now())
+  id         Int      @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  content    String
+  read       Boolean  @default(false)
+  createdAt  DateTime @default(now())
 
-  sender      User      @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver    User      @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender   User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@index([senderId])
   @@index([receiverId])
@@ -157,31 +157,31 @@ model Message {
 }
 
 model Ticket {
-  id          Int       @id @default(autoincrement())
-  userId      Int?
-  subject     String
-  message     String
-  email       String
-  status      String    @default("new") // new | in-progress | resolved | closed
-  priority    String    @default("normal") // low | normal | high
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  subject   String
+  message   String
+  email     String
+  status    String   @default("new") // new | in-progress | resolved | closed
+  priority  String   @default("normal") // low | normal | high
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([status])
 }
 
 model ActivityLog {
-  id          Int       @id @default(autoincrement())
-  userId      Int?
-  action      String    // login | signup | enroll | complete_unit | apply_job | send_message | etc
-  details     String?
-  ip          String?
-  createdAt   DateTime  @default(now())
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  action    String // login | signup | enroll | complete_unit | apply_job | send_message | etc
+  details   String?
+  ip        String?
+  createdAt DateTime @default(now())
 
-  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([action])
@@ -189,19 +189,19 @@ model ActivityLog {
 }
 
 model SiteSetting {
-  id          Int       @id @default(autoincrement())
-  key         String    @unique
-  value       String
-  updatedAt   DateTime  @updatedAt
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
 }
 
 model PasswordResetToken {
-  id          Int       @id @default(autoincrement())
-  userId      Int
-  token       String    @unique
-  expiresAt   DateTime
-  used        Boolean   @default(false)
-  createdAt   DateTime  @default(now())
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([token])
@@ -209,11 +209,24 @@ model PasswordResetToken {
 }
 
 model RateLimitEntry {
-  id          Int       @id @default(autoincrement())
-  key         String
-  count       Int       @default(1)
-  resetAt     DateTime
+  id      Int      @id @default(autoincrement())
+  key     String
+  count   Int      @default(1)
+  resetAt DateTime
 
   @@unique([key])
   @@index([resetAt])
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  action    String
+  details   String?
+  admin     String
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([action])
+  @@index([admin])
+  @@index([createdAt])
 }
