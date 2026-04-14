@@ -108,10 +108,28 @@ export async function POST(req: NextRequest) {
 
     response.headers.set("Set-Cookie", createAuthCookie(token));
     return response;
-  } catch (error: unknown) {
-    console.error("Signup error:", error);
+  } catch (error: any) {
+    console.error("[CRITICAL] Signup Exception Dump:", {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      name: error.name
+    });
+
+    // Special check for Prisma Unique Constraint (P2002 means duplicate email usually)
+    if (error.code === 'P2002') {
+      return NextResponse.json(
+        { error: "Email already exists" },
+        { status: 400 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: "Internal server error" },
+      { 
+        error: "Internal server error", 
+        details: process.env.NODE_ENV !== "production" ? error.message : undefined,
+        debug_code: error.code || error.name || "Unknown"
+      },
       { status: 500 }
     );
   }
