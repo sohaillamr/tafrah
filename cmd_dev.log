@@ -1,0 +1,24 @@
+
+> tafrah@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.5.10
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.1.2:3000
+   - Environments: .env.local, .env
+
+ ✓ Starting...
+ ✓ Ready in 3s
+ ○ Compiling /staff/login ...
+ ✓ Compiled /staff/login in 8.8s (787 modules)
+ GET /staff/login 200 in 19046ms
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 1045ms (180 modules)
+ GET /staff/login 200 in 104ms
+ ○ Compiling /api/staff/auth ...
+ ✓ Compiled /api/staff/auth in 671ms (799 modules)
+ POST /api/staff/auth 200 in 2489ms
+ ✓ Compiled /staff/dashboard in 486ms (801 modules)
+ GET /staff/dashboard 200 in 2599ms
+ ✓ Compiled in 533ms (284 modules)
+ ✓ Compiled in 202ms (284 modules)
