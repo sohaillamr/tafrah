@@ -4,12 +4,25 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { sanitize, clamp } from "@/lib/sanitize";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
 const VALID_PRIORITIES = ["low", "normal", "high"];
 
 // POST /api/tickets — create support ticket (anyone)
 export async function POST(req: NextRequest) {
   try {
+    const ip = getClientIp(req);
+    const rl = await checkRateLimit(`tickets:create:${ip}`, {
+      maxRequests: 5,
+      windowSeconds: 3600,
+    });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: "Too many ticket submissions. Please try again later." },
+        { status: 429 }
+      );
+    }
+
     const session = await getSession();
     const body = await req.json();
 

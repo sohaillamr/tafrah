@@ -4,13 +4,15 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 
+type RouteContext = { params: Promise<{ id: string }> };
+
 const VALID_STATUSES = ["new", "in-progress", "resolved", "closed"];
 const VALID_PRIORITIES = ["low", "normal", "high"];
 
 // PATCH /api/tickets/[id] — update ticket status (admin only)
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteContext
 ) {
   try {
     const session = await getSession();
@@ -18,7 +20,8 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const id = parseInt(params.id);
+    const { id: rawId } = await params;
+    const id = parseInt(rawId);
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid ticket ID" }, { status: 400 });
     }
@@ -58,7 +61,7 @@ export async function PATCH(
 // DELETE /api/tickets/[id] — admin only
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteContext
 ) {
   try {
     const session = await getSession();
@@ -66,7 +69,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const id = parseInt(params.id);
+    const { id: rawId } = await params;
+    const id = parseInt(rawId);
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid ticket ID" }, { status: 400 });
     }

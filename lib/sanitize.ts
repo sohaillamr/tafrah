@@ -22,7 +22,7 @@ export function clamp(input: string, maxLength: number): string {
 }
 
 /**
- * Sanitize an object's string values (shallow).
+ * Sanitize an object's string values (recursive).
  */
 export function sanitizeObject<T extends Record<string, unknown>>(
   obj: T,
@@ -34,6 +34,15 @@ export function sanitizeObject<T extends Record<string, unknown>>(
       (result as Record<string, unknown>)[key] = sanitize(
         clamp(result[key] as string, maxFieldLength)
       );
+    } else if (result[key] !== null && typeof result[key] === "object") {
+      if (Array.isArray(result[key])) {
+        (result as Record<string, unknown>)[key] = (result[key] as unknown[]).map(item => 
+          typeof item === "object" && item !== null ? sanitizeObject(item as Record<string, unknown>, maxFieldLength) : 
+          typeof item === "string" ? sanitize(clamp(item, maxFieldLength)) : item
+        );
+      } else {
+        (result as Record<string, unknown>)[key] = sanitizeObject(result[key] as Record<string, unknown>, maxFieldLength);
+      }
     }
   }
   return result;

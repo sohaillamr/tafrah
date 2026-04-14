@@ -8,6 +8,7 @@ import { sanitize, clamp } from "@/lib/sanitize";
 // GET /api/jobs — list jobs with pagination
 export async function GET(req: NextRequest) {
   try {
+    const session = await getSession();
     const url = new URL(req.url);
     const type = url.searchParams.get("type");
     const category = url.searchParams.get("category");
@@ -16,10 +17,17 @@ export async function GET(req: NextRequest) {
     const all = url.searchParams.get("all");
     const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
     const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get("limit") || "20")));
+    const canViewAllStatuses = session?.role === "admin" || session?.role === "hr";
 
     const where: Record<string, unknown> = {};
-    if (status) where.status = status;
-    else if (!all) where.status = "open";
+    if (status) {
+      if (status !== "open" && !canViewAllStatuses) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      where.status = status;
+    } else if (!all || !canViewAllStatuses) {
+      where.status = "open";
+    }
     if (type) where.type = type;
     if (category) where.category = category;
     if (postedById) where.postedById = parseInt(postedById);

@@ -5,13 +5,15 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { sanitize, clamp } from "@/lib/sanitize";
 
+type RouteContext = { params: Promise<{ id: string }> };
+
 const VALID_ROLES = ["student", "hr", "admin"];
 const VALID_STATUSES = ["pending", "verified", "banned"];
 
 // PATCH /api/users/[id] — update user (admin: status change; self: profile update)
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteContext
 ) {
   try {
     const session = await getSession();
@@ -19,7 +21,8 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = parseInt(params.id);
+    const { id: rawId } = await params;
+    const userId = parseInt(rawId);
     if (isNaN(userId)) {
       return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
     }
@@ -93,7 +96,7 @@ export async function PATCH(
 // GET /api/users/[id] — get user profile (requires auth, strips sensitive data for non-self/non-admin)
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteContext
 ) {
   try {
     const session = await getSession();
@@ -101,7 +104,8 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = parseInt(params.id);
+    const { id: rawId } = await params;
+    const userId = parseInt(rawId);
     if (isNaN(userId)) {
       return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
     }
@@ -142,7 +146,7 @@ export async function GET(
 // DELETE /api/users/[id] — admin only
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteContext
 ) {
   try {
     const session = await getSession();
@@ -150,7 +154,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = parseInt(params.id);
+    const { id: rawId } = await params;
+    const userId = parseInt(rawId);
     if (isNaN(userId)) {
       return NextResponse.json({ error: "Invalid user ID" }, { status: 400 });
     }

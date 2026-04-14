@@ -4,15 +4,18 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 
+type RouteContext = { params: Promise<{ id: string }> };
+
 // GET /api/courses/[id]
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteContext
 ) {
   try {
-    const id = parseInt(params.id);
+    const { id: rawId } = await params;
+    const id = parseInt(rawId);
     const course = await prisma.course.findFirst({
-      where: { OR: [{ id: isNaN(id) ? -1 : id }, { slug: params.id }] },
+      where: { OR: [{ id: isNaN(id) ? -1 : id }, { slug: rawId }] },
       include: { _count: { select: { enrollments: true } } },
     });
 
@@ -32,7 +35,7 @@ export async function GET(
 // PATCH /api/courses/[id] — admin only
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteContext
 ) {
   try {
     const session = await getSession();
@@ -40,7 +43,11 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const id = parseInt(params.id);
+    const { id: rawId } = await params;
+    const id = parseInt(rawId);
+    if (isNaN(id)) {
+      return NextResponse.json({ error: "Invalid course ID" }, { status: 400 });
+    }
     const body = await req.json();
 
     const data: Record<string, unknown> = {};
@@ -60,7 +67,7 @@ export async function PATCH(
 // DELETE /api/courses/[id] — admin only
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteContext
 ) {
   try {
     const session = await getSession();
@@ -68,7 +75,11 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const id = parseInt(params.id);
+    const { id: rawId } = await params;
+    const id = parseInt(rawId);
+    if (isNaN(id)) {
+      return NextResponse.json({ error: "Invalid course ID" }, { status: 400 });
+    }
     await prisma.course.delete({ where: { id } });
 
     await prisma.activityLog.create({

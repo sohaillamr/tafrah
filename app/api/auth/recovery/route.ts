@@ -49,9 +49,15 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        // In production: send email with reset link containing the token
-        // For now, log it (remove in production)
-        console.log(`[TAFRAH] Password reset token for user #${user.id}: ${resetToken}`);
+        // In production: send email with reset link containing the token.
+        // Never log reset tokens to server logs.
+
+        if (process.env.NODE_ENV !== "production") {
+          return NextResponse.json({
+            message: "If an account with that email exists, a recovery link has been sent.",
+            devResetToken: resetToken,
+          });
+        }
       }
 
       return NextResponse.json({

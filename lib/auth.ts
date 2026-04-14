@@ -11,14 +11,10 @@ let _secret: Uint8Array | null = null;
 function getSecret(): Uint8Array {
   if (_secret) return _secret;
   const jwtSecret = process.env.JWT_SECRET;
-  if (!jwtSecret && process.env.NODE_ENV === "production") {
-    throw new Error("[TAFRAH] CRITICAL: JWT_SECRET must be set in production!");
-  } else if (!jwtSecret) {
-    console.warn("[TAFRAH] WARNING: JWT_SECRET not set — using insecure fallback for development only");
+  if (!jwtSecret) {
+    throw new Error("[TAFRAH] CRITICAL: JWT_SECRET must be set");
   }
-  _secret = new TextEncoder().encode(
-    jwtSecret || "DEV-ONLY-FALLBACK-DO-NOT-USE-IN-PRODUCTION"
-  );
+  _secret = new TextEncoder().encode(jwtSecret);
   return _secret;
 }
 
@@ -53,7 +49,7 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
  * Returns fresh role/name from DB to prevent stale JWT data.
  */
 export async function getSession(): Promise<JWTPayload | null> {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get("tafrah_token")?.value;
   if (!token) return null;
 
@@ -79,8 +75,8 @@ export async function getSession(): Promise<JWTPayload | null> {
       name: user.name,
     };
   } catch {
-    // If DB check fails, fall back to JWT data (fail-open for availability)
-    return decoded;
+    // Fail closed on DB errors for security
+    return null;
   }
 }
 

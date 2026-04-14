@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/auth";
 import { Cairo } from "next/font/google";
 import BetaNote from "./components/BetaNote";
 import Footer from "./components/Footer";
@@ -27,12 +29,22 @@ export const metadata: Metadata = {
   description: "منصة طفرة: بيئة عمل وتدريب متخصصة لذوي التوحد. Tafrah: A specialised work & training platform for individuals with autism.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const stored = cookies().get("tafrah_lang")?.value;
+  const cookieStore = await cookies();
+  const token = cookieStore.get("tafrah_token")?.value;
+  
+  if (token) {
+    const session = await getSession();
+    if (!session) {
+      redirect("/api/auth/logout");
+    }
+  }
+
+  const stored = cookieStore.get("tafrah_lang")?.value;
   const initialLanguage = stored === "en" || stored === "ar" ? stored : "ar";
   const htmlDir = initialLanguage === "ar" ? "rtl" : "ltr";
   return (

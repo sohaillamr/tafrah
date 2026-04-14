@@ -7,6 +7,9 @@ import { getSession } from "@/lib/auth";
 // GET /api/courses — list courses
 export async function GET(req: NextRequest) {
   try {
+    const session = await getSession();
+    const isAdmin = session?.role === "admin";
+
     const url = new URL(req.url);
     const category = url.searchParams.get("category");
     const difficulty = url.searchParams.get("difficulty");
@@ -15,7 +18,14 @@ export async function GET(req: NextRequest) {
     const where: Record<string, unknown> = {};
     if (category) where.category = category;
     if (difficulty) where.difficulty = difficulty;
-    if (available !== null) where.available = available === "true";
+    if (available !== null) {
+      if (!isAdmin && available !== "true") {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      where.available = available === "true";
+    } else if (!isAdmin) {
+      where.available = true;
+    }
 
     const courses = await prisma.course.findMany({
       where,

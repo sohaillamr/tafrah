@@ -76,10 +76,16 @@ export default function CoursesPage() {
         };
 
   const filteredCourses = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
     return courses.filter((course) => {
       const title = language === "ar" ? course.titleAr : course.titleEn;
       const desc = language === "ar" ? course.descAr : course.descEn;
-      const matchesSearch = !search || title.includes(search) || desc.includes(search);
+      const normalizedTitle = title.toLowerCase();
+      const normalizedDesc = desc.toLowerCase();
+      const matchesSearch =
+        !normalizedSearch ||
+        normalizedTitle.includes(normalizedSearch) ||
+        normalizedDesc.includes(normalizedSearch);
       const matchesCategory =
         selectedCategories.length === 0 || selectedCategories.includes(course.category);
       const matchesDifficulty =

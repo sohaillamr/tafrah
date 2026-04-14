@@ -3,11 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useLanguage } from "./LanguageProvider";
 import { useAuth } from "./AuthProvider";
 
 export default function TopBar() {
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
   const { language, setLanguage } = useLanguage();
   const { user, logout } = useAuth();
   const labels =
@@ -42,6 +44,12 @@ export default function TopBar() {
         };
 
   const dashboardHref = user?.role === "admin" ? "/admin" : user?.role === "hr" ? "/dashboard/hr" : "/dashboard/student";
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/");
+    router.refresh();
+  };
 
   return (
     <header className="sticky top-0 z-10 border-b border-[#DEE2E6] bg-white">
@@ -104,7 +112,7 @@ export default function TopBar() {
               </li>
               <li className="flex items-center gap-2">
                 <span className="text-sm text-[#212529]">{user.name}</span>
-                <button type="button" onClick={() => { logout(); window.location.href = "/"; }} className="min-h-12 inline-flex items-center text-[#DC3545]">
+                <button type="button" onClick={handleLogout} className="min-h-12 inline-flex items-center text-[#DC3545]">
                   {labels.logoutLabel}
                 </button>
               </li>

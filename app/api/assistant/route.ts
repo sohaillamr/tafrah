@@ -8,6 +8,7 @@ export const runtime = "nodejs";
 
 const MAX_MESSAGE_LENGTH = 2000;
 const MAX_CONVERSATION_MESSAGES = 20;
+const GROQ_TIMEOUT_MS = 10000;
 
 export async function POST(request: Request) {
   // Require authentication
@@ -106,23 +107,35 @@ LANGUAGE SELECTION:
   const callGroq = async (apiKey: string) => {
     const models = ["llama-3.1-70b-versatile", "llama-3.1-8b-instant"];
     for (const model of models) {
-      const response = await fetch(
-        "https://api.groq.com/openai/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model,
-            messages: [{ role: "system", content: systemPrompt }, ...messages],
-            temperature: 0.2,
-            max_tokens: 500,
-            top_p: 0.1,
-          }),
-        }
-      );
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), GROQ_TIMEOUT_MS);
+      let response: Response;
+
+      try {
+        response = await fetch(
+          "https://api.groq.com/openai/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model,
+              messages: [{ role: "system", content: systemPrompt }, ...messages],
+              temperature: 0.2,
+              max_tokens: 500,
+              top_p: 0.1,
+            }),
+            signal: controller.signal,
+          }
+        );
+      } catch {
+        clearTimeout(timer);
+        continue;
+      }
+
+      clearTimeout(timer);
       if (!response.ok) {
         continue;
       }
@@ -149,7 +162,7 @@ LANGUAGE SELECTION:
   }
 
   return NextResponse.json(
-    { error: "upstream_error" },
-    { status: 500 }
+    { message: "المساعد يواجه ضغطاً حالياً ويحتاج لبعض الوقت لترتيب الأفكار. لطفاً حاول مرة أخرى بعد قليل. (The accessibility assistant is experiencing heavy traffic and requires a moment to reset.)" },
+    { status: 503 }
   );
 }

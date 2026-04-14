@@ -20,21 +20,33 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true);
   const [activePartnerId, setActivePartnerId] = useState<number | null>(null);
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
   const { language } = useLanguage();
 
   const fetchMessages = () => {
     if (!user) return;
     fetch("/api/messages")
       .then((r) => r.json())
-      .then((d) => { setMessages(d.messages || []); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then((d) => {
+        setMessages(d.messages || []);
+        setLoading(false);
+        setError("");
+      })
+      .catch(() => {
+        setLoading(false);
+        setError(language === "ar" ? "تعذر تحميل الرسائل حالياً." : "Failed to load messages.");
+      });
   };
 
   useEffect(() => {
     fetchMessages();
 
-    // Poll for new messages every 10 seconds
-    const interval = setInterval(fetchMessages, 10000);
+    // Poll for new messages every 20 seconds only when tab is visible.
+    const interval = setInterval(() => {
+      if (document.visibilityState === "visible") {
+        fetchMessages();
+      }
+    }, 20000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
@@ -58,6 +70,7 @@ export default function MessagesPage() {
           loading: "جارٍ التحميل...",
           loginRequired: "يجب تسجيل الدخول لعرض الرسائل",
           noMessages: "لا توجد رسائل حتى الآن",
+          uploadSoon: "ميزة مشاركة الملفات ستتوفر قريباً.",
         }
       : {
           home: "Home",
@@ -77,6 +90,7 @@ export default function MessagesPage() {
           loading: "Loading...",
           loginRequired: "Please sign in to view messages",
           noMessages: "No messages yet",
+          uploadSoon: "File sharing will be available soon.",
         };
 
   if (!user) {
@@ -213,6 +227,12 @@ export default function MessagesPage() {
               <p className="text-center text-[#6C757D]">{labels.noMessages}</p>
             )}
 
+            {error ? (
+              <div className="rounded-sm border border-[#FFCDD2] bg-[#FFEBEE] p-3 text-[#B71C1C]">
+                {error}
+              </div>
+            ) : null}
+
             <div className="mt-4 flex flex-wrap gap-2">
               {labels.canned.map((response) => (
                 <button
@@ -250,9 +270,11 @@ export default function MessagesPage() {
                 {labels.upload}
                 <input
                   type="file"
+                  disabled
                   className="min-h-12 rounded-sm border border-[#DEE2E6] bg-white px-4"
                 />
               </label>
+              <p className="mt-2 text-sm text-[#6C757D]">{labels.uploadSoon}</p>
             </div>
           </div>
         </section>

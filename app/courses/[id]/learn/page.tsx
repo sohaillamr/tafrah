@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 import TopBar from "../../../components/TopBar";
 import Breadcrumbs from "../../../components/Breadcrumbs";
 import { useLanguage } from "../../../components/LanguageProvider";
@@ -83,27 +84,35 @@ type CourseState = {
   reset: () => void;
 };
 
-const useCourseStore = create<CourseState>((set) => ({
-  currentStep: 0,
-  validatedSteps: {},
-  markStepValid: (step) =>
-    set((state) => ({
-      validatedSteps: { ...state.validatedSteps, [step]: true },
-    })),
-  nextStep: (totalSteps) =>
-    set((state) => ({
-      currentStep: Math.min(state.currentStep + 1, totalSteps - 1),
-    })),
-  prevStep: () =>
-    set((state) => ({
-      currentStep: Math.max(state.currentStep - 1, 0),
-    })),
-  reset: () =>
-    set({
+const useCourseStore = create<CourseState>()(
+  persist(
+    (set) => ({
       currentStep: 0,
       validatedSteps: {},
+      markStepValid: (step) =>
+        set((state) => ({
+          validatedSteps: { ...state.validatedSteps, [step]: true },
+        })),
+      nextStep: (totalSteps) =>
+        set((state) => ({
+          currentStep: Math.min(state.currentStep + 1, totalSteps - 1),
+        })),
+      prevStep: () =>
+        set((state) => ({
+          currentStep: Math.max(state.currentStep - 1, 0),
+        })),
+      reset: () =>
+        set({
+          currentStep: 0,
+          validatedSteps: {},
+        }),
     }),
-}));
+    {
+      name: "tafrah-course-storage",
+      storage: createJSONStorage(() => sessionStorage),
+    }
+  )
+);
 
 const initialTabs = [
   { id: "instructions", label: "التعليمات" },

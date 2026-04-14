@@ -5,13 +5,15 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { sanitize, clamp } from "@/lib/sanitize";
 
+type RouteContext = { params: Promise<{ id: string }> };
+
 const VALID_JOB_TYPES = ["task", "fulltime"];
 const VALID_JOB_STATUSES = ["open", "closed", "filled"];
 
 // PATCH /api/jobs/[id] — update job (admin or owning HR)
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteContext
 ) {
   try {
     const session = await getSession();
@@ -19,7 +21,8 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const id = parseInt(params.id);
+    const { id: rawId } = await params;
+    const id = parseInt(rawId);
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid job ID" }, { status: 400 });
     }
@@ -77,7 +80,7 @@ export async function PATCH(
 // DELETE /api/jobs/[id]
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteContext
 ) {
   try {
     const session = await getSession();
@@ -85,7 +88,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const id = parseInt(params.id);
+    const { id: rawId } = await params;
+    const id = parseInt(rawId);
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid job ID" }, { status: 400 });
     }

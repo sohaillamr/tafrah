@@ -8,3 +8,9 @@ export async function POST() {
   response.headers.set("Set-Cookie", clearAuthCookie());
   return response;
 }
+
+export async function GET() {
+  const response = NextResponse.redirect(new URL("/auth/login", process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"));
+  response.headers.set("Set-Cookie", clearAuthCookie());
+  return response;
+}

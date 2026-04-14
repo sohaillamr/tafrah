@@ -1,7 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
+import { jwtVerify } from "jose";
 
-export function middleware(req: NextRequest) {
+type MiddlewareJWTPayload = {
+  role?: string;
+};
+
+let _middlewareSecret: Uint8Array | null = null;
+function getMiddlewareSecret(): Uint8Array | null {
+  if (_middlewareSecret) return _middlewareSecret;
+  const secret = process.env.JWT_SECRET;
+  if (!secret) return null;
+  _middlewareSecret = new TextEncoder().encode(secret);
+  return _middlewareSecret;
+}
+
+async function verifyMiddlewareToken(token: string): Promise<MiddlewareJWTPayload | null> {
+  const secret = getMiddlewareSecret();
+  if (!secret) return null;
+  try {
+    const { payload } = await jwtVerify(token, secret);
+    return payload as MiddlewareJWTPayload;
+  } catch {
+    return null;
+  }
+}
+
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  const langCookie = req.cookies.get("tafrah_lang")?.value || "ar";
+  const response = NextResponse.next();
+  response.headers.set("x-tafrah-lang", langCookie);
 
   // --- CSRF Protection on mutating API requests ---
   const method = req.method.toUpperCase();
@@ -14,21 +43,41 @@ export function middleware(req: NextRequest) {
     const origin = req.headers.get("origin");
     const host = req.headers.get("host");
 
-    // Reject mutating requests without Origin header (blocks curl/server-side CSRF)
+    // Prefer Origin validation, fallback to Referer for same-origin requests.
     if (!origin) {
-      return NextResponse.json(
-        { error: "CSRF validation failed: missing Origin header" },
-        { status: 403 }
-      );
+      const referer = req.headers.get("referer");
+      if (!referer) {
+        return NextResponse.json(
+          { error: "CSRF validation failed: missing Origin/Referer" },
+          { status: 403 }
+        );
+      }
+
+      try {
+        const refererUrl = new URL(referer);
+        if (refererUrl.host !== host) {
+          return NextResponse.json(
+            { error: "CSRF validation failed" },
+            { status: 403 }
+          );
+        }
+      } catch {
+        return NextResponse.json(
+          { error: "Invalid referer" },
+          { status: 403 }
+        );
+      }
     }
 
     try {
-      const originUrl = new URL(origin);
-      if (originUrl.host !== host) {
-        return NextResponse.json(
-          { error: "CSRF validation failed" },
-          { status: 403 }
-        );
+      if (origin) {
+        const originUrl = new URL(origin);
+        if (originUrl.host !== host) {
+          return NextResponse.json(
+            { error: "CSRF validation failed" },
+            { status: 403 }
+          );
+        }
       }
     } catch {
       return NextResponse.json(
@@ -47,21 +96,18 @@ export function middleware(req: NextRequest) {
     if (!token) {
       const loginUrl = new URL("/auth/login", req.url);
       loginUrl.searchParams.set("redirect", pathname);
-      return NextResponse.redirect(loginUrl);
+      
+      const redirectResponse = NextResponse.redirect(loginUrl);
+      redirectResponse.cookies.set("tafrah_lang", langCookie);
+      return redirectResponse;
     }
 
-    // Admin route protection — quick JWT payload check (base64 decode)
+    // Admin route protection — verify signed JWT and enforce admin role
     if (pathname.startsWith("/admin")) {
-      try {
-        const payloadBase64 = token.split(".")[1];
-        const payload = JSON.parse(
-          Buffer.from(payloadBase64, "base64").toString()
-        );
-        if (payload.role !== "admin") {
-          return NextResponse.redirect(new URL("/", req.url));
-        }
-      } catch {
-        return NextResponse.redirect(new URL("/auth/login", req.url));
+      const payload = await verifyMiddlewareToken(token);
+      if (!payload || payload.role !== "admin") {
+        const unauthorizedUrl = new URL("/dashboard", req.url);
+        return NextResponse.redirect(unauthorizedUrl);
       }
     }
   }
@@ -83,7 +129,7 @@ export function middleware(req: NextRequest) {
   );
   response.headers.set(
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.groq.com https://*.supabase.com;"
+    "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://api.groq.com https://*.supabase.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none';"
   );
 
   return response;
