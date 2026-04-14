@@ -4,27 +4,27 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import TopBar from "../../../components/TopBar";
-import Breadcrumbs from "../../../components/Breadcrumbs";
-import { useLanguage } from "../../../components/LanguageProvider";
-import { useAuth } from "../../../components/AuthProvider";
+import TopBar from "@/app/components/TopBar";
+import Breadcrumbs from "@/app/components/Breadcrumbs";
+import { useLanguage } from "@/app/components/LanguageProvider";
+import { useAuth } from "@/app/components/AuthProvider";
 import { Lock, Target, MapPin, FileText, Trophy, Star, ArrowRight, RefreshCw, Monitor, FolderOpen, Lightbulb, Pencil, Bot, AlertTriangle, CheckCircle } from "lucide-react";
-import { unit1Content } from "../../../../data/Unit1Content";
-import { unit2Content } from "../../../../data/Unit2Content";
-import { unit3Content } from "../../../../data/Unit3Content";
-import { unit4Content } from "../../../../data/Unit4Content";
-import { unit5Content } from "../../../../data/Unit5Content";
-import { unit6Content } from "../../../../data/Unit6Content";
-import { unit7Content } from "../../../../data/Unit7Content";
-import { pythonUnit1Content } from "../../../../data/PythonUnit1Content";
-import { pythonUnit2Content } from "../../../../data/PythonUnit2Content";
-import { pythonUnit3Content } from "../../../../data/PythonUnit3Content";
-import { pythonUnit4Content } from "../../../../data/PythonUnit4Content";
-import { pythonUnit5Content } from "../../../../data/PythonUnit5Content";
-import { pythonUnit6Content } from "../../../../data/PythonUnit6Content";
-import { pythonUnit7Content } from "../../../../data/PythonUnit7Content";
-import { quizzes } from "../../../../data/quizzes";
-import { pythonQuizzes } from "../../../../data/pythonQuizzes";
+import { unit1Content } from "@/data/Unit1Content";
+import { unit2Content } from "@/data/Unit2Content";
+import { unit3Content } from "@/data/Unit3Content";
+import { unit4Content } from "@/data/Unit4Content";
+import { unit5Content } from "@/data/Unit5Content";
+import { unit6Content } from "@/data/Unit6Content";
+import { unit7Content } from "@/data/Unit7Content";
+import { pythonUnit1Content } from "@/data/PythonUnit1Content";
+import { pythonUnit2Content } from "@/data/PythonUnit2Content";
+import { pythonUnit3Content } from "@/data/PythonUnit3Content";
+import { pythonUnit4Content } from "@/data/PythonUnit4Content";
+import { pythonUnit5Content } from "@/data/PythonUnit5Content";
+import { pythonUnit6Content } from "@/data/PythonUnit6Content";
+import { pythonUnit7Content } from "@/data/PythonUnit7Content";
+import { quizzes } from "@/data/quizzes";
+import { pythonQuizzes } from "@/data/pythonQuizzes";
 
 type StepActionKind =
   | "clickIcon"
@@ -209,8 +209,6 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const [codeValue, setCodeValue] = useState("");
   const [codeOutput, setCodeOutput] = useState("");
   const [pythonSelectOption, setPythonSelectOption] = useState("");
-  const { language } = useLanguage();
-  const { user } = useAuth();
   const labels =
     language === "ar"
       ? {
@@ -390,22 +388,10 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
             "You now have technical auditing skills, a skill requested by companies like Raya and Amazon.",
         };
 
-  const {
-    currentStep,
-    validatedSteps,
-    markStepValid,
-    nextStep,
-    prevStep,
-    reset,
-  } = useCourseStore();
-
   const unitParam = searchParams?.get("unit");
   const unitNumber = Math.max(1, Math.min(7, Number(unitParam) || 1));
-  const courseId = useMemo(
-    () => (Array.isArray(params?.id) ? params.id[0] : params?.id),
-    [params]
-  );
-  const isPythonCourse = courseId === "programming-1";
+  const activeCourseId = courseId;
+  const isPythonCourse = activeCourseId === "programming-1";
   const dataEntryUnits: { chapters: { steps: Record<string, unknown>[]; [key: string]: unknown }[]; [key: string]: unknown }[] = [unit1Content[0], unit2Content[0], unit3Content[0], unit4Content[0], unit5Content[0], unit6Content[0], unit7Content[0]];
   const pythonUnits: { chapters: { steps: Record<string, unknown>[]; [key: string]: unknown }[]; [key: string]: unknown }[] = [pythonUnit1Content[0], pythonUnit2Content[0], pythonUnit3Content[0], pythonUnit4Content[0], pythonUnit5Content[0], pythonUnit6Content[0], pythonUnit7Content[0]];
   const allUnits = isPythonCourse ? pythonUnits : dataEntryUnits;

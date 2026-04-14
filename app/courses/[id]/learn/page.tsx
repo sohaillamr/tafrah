@@ -7,7 +7,7 @@ import prisma from "@/lib/prisma";
 // Abstract the heavy data parsing securely to the server side
 import { fetchUnitStepsServerSide } from "@/lib/data/course-fetcher";
 import CoursePlayerShell from "./_components/CoursePlayerShell";
-import TopBar from "@/components/TopBar";
+import TopBar from "../../../components/TopBar";
 import { Loader2 } from "lucide-react";
 
 export default async function CourseLearnPage(props: { params: Promise<{ id: string }> }) {
