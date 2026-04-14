@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { processCourseCompletion } from "@/services/course-worker";
 
 // GET /api/progress?courseSlug=xxx — get user's progress for a course
 export async function GET(req: NextRequest) {
@@ -94,34 +95,9 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // Post-Course Worker Logic
+      // Execute Background Worker non-blockingly
       if (isCompleted) {
-        const completedCourses = await prisma.enrollment.findMany({
-          where: { userId: session.userId, completed: true },
-          include: { course: true },
-        });
-
-        // Recalculate Aggregate Score (Basic metric simulation)
-        const totalScore = allProgress.reduce((sum, p) => sum + (p.quizScore || 0), 0);
-        const avgScoreForCourse = totalScore / Math.max(1, passedUnits);
-        
-        // For demonstration, calculate an overall simulated user score across completed modules
-        const aggregateScore = Math.min(100, Math.round(completedCourses.length * 10 + avgScoreForCourse * 0.1));
-
-        // Create skill tag derived from course categories
-        const baseSkills = "Foundational Logic, ";
-        const acquiredTags = completedCourses.map(e => e.course.category).join(", ");
-        
-        await prisma.user.update({
-          where: { id: session.userId },
-          data: { 
-            quizScore: aggregateScore,
-            bio: `${baseSkills} ${acquiredTags}` // Simple representation of syncing new skill tags to profile
-          }
-        });
-        
-        // Output event stream for HR matching visibility (conceptual logging or messaging system)
-        console.info(`[SYSTEM EVENT] User ${session.userId} completed ${courseSlug}. Updated score to ${aggregateScore}`);
+        processCourseCompletion(session.userId);
       }
     }
 

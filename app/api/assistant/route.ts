@@ -161,6 +161,7 @@ LANGUAGE SELECTION:
     return NextResponse.json({ message: secondaryText });
   }
 
+  // 3rd Fallback: Empathetic, neuro-inclusive downtime message.
   return NextResponse.json(
     { message: "المساعد يواجه ضغطاً حالياً ويحتاج لبعض الوقت لترتيب الأفكار. لطفاً حاول مرة أخرى بعد قليل. (The accessibility assistant is experiencing heavy traffic and requires a moment to reset.)" },
     { status: 503 }
