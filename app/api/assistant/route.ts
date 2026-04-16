@@ -47,6 +47,7 @@ export async function POST(request: Request) {
 
     const activeModel = isVoiceMode ? "llama-3.1-8b-instant" : "llama-3.3-70b-versatile";
     const backupModel = "llama3-8b-8192";
+    const messages = incoming
       .filter((m: any) => m && (m.role === "user" || m.role === "assistant"))
       .map((m: any) => ({
         role: m.role,
