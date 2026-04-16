@@ -160,6 +160,11 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const unitIndexFromUrl = searchParams.get("unit");
   const unitIndex = unitIndexFromUrl ? parseInt(unitIndexFromUrl) : 0;
 
+  // Reset persistent unit state on fresh load
+  useEffect(() => {
+    return () => reset();
+  }, [reset]);
+
   // Background Sync to API Endpoint (30s delay)
   useEffect(() => {
     if (!needsSync || !user) return;

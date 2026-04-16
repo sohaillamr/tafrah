@@ -52,7 +52,13 @@ export default async function CourseLearnPage(props: PageProps) {
   }
 
   const unitParam = searchParams.unit;
-  const activeUnit = unitParam && !Array.isArray(unitParam) ? parseInt(unitParam, 10) : 0;
+  let activeUnit = 0;
+  if (unitParam && !Array.isArray(unitParam)) {
+    const paramNum = parseInt(unitParam, 10);
+    if (!isNaN(paramNum)) {
+       activeUnit = Math.max(0, paramNum - 1);
+    }
+  }
 
   return (
     <div className='flex flex-col h-screen overflow-hidden bg-[#f8f9fa] text-[#212529]'>
@@ -72,6 +78,7 @@ async function CourseDataStreamer({ courseId, courseSlug, category, activeUnit }
     const scopedSteps = await fetchUnitStepsServerSide(courseSlug, category, activeUnit);
     
     if (!scopedSteps || scopedSteps.length === 0) {
+        console.error("DEBUG: Course found but Units are missing in DB.");
         return (
           <div className='flex h-full items-center justify-center'>
             <div className='p-8 text-center text-xl font-bold'>Content unavailable for unit {activeUnit}.</div>
