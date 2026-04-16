@@ -5,7 +5,6 @@ import prisma from '@/lib/prisma';
 
 import { fetchUnitStepsServerSide } from '@/lib/data/course-fetcher';
 import CoursePlayerShell from './_components/CoursePlayerShell';
-import TopBar from '../../../components/TopBar';
 import { Loader2 } from 'lucide-react';
 
 interface PageProps {
@@ -61,8 +60,7 @@ export default async function CourseLearnPage(props: PageProps) {
   }
 
   return (
-    <div className='flex flex-col h-screen overflow-hidden bg-[#f8f9fa] text-[#212529]'>
-      <TopBar />
+    <div className='flex flex-col min-h-screen bg-[#f8f9fa] text-[#212529]'>
 
       {/* Streaming via React Suspense */}
       <Suspense fallback={<CourseLoadingSkeleton />}>
