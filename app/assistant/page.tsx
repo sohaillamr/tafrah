@@ -140,7 +140,13 @@ export default function AssistantPage() {
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(lastMsg.text);
-        utterance.lang = language === "ar" ? "ar-SA" : "en-US";
+        utterance.lang = language === "ar" ? "ar-EG" : "en-US";
+        utterance.rate = 1.25;
+        utterance.pitch = 1.1;
+        const voices = window.speechSynthesis.getVoices();
+        let femaleVoice = voices.find(v => v.lang.includes('ar') && (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('muna')));
+        if (!femaleVoice) femaleVoice = voices.find(v => v.lang.includes('ar'));
+        if (femaleVoice) utterance.voice = femaleVoice;
         window.speechSynthesis.speak(utterance);
       }
     }
@@ -309,6 +315,12 @@ export default function AssistantPage() {
           window.speechSynthesis.cancel();
           const utterance = new SpeechSynthesisUtterance(botMessage);
           utterance.lang = "ar-EG";
+          utterance.rate = 1.25;
+          utterance.pitch = 1.1;
+          const voices = window.speechSynthesis.getVoices();
+          let femaleVoice = voices.find(v => v.lang.includes('ar') && (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('muna')));
+          if (!femaleVoice) femaleVoice = voices.find(v => v.lang.includes('ar'));
+          if (femaleVoice) utterance.voice = femaleVoice;
           window.speechSynthesis.speak(utterance);
         }
       }
@@ -321,6 +333,7 @@ export default function AssistantPage() {
   };
 
   const toggleRecording = async () => {
+    if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
     if (isRecording) {
       mediaRecorderRef.current?.stop();
       setIsRecording(false);
