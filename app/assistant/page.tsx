@@ -251,17 +251,26 @@ export default function AssistantPage() {
       setIsLoading(false); 
 
       if (reader) {
+        let buffer = "";
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split("\n").filter(line => line.trim() !== "");
           
-          for (const line of lines) {
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          
+          // Keep the last potentially incomplete line in buffer
+          buffer = lines.pop() || "";
+          
+          for (const rawLine of lines) {
+            const line = rawLine.trim();
+            if (!line) continue;
             if (line.includes("[DONE]")) break;
             if (line.startsWith("data: ")) {
               try {
-                const data = JSON.parse(line.replace("data: ", ""));
+                const jsonStr = line.replace("data: ", "").trim();
+                if (jsonStr === "[DONE]") break;
+                const data = JSON.parse(jsonStr);
                 botMessage += data.choices?.[0]?.delta?.content || "";
                 
                 setChats((prev) => prev.map((chat) => {
@@ -270,7 +279,8 @@ export default function AssistantPage() {
                   return { ...chat, messages: newMessages, updatedAt: Date.now() };
                 }));
               } catch (e) {
-                // Ignore parse errors on fragmented chunks
+                // Fragmented chunks shouldn't happen with proper line buffering,
+                // but ignore any corrupt JSON lines
               }
             }
           }

@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 const MAX_MESSAGE_LENGTH = 2000;
 const MAX_CONVERSATION_MESSAGES = 15;
-const GROQ_TIMEOUT_MS = 10000;
+const GROQ_TIMEOUT_MS = 25000;
 
 export async function POST(request: Request) {
   const session = await getSession();
@@ -24,8 +24,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const primaryKey = process.env.GROQ_API_KEY;
-  const secondaryKey = process.env.GROQ_API_KEY_SECONDARY;
+  const primaryKey = process.env.GROQ_API_KEY?.replace(/^["']|["']$/g, '');
+  const secondaryKey = process.env.GROQ_API_KEY_SECONDARY?.replace(/^["']|["']$/g, '');
   if (!primaryKey && !secondaryKey) {
     return NextResponse.json({ error: "missing_api_key" }, { status: 500 });
   }
@@ -45,10 +45,15 @@ export async function POST(request: Request) {
 
     if (messages.length === 0) return NextResponse.json({ error: "no_messages" }, { status: 400 });
 
-    const currentProgress = await prisma.progress.findFirst({
-      where: { userId: session.userId },
-      orderBy: { updatedAt: "desc" },
-    });
+    let currentProgress = null;
+    try {
+      currentProgress = await prisma.progress.findFirst({
+        where: { userId: session.userId },
+        orderBy: { updatedAt: "desc" },
+      });
+    } catch (dbError) {
+      console.error("[TAFRAH] Failed to fetch progress for AI fallback:", dbError);
+    }
 
     const settings = ObjectBody.settings || { length: "concise" };
 
@@ -76,7 +81,7 @@ COMMUNICATION STYLE & COGNITIVE SUPPORT (CRITICAL):
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "llama-3.1-70b-versatile",
+          model: "llama-3.3-70b-versatile",
           messages: [{ role: "system", content: systemPrompt }, ...messages],
           temperature: 0.1,
           max_tokens: 500,
@@ -85,26 +90,52 @@ COMMUNICATION STYLE & COGNITIVE SUPPORT (CRITICAL):
         signal: AbortSignal.timeout(GROQ_TIMEOUT_MS),
       });
 
-      if (!res.ok) throw new Error("Groq API Error");
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Groq API Error details:", res.status, errorText);
+        throw new Error("Groq API Error: " + errorText);
+      }
       return res;
     };
 
     try {
       if (primaryKey) {
+        console.log("Trying primary key for Groq.");
         const streamResponse = await fetchGroqStream(primaryKey);
-        return new Response(streamResponse.body, { headers: { "Content-Type": "text/event-stream" } });
+        console.log("Stream fetched OK.");
+        return new Response(streamResponse.body, { 
+          headers: { 
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive"
+          } 
+        });
       }
-    } catch {
+    } catch (primError: any) {
+      console.error("Groq primary request failed:", primError.message);
       if (secondaryKey) {
-        const streamFallback = await fetchGroqStream(secondaryKey);
-        return new Response(streamFallback.body, { headers: { "Content-Type": "text/event-stream" } });
+        try {
+          const streamFallback = await fetchGroqStream(secondaryKey);
+          return new Response(streamFallback.body, { 
+            headers: { 
+              "Content-Type": "text/event-stream",
+              "Cache-Control": "no-cache, no-transform",
+              "Connection": "keep-alive"
+            } 
+          });
+        } catch (secErr: any) {
+          console.error("Groq fallback request failed:", secErr.message);
+          return NextResponse.json(
+            { message: "Service unavailable at the moment. Please try again later.", sys_error: secErr.message },
+            { status: 503 }
+          );
+        }
       }
+      return NextResponse.json(
+        { message: "Service unavailable at the moment. Please try again later.", sys_error: primError.message },
+        { status: 503 }
+      );
     }
-
-    return NextResponse.json(
-      { message: "Service unavailable at the moment. Please try again later." },
-      { status: 503 }
-    );
 
   } catch (err) {
     console.error("Assistant Error:", err);
