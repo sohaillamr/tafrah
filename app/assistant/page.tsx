@@ -216,29 +216,66 @@ export default function AssistantPage() {
       chatId = fallback.id;
     }
     setErrorMessage("");
-    updateChatMessages(chatId, nextMessages);
+    
+    // Add empty assistant message that we will stream into
+    const messagesWithPlaceholder = [...nextMessages, { role: "assistant", text: "" } as Message];
+    updateChatMessages(chatId, messagesWithPlaceholder);
     setIsLoading(true);
+
     try {
       const response = await fetch("/api/assistant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           language: "fusha",
+          settings: { length: "concise" },
           messages: nextMessages.map((message) => ({
             role: message.role,
             content: message.text,
           })),
         }),
       });
-      const data = await response.json();
+      
       if (!response.ok) {
-        const errorCode = typeof data?.error === "string" ? data.error : "request_failed";
-        setErrorMessage(errorCode === "missing_api_key" ? labels.missingKey : labels.error);
-        updateChatMessages(chatId, nextMessages);
+        setErrorMessage(labels.error);
+        updateChatMessages(chatId, nextMessages); // rollback placeholder
+        setIsLoading(false);
         return;
       }
-      const reply = typeof data?.message === "string" ? data.message : labels.noReply;
-      updateChatMessages(chatId, [...nextMessages, { role: "assistant", text: reply }]);
+      
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let botMessage = "";
+
+      // We start streaming now, so we can hide the generic loading indicator
+      setIsLoading(false); 
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split("\n").filter(line => line.trim() !== "");
+          
+          for (const line of lines) {
+            if (line.includes("[DONE]")) break;
+            if (line.startsWith("data: ")) {
+              try {
+                const data = JSON.parse(line.replace("data: ", ""));
+                botMessage += data.choices?.[0]?.delta?.content || "";
+                
+                setChats((prev) => prev.map((chat) => {
+                  if (chat.id !== chatId) return chat;
+                  const newMessages = [...nextMessages, { role: "assistant", text: botMessage } as Message];
+                  return { ...chat, messages: newMessages, updatedAt: Date.now() };
+                }));
+              } catch (e) {
+                // Ignore parse errors on fragmented chunks
+              }
+            }
+          }
+        }
+      }
     } catch {
       setErrorMessage(labels.error);
       updateChatMessages(chatId, nextMessages);
@@ -453,15 +490,12 @@ export default function AssistantPage() {
               ))}
               {isLoading && (
                 <div className="flex gap-3 py-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#2E5C8A] to-[#4A90C4] text-sm font-bold text-white mt-1">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#2E5C8A] to-[#4A90C4] text-sm font-bold text-white mt-1 shadow-sm">
                     ن
                   </div>
-                  <div className="rounded-2xl rounded-es-md border border-[#E2E8F0] bg-white px-5 py-4 shadow-sm">
-                    <div className="flex items-center gap-1.5">
-                      <span className="h-2 w-2 animate-bounce rounded-full bg-[#2E5C8A]" style={{ animationDelay: "0ms" }} />
-                      <span className="h-2 w-2 animate-bounce rounded-full bg-[#2E5C8A]" style={{ animationDelay: "150ms" }} />
-                      <span className="h-2 w-2 animate-bounce rounded-full bg-[#2E5C8A]" style={{ animationDelay: "300ms" }} />
-                    </div>
+                  <div className="rounded-2xl border border-[#E2E8F0] bg-white px-4 py-3 shadow-sm animate-pulse flex items-center gap-2 text-[#2E5C8A]">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M9 13a4.5 4.5 0 0 0 3-4"/><path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/><path d="M3.477 10.896a4 4 0 0 1 .585-.396"/><path d="M6 18a4 4 0 0 1-1.968-.524"/><path d="M12 13h12"/><path d="M13 10h11"/><path d="M13 16h11"/></svg>
+                    <span className="text-sm font-medium">{language === "en" ? "Nour is reading..." : "نور يقرأ..."}</span>
                   </div>
                 </div>
               )}
