@@ -72,7 +72,18 @@ function LoginForm() {
         return;
       }
       
-      const redirectDest = searchParams.get("redirect");
+      let redirectDest = searchParams.get("redirect");
+      // Clean up _next/data RSC fetches that the Next.js router struggles with
+      if (redirectDest?.includes("/_next/data/")) {
+        // e.g. /_next/data/buildId/assistant.json -> /assistant
+        const match = redirectDest.match(/\/_next\/data\/[^/]+(.*)\.json/);
+        if (match && match[1]) {
+          redirectDest = match[1];
+        } else {
+          redirectDest = null;
+        }
+      }
+
       if (redirectDest?.startsWith("/")) {
         router.push(redirectDest);
         return;

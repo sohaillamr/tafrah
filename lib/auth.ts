@@ -9,16 +9,13 @@ import prisma from "@/lib/prisma";
  */
 let _secret: Uint8Array | null = null;
 function getSecret(): Uint8Array {
-  if (_secret) return _secret;
+  // Always fetch fresh from env to avoid caching the dummy secret across warm starts
   const jwtSecret = process.env.JWT_SECRET;
   if (!jwtSecret) {
-    // If we're rendering/building and the secret is missing, return a dummy so the build doesn't crash.
-    // Vercel sometimes evaluates routes at build time even if they're dynamic.
-    console.warn("[WARNING] JWT_SECRET is missing. Using static fallback for build execution only.");
+    console.warn("[WARNING] JWT_SECRET is missing dynamically! Using fallback.");
     return new TextEncoder().encode("dummy-secret-for-build-time-only-123");
   }
-  _secret = new TextEncoder().encode(jwtSecret);
-  return _secret;
+  return new TextEncoder().encode(jwtSecret);
 }
 
 const IS_PRODUCTION = process.env.NODE_ENV === "production";

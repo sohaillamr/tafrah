@@ -97,13 +97,8 @@ export async function middleware(req: NextRequest) {
         }
       }
     } catch {
-      // Token is unreadable or corrupted
-      const loginUrl = new URL("/auth/login", req.url);
-      loginUrl.searchParams.set("redirect", pathname);
-      const redirectResponse = NextResponse.redirect(loginUrl);
-      redirectResponse.cookies.delete("tafrah_token");
-      redirectResponse.cookies.set("tafrah_lang", langCookie);
-      return redirectResponse;
+      // Edge runtime sometimes fails decodeJwt on soft navigations.
+      // Do nothing here — let Node.js getSession() in app/layout.tsx securely handle the token!
     }
   }
 
