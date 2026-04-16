@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import TopBar from "../components/TopBar";
 import { useLanguage } from "../components/LanguageProvider";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Message = {
   role: "user" | "assistant";
@@ -545,15 +548,24 @@ export default function AssistantPage() {
                       ن
                     </div>
                   ) : null}
-                  <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed whitespace-pre-wrap ${
+                  <motion.div
+                    layout
+                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    className={`max-w-[80%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed ${
                       message.role === "user"
-                        ? "bg-[#2E5C8A] text-white rounded-ee-md"
-                        : "bg-white border border-[#E2E8F0] text-[#212529] rounded-es-md shadow-sm"
+                        ? "bg-[#71618E] text-white rounded-ee-md"
+                        : "bg-white border border-[#E2E8F0] text-[#3d3d42] rounded-es-md shadow-sm prose prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-[#F3F4F6]"
                     }`}
                   >
-                    {message.text}
-                  </div>
+                    {message.role === "user" ? (
+                      <div className="whitespace-pre-wrap">{message.text}</div>
+                    ) : (
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {message.text}
+                      </ReactMarkdown>
+                    )}
+                  </motion.div>
                 </div>
               ))}
               {isLoading && (
