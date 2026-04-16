@@ -98,7 +98,7 @@ export default function HrSignupPage() {
       setCommercialNumber("");
       setPassword("");
       setErrors({});
-      setTimeout(() => router.push("/dashboard/hr"), 1500);
+      setTimeout(() => { window.location.href = "/dashboard/hr"; }, 1500);
     } catch {
       setStatus("error");
       setServerError(language === "ar" ? "حدث خطأ. حاول مرة أخرى." : "Something went wrong. Try again.");

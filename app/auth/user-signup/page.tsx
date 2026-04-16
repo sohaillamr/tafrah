@@ -93,7 +93,7 @@ export default function UserSignupPage() {
       setEmail("");
       setPassword("");
       setErrors({});
-      setTimeout(() => router.push("/dashboard/student"), 1500);
+      setTimeout(() => { window.location.href = "/dashboard/student"; }, 1500);
     } catch {
       setStatus("error");
       setServerError(language === "ar" ? "حدث خطأ. حاول مرة أخرى." : "Something went wrong. Try again.");

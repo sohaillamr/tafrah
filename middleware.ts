@@ -107,6 +107,20 @@ export async function middleware(req: NextRequest) {
     }
   }
 
+  // --- Redirect authenticated users away from auth pages ---
+  if (pathname.startsWith("/auth/login") || pathname.startsWith("/auth/user-signup") || pathname.startsWith("/auth/hr-signup")) {
+    const token = req.cookies.get("tafrah_token")?.value;
+    if (token) {
+      try {
+        const payload = decodeJwt(token) as { role?: string };
+        const dest = payload.role === "admin" ? "/admin" : payload.role === "hr" ? "/dashboard/hr" : "/dashboard/student";
+        return NextResponse.redirect(new URL(dest, req.url));
+      } catch {
+        // Corrupted token, ignore and let them see the login page
+      }
+    }
+  }
+
   // --- Security headers ---
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("X-Frame-Options", "DENY");
@@ -131,6 +145,7 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    "/auth/:path*",
     "/api/:path*",
     "/admin/:path*",
     "/dashboard/:path*",

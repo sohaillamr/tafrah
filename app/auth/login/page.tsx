@@ -85,14 +85,15 @@ function LoginForm() {
       }
 
       if (redirectDest?.startsWith("/")) {
-        router.push(redirectDest);
+        // Use window.location.href instead of router.push to bypass Next.js aggressive client-side redirect caching
+        window.location.href = redirectDest;
         return;
       }
 
       const role = result.user?.role;
-      if (role === "admin") router.push("/admin");
-      else if (role === "hr") router.push("/dashboard/hr");
-      else router.push("/dashboard/student");
+      if (role === "admin") window.location.href = "/admin";
+      else if (role === "hr") window.location.href = "/dashboard/hr";
+      else window.location.href = "/dashboard/student";
     } catch {
       setHasError(true);
       setErrorMsg(labels.error);
