@@ -19,9 +19,9 @@ export function useNourVoice(onTranscribedText: (text: string) => void) {
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.lang = 'ar-EG';
     // Deep calibration for "Soft Girl" persona
-    utterance.pitch = 1.4;
-    utterance.rate = 0.85;
-    utterance.volume = 0.8;
+    utterance.pitch = 1.3;
+    utterance.rate = 1.2;
+    utterance.volume = 0.9;
     
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
@@ -29,7 +29,7 @@ export function useNourVoice(onTranscribedText: (text: string) => void) {
 
     const setVoiceAndSpeak = () => {
       const voices = window.speechSynthesis.getVoices();
-      let femaleVoice = voices.find(v => v.lang.includes('ar') && (v.name.includes('Hoda') || v.name.includes('Muna') || v.name.includes('Naay') || v.name.includes('Laila') || v.name.includes('Female')));
+      let femaleVoice = voices.find(v => v.lang.includes('ar') && (v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('muna') || v.name.toLowerCase().includes('hoda')));
       if (!femaleVoice) femaleVoice = voices.find(v => v.lang.includes('ar'));
       if (femaleVoice) utterance.voice = femaleVoice;
       window.speechSynthesis.speak(utterance);
