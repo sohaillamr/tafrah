@@ -14,7 +14,8 @@ import { pythonUnit5Content } from "../../data/PythonUnit5Content";
 import { pythonUnit6Content } from "../../data/PythonUnit6Content";
 import { pythonUnit7Content } from "../../data/PythonUnit7Content";
 
-const buildSteps = (unit: any): any[] => {
+const buildSteps = (unitParam: any): any[] => {
+  const unit = Array.isArray(unitParam) ? unitParam[0] : unitParam;
   if (!unit || !unit.chapters) return [];
   return unit.chapters.flatMap((chapter: any, chapterIndex: number) =>
     chapter.steps.map((step: any, index: number) => ({
