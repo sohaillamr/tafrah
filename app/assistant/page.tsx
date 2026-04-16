@@ -17,6 +17,7 @@ type Chat = {
   title: string;
   messages: Message[];
   updatedAt: number;
+  mode?: "text" | "voice";
 };
 
 type Language = "ar" | "en";
@@ -31,11 +32,12 @@ const getInitialMessages = (language: Language): Message[] => [
   },
 ];
 
-const createChat = (language: Language): Chat => ({
+const createChat = (language: Language, mode: "text" | "voice" = "text"): Chat => ({
   id: `${Date.now()}-${Math.floor(Math.random() * 1000)}`,
   title: language === "ar" ? "محادثة جديدة" : "New chat",
   messages: getInitialMessages(language),
   updatedAt: Date.now(),
+  mode,
 });
 
 const normalizeMessages = (items: any[]): Message[] => {
@@ -187,8 +189,8 @@ export default function AssistantPage() {
     );
   };
 
-  const createNewChat = () => {
-    const newChat = createChat(language);
+  const createNewChat = (mode: "text" | "voice" = "text") => {
+    const newChat = createChat(language, mode);
     setChats((prev) => [newChat, ...prev]);
     setActiveChatId(newChat.id);
     setInput("");
@@ -235,6 +237,7 @@ export default function AssistantPage() {
         body: JSON.stringify({
           language: "fusha",
           settings: { length: "concise" },
+          mode: activeChat?.mode || "text",
           messages: nextMessages.map((message) => ({
             role: message.role,
             content: message.text,
