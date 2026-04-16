@@ -410,7 +410,7 @@ export default function AssistantPage() {
             <h2 className="font-semibold text-[#2E5C8A]">{labels.chats}</h2>
             <button
               type="button"
-              onClick={createNewChat}
+              onClick={() => createNewChat("text")}
               className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2E5C8A] text-white hover:bg-[#24496E] transition-colors"
               title={labels.newChat}
             >
@@ -461,7 +461,7 @@ export default function AssistantPage() {
             <h2 className="font-semibold text-[#2E5C8A]">{labels.chats}</h2>
             <button
               type="button"
-              onClick={createNewChat}
+              onClick={() => createNewChat("text")}
               className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2E5C8A] text-white hover:bg-[#24496E] transition-colors"
               title={labels.newChat}
             >
@@ -529,7 +529,7 @@ export default function AssistantPage() {
               </div>
               <button
                 type="button"
-                onClick={createNewChat}
+                onClick={() => createNewChat("text")}
                 className="flex h-9 items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-3 text-sm font-medium text-[#495057] hover:bg-[#F5F9FF] transition-colors md:hidden"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
