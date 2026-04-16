@@ -404,7 +404,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const steps = useMemo(() => buildSteps(currentUnit), [currentUnit]);
   const step = steps[currentStep];
   const canGoNext = validatedSteps[currentStep];
-  const isAvailable = courseId === "data-entry-1" || courseId === "programming-1";
+  const isAvailable = true; // previously: courseId === "data-entry-1" || courseId === "programming-1";
   const isLastStep = currentStep === steps.length - 1;
   const isCompleted = isLastStep && validatedSteps[currentStep];
   const nourTarget = step?.action?.label ?? labels.next;
