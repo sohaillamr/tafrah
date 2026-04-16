@@ -2,16 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, Suspense } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import TopBar from "../../components/TopBar";
 import Breadcrumbs from "../../components/Breadcrumbs";
 import { useLanguage } from "../../components/LanguageProvider";
 import { useAuth } from "../../components/AuthProvider";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -70,6 +71,13 @@ export default function LoginPage() {
         setIsLoading(false);
         return;
       }
+      
+      const redirectDest = searchParams.get("redirect");
+      if (redirectDest?.startsWith("/")) {
+        router.push(redirectDest);
+        return;
+      }
+
       const role = result.user?.role;
       if (role === "admin") router.push("/admin");
       else if (role === "hr") router.push("/dashboard/hr");
@@ -168,5 +176,13 @@ export default function LoginPage() {
         </section>
       </main>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center p-12">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

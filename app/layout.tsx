@@ -3,7 +3,6 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { Cairo } from "next/font/google";
-import BetaNote from "./components/BetaNote";
 import Footer from "./components/Footer";
 import { LanguageProvider } from "./components/LanguageProvider";
 import { AuthProvider } from "./components/AuthProvider";
@@ -53,7 +52,6 @@ export default async function RootLayout({
         <LanguageProvider initialLanguage={initialLanguage}>
           <AuthProvider>
             <ToastProvider>
-              <BetaNote />
               {children}
               <Footer />
             </ToastProvider>
