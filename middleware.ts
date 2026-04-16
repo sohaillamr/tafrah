@@ -109,10 +109,21 @@ export async function middleware(req: NextRequest) {
       return redirectResponse;
     }
 
-    // Admin route protection — verify signed JWT and enforce admin role
+    // Verify signed JWT for all protected routes to prevent spoofing
+    const payload = await verifyMiddlewareToken(token);
+    if (!payload) {
+      // Token is invalid/expired
+      const loginUrl = new URL("/auth/login", req.url);
+      loginUrl.searchParams.set("redirect", pathname);
+      const redirectResponse = NextResponse.redirect(loginUrl);
+      redirectResponse.cookies.delete("tafrah_token");
+      redirectResponse.cookies.set("tafrah_lang", langCookie);
+      return redirectResponse;
+    }
+
+    // Admin route protection — enforce admin role
     if (pathname.startsWith("/admin")) {
-      const payload = await verifyMiddlewareToken(token);
-      if (!payload || payload.role !== "admin") {
+      if (payload.role !== "admin") {
         const unauthorizedUrl = new URL("/dashboard", req.url);
         return NextResponse.redirect(unauthorizedUrl);
       }

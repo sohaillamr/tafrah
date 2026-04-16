@@ -2,9 +2,10 @@ export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
-import { signToken, createAuthCookie } from "@/lib/auth";
 import bcrypt from "bcryptjs";
+import { signToken } from "@/lib/auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { cookies } from "next/headers";
 
 export async function POST(req: NextRequest) {
   try {
@@ -76,7 +77,18 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    response.headers.set("Set-Cookie", createAuthCookie(token));
+    const isProduction = process.env.NODE_ENV === "production";
+    
+    // Set cookie using next/headers to ensure max compatibility inside server actions/routes
+    const cookieStore = await cookies();
+    cookieStore.set("tafrah_token", token, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: "lax",
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+      path: "/",
+    });
+
     return response;
   } catch (error: any) {
     console.error("[CRITICAL] Login Exception Dump:", {
@@ -86,7 +98,6 @@ export async function POST(req: NextRequest) {
       name: error.name
     });
     
-    // Fallback: If development/debugging mode, push exact Prisma/Bcrypt error to client
     return NextResponse.json(
       { 
         error: "Internal server error", 
