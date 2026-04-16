@@ -76,6 +76,9 @@ export default function AssistantPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const { language } = useLanguage();
   const endRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -279,11 +282,16 @@ export default function AssistantPage() {
                   return { ...chat, messages: newMessages, updatedAt: Date.now() };
                 }));
               } catch (e) {
-                // Fragmented chunks shouldn't happen with proper line buffering,
-                // but ignore any corrupt JSON lines
+                // Ignore corrupt chunks
               }
             }
           }
+        }
+        if (botMessage.length > 0 && typeof window !== "undefined" && window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(botMessage);
+          utterance.lang = "ar-EG";
+          window.speechSynthesis.speak(utterance);
         }
       }
     } catch {
@@ -291,6 +299,56 @@ export default function AssistantPage() {
       updateChatMessages(chatId, nextMessages);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const toggleRecording = async () => {
+    if (isRecording) {
+      mediaRecorderRef.current?.stop();
+      setIsRecording(false);
+      return;
+    }
+    
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const formData = new FormData();
+        formData.append("file", audioBlob, "audio.webm");
+        
+        setIsLoading(true);
+        try {
+          const res = await fetch("/api/assistant/stt", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await res.json();
+          if (data.text) {
+            handleSend(data.text);
+          }
+        } catch (error) {
+          setErrorMessage(labels.error);
+        } finally {
+          stream.getTracks().forEach(track => track.stop());
+          setIsLoading(false);
+        }
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error(err);
+      setErrorMessage(labels.error);
     }
   };
 
@@ -552,9 +610,23 @@ export default function AssistantPage() {
                   }}
                   onKeyDown={handleKeyDown}
                   rows={1}
-                  className="w-full resize-none rounded-2xl border border-[#E2E8F0] bg-[#F8FAFB] px-4 py-3 pe-12 text-[15px] placeholder:text-[#ADB5BD] focus:border-[#2E5C8A] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2E5C8A]/20 transition-all"
+                  className="w-full resize-none rounded-2xl border border-[#E2E8F0] bg-[#F8FAFB] px-4 py-3 pe-24 text-[15px] placeholder:text-[#ADB5BD] focus:border-[#2E5C8A] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2E5C8A]/20 transition-all"
                   placeholder={labels.placeholder}
                 />
+                <button
+                  type="button"
+                  onClick={toggleRecording}
+                  className={`absolute bottom-2 ${language === "ar" ? "left-3" : "right-3"} flex h-8 w-8 items-center justify-center rounded-full transition-all ${
+                    isRecording ? "bg-red-500 text-white animate-pulse shadow-md" : "bg-[#F8FAFB] text-[#ADB5BD] hover:bg-[#E2E8F0] hover:text-[#495057]"
+                  }`}
+                  title={isRecording ? "Stop recording..." : "Voice input"}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="22"></line>
+                  </svg>
+                </button>
               </div>
               <button
                 type="submit"
