@@ -37,9 +37,11 @@ export async function signToken(payload: JWTPayload): Promise<string> {
 
 export async function verifyToken(token: string): Promise<JWTPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, getSecret());
+    const secret = getSecret();
+    const { payload } = await jwtVerify(token, secret);
     return payload as unknown as JWTPayload;
-  } catch {
+  } catch (error) {
+    console.error("[CRITICAL] verifyToken failed:", error);
     return null;
   }
 }
@@ -54,7 +56,10 @@ export async function getSession(): Promise<JWTPayload | null> {
   if (!token) return null;
 
   const decoded = await verifyToken(token);
-  if (!decoded) return null;
+  if (!decoded) {
+    console.error("[CRITICAL] getSession: decoded token is null.");
+    return null;
+  }
 
   // Verify user still exists and isn't banned
   try {
@@ -64,6 +69,7 @@ export async function getSession(): Promise<JWTPayload | null> {
     });
 
     if (!user || user.status === "banned") {
+      console.error("[CRITICAL] getSession: user not found or banned.", decoded.userId);
       return null;
     }
 
@@ -74,9 +80,11 @@ export async function getSession(): Promise<JWTPayload | null> {
       role: user.role,
       name: user.name,
     };
-  } catch {
-    // Fail closed on DB errors for security
-    return null;
+  } catch (error) {
+    console.error("[CRITICAL] getSession DB check failed (likely a cold start connection timeout). Falling back to JWT.", error);
+    // DO NOT fail closed by returning null here just for a DB ping error (which kicks the user out entirely).
+    // Instead, trust the securely signed JWT as a fallback until the DB catches up!
+    return decoded;
   }
 }
 

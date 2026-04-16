@@ -85,8 +85,8 @@ export async function middleware(req: NextRequest) {
     }
 
     try {
-      // Decode JWT without signature verification at Edge.
-      // Strict signature and DB verification are handled via Node.js in Server Components (e.g. app/layout.tsx & getSession).
+      // Decode JWT without signature verification at Edge (since env vars can be delayed)
+      // Strict signature and DB verification are handled via Node.js in API endpoints.
       const payload = decodeJwt(token) as { role?: string };
       
       // Admin route protection — enforce admin role
@@ -97,8 +97,13 @@ export async function middleware(req: NextRequest) {
         }
       }
     } catch {
-      // Edge runtime sometimes fails decodeJwt on soft navigations.
-      // Do nothing here — let Node.js getSession() in app/layout.tsx securely handle the token!
+      // Token is structurally invalid (fake or corrupted).
+      const loginUrl = new URL("/auth/login", req.url);
+      loginUrl.searchParams.set("redirect", pathname);
+      const redirectResponse = NextResponse.redirect(loginUrl);
+      redirectResponse.cookies.delete("tafrah_token");
+      redirectResponse.cookies.set("tafrah_lang", langCookie);
+      return redirectResponse;
     }
   }
 

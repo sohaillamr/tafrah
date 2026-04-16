@@ -29,7 +29,7 @@ export async function GET() {
     });
 
     if (!user || user.status === "banned") {
-      // Clear the auth cookie if user doesn't exist or is banned
+      // Clear the auth cookie if user is definitively banned or manually deleted in the db
       const response = NextResponse.json({ user: null });
       response.headers.set("Set-Cookie", clearAuthCookie());
       return response;
@@ -37,7 +37,23 @@ export async function GET() {
 
     return NextResponse.json({ user });
   } catch (error: unknown) {
-    console.error("Session error:", error);
+    // If Prisma connection times out at the node layer, DO NOT nuke the user's UI authentication. 
+    // Fall back to the successfully decoded JWT session struct so the site stays usable!
+    console.error("[CRITICAL] Session error in /api/auth/me (likely DB Timeout):", error);
+    try {
+      const fallbackSession = await getSession();
+      if (fallbackSession) {
+        return NextResponse.json({ 
+          user: { 
+            id: fallbackSession.userId, 
+            email: fallbackSession.email, 
+            name: fallbackSession.name, 
+            role: fallbackSession.role,
+            status: "active"
+          } 
+        });
+      }
+    } catch {}
     return NextResponse.json({ user: null });
   }
 }

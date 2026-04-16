@@ -1,7 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import { getSession } from "@/lib/auth";
 import { Cairo } from "next/font/google";
 import Footer from "./components/Footer";
 import { LanguageProvider } from "./components/LanguageProvider";
@@ -34,19 +32,9 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const cookieStore = await cookies();
-  const token = cookieStore.get("tafrah_token")?.value;
-  
-  if (token) {
-    const session = await getSession();
-    if (!session) {
-      redirect("/api/auth/logout");
-    }
-  }
-
   const stored = cookieStore.get("tafrah_lang")?.value;
   const initialLanguage = stored === "en" || stored === "ar" ? stored : "ar";
-  const htmlDir = initialLanguage === "ar" ? "rtl" : "ltr";
-  return (
+  const htmlDir = initialLanguage === "ar" ? "rtl" : "ltr";  return (
     <html lang={initialLanguage} dir={htmlDir}>
       <body className={cairo.className}>
         <LanguageProvider initialLanguage={initialLanguage}>
