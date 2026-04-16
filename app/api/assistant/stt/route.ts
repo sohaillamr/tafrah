@@ -23,7 +23,8 @@ export async function POST(request: Request) {
     const groqFormData = new FormData();
     groqFormData.append("file", file, "audio.webm");
     groqFormData.append("model", "whisper-large-v3");
-    groqFormData.append("language", "ar"); // Assuming Egyptian Arabic primarily
+    groqFormData.append("language", "ar");
+    groqFormData.append("prompt", "تكلم باللهجة المصرية العامية. يا باشا، إزيك، عامل إيه؟");
 
     const res = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
       method: "POST",
