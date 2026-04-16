@@ -45,7 +45,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "missing_api_key" }, { status: 500 });
     }
 
-    const activeModel = isVoiceMode ? "llama-3.1-8b-instant" : "llama-3.3-70b-versatile";
+    // We upgrade both models to llama-3.3-70b-versatile to ensure high intelligence for text and voice, 
+    // falling back to an 8b model only when necessary.
+    const activeModel = "llama-3.3-70b-versatile";
     const backupModel = "llama3-8b-8192";
     const messages = incoming
       .filter((m: any) => m && (m.role === "user" || m.role === "assistant"))

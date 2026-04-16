@@ -408,14 +408,24 @@ export default function AssistantPage() {
         <aside className="hidden md:flex w-72 shrink-0 flex-col bg-white border-e border-[#E2E8F0]">
           <div className="flex items-center justify-between gap-3 border-b border-[#E2E8F0] p-4">
             <h2 className="font-semibold text-[#2E5C8A]">{labels.chats}</h2>
-            <button
-              type="button"
-              onClick={() => createNewChat("text")}
-              className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2E5C8A] text-white hover:bg-[#24496E] transition-colors"
-              title={labels.newChat}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => createNewChat("text")}
+                className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2E5C8A] text-white hover:bg-[#24496E] transition-colors"
+                title={labels.newChat}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => createNewChat("voice")}
+                className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#10b981] text-white hover:bg-[#059669] transition-colors"
+                title={language === "ar" ? "محادثة صوتية جديدة" : "New Voice Chat"}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
+              </button>
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto p-3 sim-scroll">
             <div className="flex flex-col gap-1">
@@ -459,14 +469,24 @@ export default function AssistantPage() {
         >
           <div className="flex items-center justify-between gap-3 border-b border-[#E2E8F0] p-4">
             <h2 className="font-semibold text-[#2E5C8A]">{labels.chats}</h2>
-            <button
-              type="button"
-              onClick={() => createNewChat("text")}
-              className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2E5C8A] text-white hover:bg-[#24496E] transition-colors"
-              title={labels.newChat}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => createNewChat("text")}
+                className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2E5C8A] text-white hover:bg-[#24496E] transition-colors"
+                title={labels.newChat}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => createNewChat("voice")}
+                className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#10b981] text-white hover:bg-[#059669] transition-colors"
+                title={language === "ar" ? "محادثة صوتية جديدة" : "New Voice Chat"}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
+              </button>
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto p-3 sim-scroll">
             <div className="flex flex-col gap-1">
@@ -527,18 +547,46 @@ export default function AssistantPage() {
                 <h1 className="font-semibold text-[#212529]">{labels.title}</h1>
                 <p className="text-xs text-[#6C757D]">{labels.subtitle}</p>
               </div>
-              <button
-                type="button"
-                onClick={() => createNewChat("text")}
-                className="flex h-9 items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-3 text-sm font-medium text-[#495057] hover:bg-[#F5F9FF] transition-colors md:hidden"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                {labels.newChat}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => createNewChat("text")}
+                  className="flex h-9 items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-3 text-sm font-medium text-[#495057] hover:bg-[#F5F9FF] transition-colors md:hidden"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  {labels.newChat}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => createNewChat("voice")}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#10b981] text-white hover:bg-[#059669] transition-colors md:hidden"
+                  title={language === "ar" ? "محادثة صوتية جديدة" : "New Voice Chat"}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Messages */}
+          {activeChat?.mode === "voice" ? (
+            <div className="flex-1 flex flex-col items-center justify-center space-y-8 min-h-0 bg-white">
+              <div 
+                className={"flex h-48 w-48 cursor-pointer items-center justify-center rounded-full shadow-2xl transition-all duration-300 " + (isRecording ? "scale-110 bg-red-500 shadow-red-200/50 animate-pulse" : "bg-[#10b981] hover:bg-[#059669] shadow-green-200/50")}
+                onClick={toggleRecording}
+              >
+                {isRecording ? (
+                  <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><rect x="9" y="9" width="6" height="6" rx="1"></rect><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"></path></svg>
+                ) : (
+                  <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
+                )}
+              </div>
+              <div className="font-medium text-lg text-[#6C757D] min-h-[2rem]">
+                {isRecording ? (language === "ar" ? "جاري الاستماع..." : "Listening...") : isLoading ? (language === "ar" ? "تفكر..." : "Thinking...") : (language === "ar" ? "انقر للتحدث" : "Tap to Speak")}
+              </div>
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col min-h-0 min-w-0">
+              {/* Messages */}
           <div className="flex-1 overflow-y-auto sim-scroll">
             <div className="mx-auto flex max-w-3xl flex-col gap-1 px-4 py-6">
               {activeMessages.map((message, index) => (
@@ -656,6 +704,8 @@ export default function AssistantPage() {
               </button>
             </div>
           </form>
+          </div>
+        )}
         </div>
       </div>
     </div>
