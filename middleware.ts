@@ -1,35 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jwtVerify } from "jose";
-
-type MiddlewareJWTPayload = {
-  role?: string;
-};
-
-let _middlewareSecret: Uint8Array | null = null;
-function getMiddlewareSecret(): Uint8Array | null {
-  if (_middlewareSecret) return _middlewareSecret;
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    return new TextEncoder().encode("dummy-secret-for-build-time-only-123");
-  }
-  _middlewareSecret = new TextEncoder().encode(secret);
-  return _middlewareSecret;
-}
-
-async function verifyMiddlewareToken(token: string): Promise<MiddlewareJWTPayload | null> {
-  const secret = getMiddlewareSecret();
-  if (!secret) return null;
-  try {
-    const { payload } = await jwtVerify(token, secret);
-    return payload as MiddlewareJWTPayload;
-  } catch {
-    return null;
-  }
-}
+import { decodeJwt } from "jose";
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-
   const langCookie = req.cookies.get("tafrah_lang")?.value || "ar";
   const response = NextResponse.next();
   response.headers.set("x-tafrah-lang", langCookie);
@@ -111,24 +84,26 @@ export async function middleware(req: NextRequest) {
       return redirectResponse;
     }
 
-    // Verify signed JWT for all protected routes to prevent spoofing
-    const payload = await verifyMiddlewareToken(token);
-    if (!payload) {
-      // Token is invalid/expired
+    try {
+      // Decode JWT without signature verification at Edge.
+      // Strict signature and DB verification are handled via Node.js in Server Components (e.g. app/layout.tsx & getSession).
+      const payload = decodeJwt(token) as { role?: string };
+      
+      // Admin route protection — enforce admin role
+      if (pathname.startsWith("/admin")) {
+        if (payload.role !== "admin") {
+          const unauthorizedUrl = new URL("/dashboard", req.url);
+          return NextResponse.redirect(unauthorizedUrl);
+        }
+      }
+    } catch {
+      // Token is unreadable or corrupted
       const loginUrl = new URL("/auth/login", req.url);
       loginUrl.searchParams.set("redirect", pathname);
       const redirectResponse = NextResponse.redirect(loginUrl);
       redirectResponse.cookies.delete("tafrah_token");
       redirectResponse.cookies.set("tafrah_lang", langCookie);
       return redirectResponse;
-    }
-
-    // Admin route protection — enforce admin role
-    if (pathname.startsWith("/admin")) {
-      if (payload.role !== "admin") {
-        const unauthorizedUrl = new URL("/dashboard", req.url);
-        return NextResponse.redirect(unauthorizedUrl);
-      }
     }
   }
 
