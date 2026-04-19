@@ -162,9 +162,9 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const { language } = useLanguage();
   const { user } = useAuth();
   
-  const { 
-    currentStep, validatedSteps, nextStep, prevStep, markStepValid, initCourse, 
-    needsSync, markSynced 
+  const {
+    currentStep, validatedSteps, nextStep, prevStep, markStepValid, initCourse, reset,
+    needsSync, markSynced
   } = useCourseStore();
 
   const unitIndexFromUrl = searchParams.get("unit");
