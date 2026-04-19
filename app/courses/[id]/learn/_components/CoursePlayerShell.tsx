@@ -76,9 +76,11 @@ const buildSteps = (unit: { chapters: { steps: Record<string, unknown>[]; [key: 
 };
 
 type CourseState = {
+  courseKey: string;
   currentStep: number;
   validatedSteps: Record<number, boolean>;
   needsSync: boolean;
+  initCourse: (key: string) => void;
   markStepValid: (step: number) => void;
   nextStep: (totalSteps: number) => void;
   prevStep: () => void;
@@ -88,10 +90,18 @@ type CourseState = {
 
 const useCourseStore = create<CourseState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
+      courseKey: "",
       currentStep: 0,
       validatedSteps: {},
       needsSync: false,
+      initCourse: (key) =>
+        set((state) => {
+          if (state.courseKey !== key) {
+            return { courseKey: key, currentStep: 0, validatedSteps: {}, needsSync: true };
+          }
+          return state;
+        }),
       markStepValid: (step) =>
         set((state) => ({
           validatedSteps: { ...state.validatedSteps, [step]: true },
@@ -120,7 +130,7 @@ const useCourseStore = create<CourseState>()(
     }),
     {
       name: "tafrah-course-storage",
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );
@@ -153,17 +163,17 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const { user } = useAuth();
   
   const { 
-    currentStep, validatedSteps, nextStep, prevStep, markStepValid, reset, 
+    currentStep, validatedSteps, nextStep, prevStep, markStepValid, initCourse, 
     needsSync, markSynced 
   } = useCourseStore();
 
   const unitIndexFromUrl = searchParams.get("unit");
   const unitIndex = unitIndexFromUrl ? parseInt(unitIndexFromUrl) : 0;
 
-  // Reset persistent unit state on fresh load
+  // Initialize course explicitly so we don't mix progression between units or courses
   useEffect(() => {
-    return () => reset();
-  }, [reset]);
+    initCourse(`${courseId}-${unitIndex}`);
+  }, [courseId, unitIndex, initCourse]);
 
   // Background Sync to API Endpoint (30s delay)
   useEffect(() => {
@@ -278,7 +288,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
           quizScoreLabel: "النتيجة",
           quizLocked: "مقفلة - أكمل اختبار الوحدة السابقة أولاً",
           startQuiz: "ابدأ الاختبار",
-          nextUnit: "انتقل للوحدة التالية",
+          nextUnit: "ابدأ الوحدة التالية",
           comingSoon: "هذه الدورة متاحة قريباً.",
           lessonEnds: "ينتهي الدرس بعد إكمال كل الخطوات والحصول على الشارة.",
           stepLabel: "الخطوة",
@@ -366,7 +376,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
           quizScoreLabel: "Score",
           quizLocked: "Locked - complete the previous unit's quiz first",
           startQuiz: "Start quiz",
-          nextUnit: "Go to next unit",
+          nextUnit: "Start next unit",
           comingSoon: "This course is available soon.",
           lessonEnds: "The lesson ends after completing all steps and earning the badge.",
           stepLabel: "Step",

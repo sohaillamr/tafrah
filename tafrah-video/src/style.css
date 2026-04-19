@@ -1,0 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-tafrah-purple: #8B5CF6;
+  --color-tafrah-purpleLight: #C4B5FD;
+  --color-tafrah-purpleDark: #5B21B6;
+  --color-tafrah-grey: #374151;
+  --color-tafrah-light: #F3F4F6;
+  
+  --font-arabic: "Cairo", "Tajawal", "sans-serif";
+}
+
+body {
+  direction: rtl; /* STRICT RTL enforcement */
+}

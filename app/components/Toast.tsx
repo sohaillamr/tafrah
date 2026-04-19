@@ -51,7 +51,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               toast.type === "success"
                 ? "border-[#28A745] bg-[#E8F5E9] text-[#212529]"
                 : toast.type === "error"
-                  ? "border-[#DC3545] bg-[#FFEBEE] text-[#DC3545]"
+                  ? "border-[#FFD54F] bg-[#FFF8E1] text-[#A66700]" // Warm yellow/orange instead of bright red
                   : "border-[#2E5C8A] bg-[#E3F2FD] text-[#212529]";
             return (
               <div

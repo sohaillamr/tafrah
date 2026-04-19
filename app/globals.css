@@ -12,6 +12,8 @@ body {
   color: #212529;
   font-size: 18px;
   line-height: 1.8;
+  font-family: "Open Sans", ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.02em; /* Ensure fonts aren't too dense */
 }
 
 @layer base {

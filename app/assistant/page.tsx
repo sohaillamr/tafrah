@@ -596,11 +596,20 @@ export default function AssistantPage() {
           {activeChat?.mode === "voice" ? (
             <div className="flex-1 flex flex-col items-center justify-center space-y-8 min-h-0 bg-white">
               <div 
-                className={"flex h-48 w-48 cursor-pointer items-center justify-center rounded-full shadow-2xl transition-all duration-300 " + (isRecording ? "scale-110 bg-red-500 shadow-red-200/50 animate-pulse" : "bg-[#10b981] hover:bg-[#059669] shadow-green-200/50")}
-                onClick={toggleRecording}
+                className={"flex h-48 w-48 cursor-pointer items-center justify-center rounded-full shadow-2xl transition-all duration-300 " + 
+                  (isRecording ? "scale-105 bg-[#4A90C4] shadow-[#4A90C4]/50 animate-pulse" : 
+                   isLoading ? "scale-100 bg-[#2E5C8A] shadow-[#2E5C8A]/50 animate-pulse cursor-wait" : 
+                   "bg-[#10b981] hover:bg-[#059669] shadow-green-200/50")}
+                onClick={() => !isLoading && toggleRecording()}
               >
                 {isRecording ? (
                   <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><rect x="9" y="9" width="6" height="6" rx="1"></rect><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"></path></svg>
+                ) : isLoading ? (
+                  <div className="flex gap-2">
+                    <div className="w-4 h-4 bg-white rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-4 h-4 bg-white rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-4 h-4 bg-white rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  </div>
                 ) : (
                   <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
                 )}
@@ -713,11 +722,14 @@ export default function AssistantPage() {
                 />
                 <button
                   type="button"
-                  onClick={toggleRecording}
+                  onClick={() => !isLoading && toggleRecording()}
                   className={`absolute bottom-2 ${language === "ar" ? "left-3" : "right-3"} flex h-8 w-8 items-center justify-center rounded-full transition-all ${
-                    isRecording ? "bg-red-500 text-white animate-pulse shadow-md" : "bg-[#F8FAFB] text-[#ADB5BD] hover:bg-[#E2E8F0] hover:text-[#495057]"
+                    isRecording ? "bg-[#4A90C4] text-white animate-pulse shadow-md" : 
+                    isLoading ? "bg-[#2E5C8A] text-white animate-pulse shadow-md cursor-wait" :
+                    "bg-[#F8FAFB] text-[#ADB5BD] hover:bg-[#E2E8F0] hover:text-[#495057]"
                   }`}
                   title={isRecording ? "Stop recording..." : "Voice input"}
+                  disabled={isLoading}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
