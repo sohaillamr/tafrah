@@ -33,7 +33,7 @@ export async function fetchUnitStepsServerSide(courseSlug: string, category: str
   // Simulate minor network delay for realism if needed, or just return straight async
   return new Promise<any[]>((resolve) => {
     let unitData: any = null;
-    const isPython = category === "python";
+    const isPython = courseSlug === "programming-1" || category === "python" || category === "البرمجة";
 
     if (isPython) {
       switch (activeUnit) {

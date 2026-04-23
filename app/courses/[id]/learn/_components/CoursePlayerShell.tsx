@@ -406,7 +406,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const unitParam = searchParams?.get("unit");
   const unitNumber = Math.max(1, Math.min(7, Number(unitParam) || 1));
   const activeCourseId = courseId;
-  const isPythonCourse = activeCourseId === "programming-1";
+  const isPythonCourse = courseSlug === "programming-1" || category === "python" || category === "البرمجة";
   const dataEntryUnits: { chapters: { steps: Record<string, unknown>[]; [key: string]: unknown }[]; [key: string]: unknown }[] = [unit1Content[0], unit2Content[0], unit3Content[0], unit4Content[0], unit5Content[0], unit6Content[0], unit7Content[0]];
   const pythonUnits: { chapters: { steps: Record<string, unknown>[]; [key: string]: unknown }[]; [key: string]: unknown }[] = [pythonUnit1Content[0], pythonUnit2Content[0], pythonUnit3Content[0], pythonUnit4Content[0], pythonUnit5Content[0], pythonUnit6Content[0], pythonUnit7Content[0]];
   const allUnits = isPythonCourse ? pythonUnits : dataEntryUnits;
