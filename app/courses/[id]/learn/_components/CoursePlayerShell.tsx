@@ -826,7 +826,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     router.push(`/courses/${courseId}/learn${query}`);
   };
 
-  const currentQuiz = isPythonCourse ? (pythonQuizzes as Record<number, typeof quizzes[1]>)[unitNumber] : isFinanceCourse ? (financeQuizzes as Record<number, typeof quizzes[1]>)[unitNumber-1] : quizzes[unitNumber];
+  const currentQuiz = isPythonCourse ? (pythonQuizzes as Record<number, typeof quizzes[1]>)[unitNumber] : isFinanceCourse ? (financeQuizzes as Record<number, typeof quizzes[1]>)[unitNumber] : quizzes[unitNumber];
 
   const handleQuizAnswer = (questionId: string, answerId: string) => {
     setQuizAnswers((prev) => ({ ...prev, [questionId]: answerId }));
@@ -1725,5 +1725,6 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     </div>
   );
 }
+
 
 

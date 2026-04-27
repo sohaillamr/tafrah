@@ -26,14 +26,14 @@ const skillsArabic: Record<string, string[]> = {
   "data-entry": ["إدخال بيانات الجداول", "تنسيق الأعمدة", "مراجعة الأخطاء"],
   design: ["المحاذاة", "اختيار الألوان", "ملفات التسليم الواضحة"],
   qa: ["كتابة حالات الاختبار", "التقاط الأخطاء", "توثيق النتائج"],
-  programming: ["كتابة أوامر بايثون", "فهم المتغيرات والأنواع", "استخدام الشروط والحلقات", "تعريف الدوال", "بناء برنامج متكامل"],
+  programming: ["كتابة أوامر بايثون", "فهم المتغيرات والأنواع", "استخدام الشروط والحلقات", "تعريف الدوال", "بناء برنامج متكامل"], finance: ["فهم الأصول والخصوم", "معادلة المحاسبة", "قيود اليومية", "القوائم المالية", "استخدام أنظمة ERP"],
 };
 
 const skillsEnglish: Record<string, string[]> = {
   "data-entry": ["Table data entry", "Column formatting", "Error review"],
   design: ["Alignment", "Color selection", "Clear handoff files"],
   qa: ["Test case writing", "Bug capture", "Result documentation"],
-  programming: ["Writing Python commands", "Variables and data types", "Conditions and loops", "Defining functions", "Building a complete program"],
+  programming: ["Writing Python commands", "Variables and data types", "Conditions and loops", "Defining functions", "Building a complete program"], finance: ["Understanding Assets and Liabilities", "Accounting Equation", "Journal Entries and Ledger", "Financial Statements", "Working with ERP Systems"],
 };
 
 const syllabusArabic = [
@@ -150,6 +150,21 @@ const syllabusEnglish = [
   },
 ];
 
+
+const financeSyllabusArabic = [
+  { title: 'الوحدة ١: لغة المال', lessons: ['ما هي المحاسبة؟', 'الأصول', 'الخصوم', 'معادلة الميزان', 'شجرة الحسابات'], quiz: true },
+  { title: 'الوحدة ٢: قصة معاملة', lessons: ['قيود اليومية', 'المدين والدائن', 'دفتر الأستاذ', 'ميزان المراجعة'], quiz: true },
+  { title: 'الوحدة ٣: الصورة الكبرى', lessons: ['قائمة الدخل', 'الأرباح المحتجزة', 'الميزانية العمومية', 'التدفقات النقدية'], quiz: true },
+  { title: 'الوحدة ٤: المحاسبة التقنية', lessons: ['البرامج المحاسبية', 'نظام ERP', 'Dynamics 365', 'Excel'], quiz: true }
+];
+
+const financeSyllabusEnglish = [
+  { title: 'Module 1: Language of Money', lessons: ['What is Accounting?', 'Assets', 'Liabilities', 'The Equation', 'Chart of Accounts'], quiz: true },
+  { title: 'Module 2: Story of a Transaction', lessons: ['Journal Entries', 'Debit and Credit', 'The Ledger', 'Trial Balance'], quiz: true },
+  { title: 'Module 3: The Big Picture', lessons: ['Income Statement', 'Retained Earnings', 'Balance Sheet', 'Cash Flows'], quiz: true },
+  { title: 'Module 4: Tech Accounting', lessons: ['Accounting Software', 'ERP Systems', 'Dynamics 365', 'Excel'], quiz: true }
+];
+
 const pythonSyllabusEnglish = [
   {
     title: "Module 1: Introduction to Programming",
@@ -249,11 +264,11 @@ export default function CourseDetailsPage() {
           syllabus: "منهج الدورة",
           quiz: "اختبار قصير بعد هذه الوحدة.",
           trainer: "معلومات المدرب",
-          trainerName: course?.category === "programming" ? "أستاذ محمد" : "أستاذة سارة",
-          trainerBio: course?.category === "programming" ? "خبير في برمجة بايثون معتمد لتدريب ذوي التوحد." : "خبير في إدخال البيانات معتمد لتدريب ذوي التوحد.",
+          trainerName: course?.category === "programming" ? "أستاذ محمد" : course?.category === "finance" ? "أستاذ أحمد (محاسب معتمد)" : "أستاذة سارة",
+          trainerBio: course?.category === "programming" ? "خبير في برمجة بايثون معتمد لتدريب ذوي التوحد." : course?.category === "finance" ? "خبير مالي ومحاسب معتمد لتدريب ذوي التوحد." : "خبير في إدخال البيانات معتمد لتدريب ذوي التوحد.",
           comingSoon: "قريباً",
           comingSoonNote: "هذه الدورة ستكون متاحة قريباً.",
-          syllabusData: course?.category === "programming" ? pythonSyllabusArabic : syllabusArabic,
+          syllabusData: course?.slug === "programming-1" || course?.category === "programming" ? pythonSyllabusArabic : course?.category === "finance" ? financeSyllabusArabic : syllabusArabic,
         }
       : {
           home: "Home",
@@ -274,11 +289,11 @@ export default function CourseDetailsPage() {
           syllabus: "Course syllabus",
           quiz: "A short quiz after this module.",
           trainer: "Trainer info",
-          trainerName: course?.category === "programming" ? "Mr. Mohammed" : "Ms. Sara",
-          trainerBio: course?.category === "programming" ? "A certified Python programming expert training autistic learners." : "A certified data entry expert training autistic learners.",
+          trainerName: course?.category === "programming" ? "أستاذ محمد" : course?.category === "finance" ? "أستاذ أحمد (محاسب معتمد)" : "أستاذة سارة",
+          trainerBio: course?.category === "programming" ? "A certified Python programming expert training autistic learners." : course?.category === "finance" ? "خبير مالي ومحاسب معتمد لتدريب ذوي التوحد." : "A certified data entry expert training autistic learners.",
           comingSoon: "Coming soon",
           comingSoonNote: "This course will be available soon.",
-          syllabusData: course?.category === "programming" ? pythonSyllabusEnglish : syllabusEnglish,
+          syllabusData: course?.slug === "programming-1" || course?.category === "programming" ? pythonSyllabusEnglish : course?.category === "finance" ? financeSyllabusEnglish : syllabusEnglish,
         };
 
   if (loading || authLoading) {
