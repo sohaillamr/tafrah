@@ -170,6 +170,21 @@ async function main() {
     },
   });
 
+  const course5 = await prisma.course.create({
+    data: {
+      slug: "finance-1",
+      titleAr: "أساسيات المالية والمحاسبة",
+      titleEn: "Finance & Accounting Fundamentals",
+      descAr: "هيكلة الكورس متقسمة لـ 4 موديولات، كل موديول بيبني على اللي قبله بأسلوب تصاعدي لفهم المحاسبة والمالية في الشركات.",
+      descEn: "Course structure divided into 4 modules, each building on the previous one using scaffolding to understand accounting and finance.",
+      category: "finance",
+      difficulty: "beginner",
+      hours: 4,
+      modules: 4,
+      available: true,
+    },
+  });
+
   // --- ENROLLMENTS ---
   await prisma.enrollment.create({
     data: { userId: student1.id, courseId: course1.id, progress: 60 },

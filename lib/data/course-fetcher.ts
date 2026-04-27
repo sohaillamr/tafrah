@@ -13,6 +13,10 @@ import { pythonUnit4Content } from "../../data/PythonUnit4Content";
 import { pythonUnit5Content } from "../../data/PythonUnit5Content";
 import { pythonUnit6Content } from "../../data/PythonUnit6Content";
 import { pythonUnit7Content } from "../../data/PythonUnit7Content";
+import { financeUnit1Content } from "../../data/FinanceUnit1Content";
+import { financeUnit2Content } from "../../data/FinanceUnit2Content";
+import { financeUnit3Content } from "../../data/FinanceUnit3Content";
+import { financeUnit4Content } from "../../data/FinanceUnit4Content";
 
 const buildSteps = (unitParam: any): any[] => {
   const unit = Array.isArray(unitParam) ? unitParam[0] : unitParam;
@@ -34,6 +38,7 @@ export async function fetchUnitStepsServerSide(courseSlug: string, category: str
   return new Promise<any[]>((resolve) => {
     let unitData: any = null;
     const isPython = courseSlug === "programming-1" || category === "python" || category === "البرمجة";
+    const isFinance = courseSlug === "finance-1" || category === "finance" || category === "المالية والمحاسبة";
 
     if (isPython) {
       switch (activeUnit) {
@@ -44,6 +49,13 @@ export async function fetchUnitStepsServerSide(courseSlug: string, category: str
         case 4: unitData = pythonUnit5Content; break;
         case 5: unitData = pythonUnit6Content; break;
         case 6: unitData = pythonUnit7Content; break;
+      }
+    } else if (isFinance) {
+      switch (activeUnit) {
+        case 0: unitData = financeUnit1Content; break;
+        case 1: unitData = financeUnit2Content; break;
+        case 2: unitData = financeUnit3Content; break;
+        case 3: unitData = financeUnit4Content; break;
       }
     } else {
       switch (activeUnit) {
