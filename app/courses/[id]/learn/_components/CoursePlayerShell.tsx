@@ -25,6 +25,7 @@ import { pythonUnit6Content } from "@/data/PythonUnit6Content";
 import { pythonUnit7Content } from "@/data/PythonUnit7Content";
 import { quizzes } from "@/data/quizzes";
 import { pythonQuizzes } from "@/data/pythonQuizzes";
+import { financeQuizzes } from "@/data/financeQuizzes";
 
 type StepActionKind =
   | "clickIcon"
@@ -409,7 +410,16 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const isPythonCourse = courseSlug === "programming-1" || category === "python" || category === "البرمجة";
   const dataEntryUnits: { chapters: { steps: Record<string, unknown>[]; [key: string]: unknown }[]; [key: string]: unknown }[] = [unit1Content[0], unit2Content[0], unit3Content[0], unit4Content[0], unit5Content[0], unit6Content[0], unit7Content[0]];
   const pythonUnits: { chapters: { steps: Record<string, unknown>[]; [key: string]: unknown }[]; [key: string]: unknown }[] = [pythonUnit1Content[0], pythonUnit2Content[0], pythonUnit3Content[0], pythonUnit4Content[0], pythonUnit5Content[0], pythonUnit6Content[0], pythonUnit7Content[0]];
-  const allUnits = isPythonCourse ? pythonUnits : dataEntryUnits;
+  const isFinanceCourse = courseSlug === "finance-1" || category === "finance"; 
+  let financeUnits: any[] = []; 
+  try { 
+    let fu1 = require("@/data/FinanceUnit1Content").financeUnit1Content[0]; 
+    let fu2 = require("@/data/FinanceUnit2Content").financeUnit2Content[0]; 
+    let fu3 = require("@/data/FinanceUnit3Content").financeUnit3Content[0]; 
+    let fu4 = require("@/data/FinanceUnit4Content").financeUnit4Content[0]; 
+    financeUnits = [fu1, fu2, fu3, fu4]; 
+  } catch(e) {} 
+  const allUnits = isPythonCourse ? pythonUnits : isFinanceCourse ? financeUnits : dataEntryUnits;
   const currentUnit = allUnits[unitNumber - 1];
   const steps = useMemo(() => buildSteps(currentUnit), [currentUnit]);
   const step = steps[currentStep];
@@ -421,7 +431,9 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const dataEntryUnitTitles = [labels.unit1Title, labels.unit2Title, labels.unit3Title, labels.unit4Title, labels.unit5Title, labels.unit6Title, labels.unit7Title];
   const pythonUnitTitlesAr = ["الوحدة ١: مقدمة في البرمجة", "الوحدة ٢: المتغيرات وأنواع البيانات", "الوحدة ٣: العمليات والمقارنات", "الوحدة ٤: الشروط والقرارات", "الوحدة ٥: الحلقات والتكرار", "الوحدة ٦: الدوال", "الوحدة ٧: مشروع نهائي"];
   const pythonUnitTitlesEn = ["Unit 1: Intro to Programming", "Unit 2: Variables & Data Types", "Unit 3: Operations & Comparisons", "Unit 4: Conditions & Decisions", "Unit 5: Loops & Iteration", "Unit 6: Functions", "Unit 7: Final Project"];
-  const unitTitles = isPythonCourse ? (language === "ar" ? pythonUnitTitlesAr : pythonUnitTitlesEn) : dataEntryUnitTitles;
+  const financeUnitTitlesAr = ["الوحدة ١: لغة المال", "الوحدة ٢: قصة معاملة", "الوحدة ٣: الصورة الكبرى", "الوحدة ٤: المحاسبة في العالم التقني"];
+  const financeUnitTitlesEn = ["Unit 1: Language of Money", "Unit 2: Story of a Transaction", "Unit 3: The Big Picture", "Unit 4: Tech World Accounting"];
+  const unitTitles = isPythonCourse ? (language === "ar" ? pythonUnitTitlesAr : pythonUnitTitlesEn) : isFinanceCourse ? (language === "ar" ? financeUnitTitlesAr : financeUnitTitlesEn) : dataEntryUnitTitles;
   const unitTitle = unitTitles[unitNumber - 1];
   const shouldShowCodeEditor = isPythonCourse;
   const shouldShowTabs =
@@ -814,7 +826,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     router.push(`/courses/${courseId}/learn${query}`);
   };
 
-  const currentQuiz = isPythonCourse ? (pythonQuizzes as Record<number, typeof quizzes[1]>)[unitNumber] : quizzes[unitNumber];
+  const currentQuiz = isPythonCourse ? (pythonQuizzes as Record<number, typeof quizzes[1]>)[unitNumber] : isFinanceCourse ? (financeQuizzes as Record<number, typeof quizzes[1]>)[unitNumber-1] : quizzes[unitNumber];
 
   const handleQuizAnswer = (questionId: string, answerId: string) => {
     setQuizAnswers((prev) => ({ ...prev, [questionId]: answerId }));
@@ -1713,3 +1725,5 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     </div>
   );
 }
+
+
