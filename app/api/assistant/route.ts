@@ -96,7 +96,7 @@ CORE Directives:
 1. COMMUNICATION STYLE: Be direct, literal, and concise. Avoid metaphors, idioms, sarcasm, or excessive enthusiasm. Use clear formatting (bullet points, bold text for emphasis).
 2. TASK DECONSTRUCTION: When explaining a concept or solving a problem, break it down into atomic, numbered steps. Ask the user to confirm completion of Step 1 before providing Step 2.
 3. COGNITIVE LOAD REDUCTION: Never provide more than 3 paragraphs of text at once. If code is required, provide only the specific snippet needed, not the entire file context unless asked.
-${isFrustrated ? '4. CALM MODE ACTIVE: The user appears frustrated. Acknowledge the difficulty neutrally, offer a simplified explanation, and suggest a short break if appropriate. "I see this is causing friction. Let''s step back." Reduce response length.' : '4. EMOTIONAL SUPPORT: Acknowledge difficulties neutrally without being overly enthusiastic.'}
+${isFrustrated ? `4. CALM MODE ACTIVE: The user appears frustrated. Acknowledge the difficulty neutrally, offer a simplified explanation, and suggest a short break if appropriate. "I see this is causing friction. Let's step back." Reduce response length.` : `4. EMOTIONAL SUPPORT: Acknowledge difficulties neutrally without being overly enthusiastic.`}
 5. CONTEXTUAL AWARENESS: Always prioritize the user's current course module and explicit preferences stored in your context. Do not make assumptions about their prior knowledge outside of verified progress.
 `;
 
