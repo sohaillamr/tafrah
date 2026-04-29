@@ -34,6 +34,7 @@ model User {
   activityLogs     ActivityLog[]
   jobsPosted       Job[]         @relation("JobPoster")
   preferences      UserPreference?
+  skillProfile     SkillProfile?
 
   @@index([status])
   @@index([role])
@@ -45,8 +46,26 @@ model UserPreference {
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   formattingPrefs    String?  // e.g. "prefers code snippets", "no lengthy paragraphs"
   sensoryTriggers    String?  // e.g. "frustrates easily on CSS syntax"
+  theme              String   @default("light") // light | dark | sepia | high-contrast
+  reduceMotion       Boolean  @default(false)
+  mascot             String?  // e.g. "owl", "cat", "none"
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+}
+
+model SkillProfile {
+  id                   Int      @id @default(autoincrement())
+  userId               Int      @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logicFlow            Int      @default(10)
+  attentionToDetail    Int      @default(10)
+  syntaxAccuracy       Int      @default(10)
+  patternRecognition   Int      @default(10)
+  problemDecomposition Int      @default(10)
+  badges               Json?    // Array of earned badges
+  projects             Json?    // Array of digital lab projects
+  careerReadiness      Int      @default(0) // 0-100 scale
+  updatedAt            DateTime @updatedAt
 }
 
 model Course {
@@ -241,3 +260,4 @@ model AuditLog {
   @@index([admin])
   @@index([createdAt])
 }
+

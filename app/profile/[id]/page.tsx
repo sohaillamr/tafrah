@@ -8,6 +8,7 @@ import Breadcrumbs from "../../components/Breadcrumbs";
 import { UserRound } from "lucide-react";
 import { useLanguage } from "../../components/LanguageProvider";
 import { useAuth } from "../../components/AuthProvider";
+import { SkillRadar } from "../../components/SkillRadar";
 
 const RechartsBar = dynamic(
   () => import("recharts").then((mod) => {
@@ -333,14 +334,27 @@ export default function ProfilePage() {
         </section>
 
         <section className="flex flex-col gap-4 rounded-sm border border-[#DEE2E6] bg-white p-6">
-          <h2 className="font-semibold">{labels.portfolio}</h2>
+          <h2 className="font-semibold text-lg mb-2 text-[#2E5C8A]">Career Readiness Tracker</h2>
+          <div className="w-full bg-[#E9ECEF] rounded-full h-4 overflow-hidden mb-2">
+            <div className="bg-[#28A745] h-4 rounded-full" style={{ width: '45%' }}></div>
+          </div>
+          <div className="flex justify-between text-sm text-[#6C757D] mb-8">
+             <span>Foundation: 100%</span>
+             <span>Portfolio: 10%</span>
+             <span>Soft Skills: 0%</span>
+          </div>
+
+          <h2 className="font-semibold text-lg text-[#2E5C8A]">My Digital Labs</h2>
           <div className="grid gap-4 md:grid-cols-3">
             {projects.map((project) => (
               <div
                 key={project.id}
-                className="flex flex-col gap-3 rounded-sm border border-[#DEE2E6] bg-[#F8F9FA] p-4"
+                className="flex flex-col gap-3 rounded-sm border border-[#DEE2E6] bg-[#F8F9FA] p-4 relative"
               >
-                <p className="font-semibold">{project.title}</p>
+                <div className="absolute top-2 right-2 text-xs font-bold text-white bg-gradient-to-r from-blue-500 to-indigo-600 px-2 py-1 rounded shadow" title="Verified by Nour AI">
+                  AI Verified
+                </div>
+                <p className="font-semibold pr-20">{project.title}</p>
                 <button
                   type="button"
                   className="min-h-12 rounded-sm border border-[#DEE2E6] px-4"
@@ -363,9 +377,14 @@ export default function ProfilePage() {
         </section>
 
         <section className="rounded-sm border border-[#DEE2E6] bg-white p-6">
-          <h2 className="font-semibold">{labels.skills}</h2>
-          <div className="mt-4 h-64">
-            <RechartsBar data={skillsData} language={language} />
+          <h2 className="font-semibold text-lg mb-4 text-[#2E5C8A]">Skill Radar</h2>
+          <SkillRadar data={{ logicFlow: 75, attentionToDetail: 90, syntaxAccuracy: 85, patternRecognition: 65, problemDecomposition: 80 }} />
+
+          <h2 className="font-semibold text-lg mt-8 mb-4 text-[#2E5C8A]">Micro-Badges</h2>
+          <div className="flex flex-wrap gap-4">
+             <div className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full border border-blue-200 shadow-sm font-medium">Deep Diver</div>
+             <div className="px-4 py-2 bg-green-100 text-green-800 rounded-full border border-green-200 shadow-sm font-medium">Bug Hunter</div>
+             <div className="px-4 py-2 bg-purple-100 text-purple-800 rounded-full border border-purple-200 shadow-sm font-medium">Logical Architect</div>
           </div>
         </section>
 
