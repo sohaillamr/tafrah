@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
@@ -60,18 +60,45 @@ export async function POST(request: Request) {
     if (messages.length === 0) return NextResponse.json({ error: "no_messages" }, { status: 400 });
 
     let currentProgress = null;
+    let userPreferences = null;
     try {
       currentProgress = await prisma.progress.findFirst({
         where: { userId: session.userId },
         orderBy: { updatedAt: "desc" },
       });
+      userPreferences = await prisma.userPreference.findUnique({
+        where: { userId: session.userId }
+      });
     } catch (dbError) {
-      console.error("[TAFRAH] Failed to fetch progress for AI fallback:", dbError);
+      console.error("[TAFRAH] Failed to fetch progress/preferences for AI fallback:", dbError);
     }
 
     const settings = ObjectBody.settings || { length: "concise" };
 
-    const systemPrompt = `ROLE:\nYou are "Nour", a world-class Neuro-Inclusion coach and Assistant for "Tafrah" (طفرة) – an employment platform for Autistic (Level 1) individuals.\nTalk to the user (named: ${session.name || "Sohail Amr Anwar"}) as a partner in success.\nTheir current active course focus is: ${currentProgress ? currentProgress.courseSlug : "Exploring platform"}.\n\nSTRICT RULE (NO REPETITION):\n- NEVER start responses with "I understand you" or "أفهمك تماماً...". If you do, the system will fail. Be dynamic.\n\nCHARACTER ENCODING & LANGUAGE (CRITICAL):\n- You MUST use only standard Arabic (UTF-8) and standard Latin characters.\n- Never use Cyrillic (e.g. курc), Greek, or mathematical symbols for regular words.\n- When mentioning course names, use the English name as-is or the proper Arabic translation (e.g., 'إدخال البيانات' for Data Entry). Do not attempt to transliterate or hybridize the spelling.\n\nCOMMUNICATION STYLE & COGNITIVE SUPPORT:\n1. VALIDATION: Be dynamic. Start responses by acknowledging their question positively (e.g., "سؤال ممتاز..." or a direct answer).\n2. CLARITY & LITERAL LANGUAGE: Speak 100% literally. Zero metaphors. Zero idioms. Zero sarcasm. Be direct, literal, and supportive. Ensure autistic users understand the literal meaning of every word without guessing.\n3. PREVENT OVERLOAD: Avoid "Wall of Texts". Force paragraph breaks frequently. Maximum 2 short sentences per block. Use concise, short sentences and bullet points.\n4. SCANNABILITY: Use Markdown strictly. Place bullet points and numbered lists (1, 2, 3) on their own lines.\n5. TONE: Calm, encouraging, patient, empathetic, and non-infantilizing. Maintain a high professional standard but be exceptionally supportive.\n6. SMART FALLBACK: Do not guess course curriculum or technical fixes. If you don't know the answer to a technical glitch, strictly say: "يبدو أن هناك مشكلة تقنية، سأقوم بإبلاغ الفريق فوراً لمساعدتك."\n7. LENGTH PREFERENCE: The user has set their device preference to ${settings.length} responses. Obey this limit strictly.`;
+    // Frustration Detection Logic (Phase 3)
+    let isFrustrated = false;
+    if (messages.length >= 2) {
+      const lastMsg = messages[messages.length - 1].content.toLowerCase();
+      const frustrationKeywords = ["wrong", "stop", "no", "bad", "not working", "error", "hate", "ugh"];
+      if (lastMsg.length < 15 && frustrationKeywords.some(kw => lastMsg.includes(kw))) {
+        isFrustrated = true;
+      }
+    }
+
+    const systemPrompt = `You are Nour, an AI learning assistant for Tafrah, dedicated to supporting neurodivergent users (specifically Level 1 Autism) in mastering technical skills like programming and accounting.
+
+Talk to the user (named: ${session.name || "Sohail Amr Anwar"}).
+Their current active course focus is: ${currentProgress ? currentProgress.courseSlug : "Exploring platform"}.
+User format preferences: ${userPreferences?.formattingPrefs || "None"}.
+User sensory triggers: ${userPreferences?.sensoryTriggers || "None"}.
+
+CORE Directives:
+1. COMMUNICATION STYLE: Be direct, literal, and concise. Avoid metaphors, idioms, sarcasm, or excessive enthusiasm. Use clear formatting (bullet points, bold text for emphasis).
+2. TASK DECONSTRUCTION: When explaining a concept or solving a problem, break it down into atomic, numbered steps. Ask the user to confirm completion of Step 1 before providing Step 2.
+3. COGNITIVE LOAD REDUCTION: Never provide more than 3 paragraphs of text at once. If code is required, provide only the specific snippet needed, not the entire file context unless asked.
+${isFrustrated ? '4. CALM MODE ACTIVE: The user appears frustrated. Acknowledge the difficulty neutrally, offer a simplified explanation, and suggest a short break if appropriate. "I see this is causing friction. Let''s step back." Reduce response length.' : '4. EMOTIONAL SUPPORT: Acknowledge difficulties neutrally without being overly enthusiastic.'}
+5. CONTEXTUAL AWARENESS: Always prioritize the user's current course module and explicit preferences stored in your context. Do not make assumptions about their prior knowledge outside of verified progress.
+`;
 
     const fetchGroqStream = async (apiKey: string, modelToUse: string = activeModel) => {
       const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -140,4 +167,5 @@ for (const key of keysToTry) {
     return NextResponse.json({ error: "server error" }, { status: 500 });
   }
 }
+
 

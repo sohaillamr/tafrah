@@ -33,9 +33,20 @@ model User {
   tickets          Ticket[]
   activityLogs     ActivityLog[]
   jobsPosted       Job[]         @relation("JobPoster")
+  preferences      UserPreference?
 
   @@index([status])
   @@index([role])
+}
+
+model UserPreference {
+  id                 Int      @id @default(autoincrement())
+  userId             Int      @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  formattingPrefs    String?  // e.g. "prefers code snippets", "no lengthy paragraphs"
+  sensoryTriggers    String?  // e.g. "frustrates easily on CSS syntax"
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 }
 
 model Course {
