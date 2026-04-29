@@ -64,6 +64,8 @@ model SkillProfile {
   problemDecomposition Int      @default(10)
   badges               Json?    // Array of earned badges
   projects             Json?    // Array of digital lab projects
+  verifiedProjects     Json?    // e.g., [{ id: "1", title: "Data Clean", aiVerified: true }]
+  strengthsSummary     Json?    // Structured JSON of cognitive advantages
   careerReadiness      Int      @default(0) // 0-100 scale
   updatedAt            DateTime @updatedAt
 }
@@ -260,4 +262,5 @@ model AuditLog {
   @@index([admin])
   @@index([createdAt])
 }
+
 
