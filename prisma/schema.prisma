@@ -49,6 +49,10 @@ model UserPreference {
   theme              String   @default("light") // light | dark | sepia | high-contrast
   reduceMotion       Boolean  @default(false)
   mascot             String?  // e.g. "owl", "cat", "none"
+  uiSettings         Json?    // Stores font size, contrast, spacing, etc.
+  learningStyle      String?  // visual, step-by-step, text-heavy
+  nourTone           String   @default("calm") // calm, enthusiastic, direct
+  dailyEnergyLog     Json?    // e.g. [{ date: '2023-10-27', level: 'low' }]
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }
