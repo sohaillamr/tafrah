@@ -1,24 +1,27 @@
 export const pythonUnit6Content = [
   {
-    unit_id: "PY_UNIT_06",
-    title: "الشروط والقرارات",
-    focus: "Basic Concepts",
-    chapters: [
-      {
-        chapter_id: "py-ch-6-1",
-        chapter_title: "1. مقدمة عملية",
-        steps: [
-          {
-            type: "info",
-            instruction: "في هذا التدريب العملي سنتعلم هذا المفهوم برمجياً."
-          },
-          {
-            type: "code",
-            instruction: "انسخ الكود التالي لتجربة التطبيق العملي:",
-            codeTemplate: `if age > 18:\n    print("مسموح")`
+  "id": 6,
+  "title": "التكرار والحلقات (Loops)",
+  "focus": "المرور على القوائم بأتمتة المهام",
+  "chapters": [
+    {
+      "chapter_id": "py-ch-6-1",
+      "chapter_title": "1. استخدام for loop",
+      "steps": [
+        {
+          "type": "info",
+          "instruction": "التكرار مفيد جداً عندما تريد إعطاء أوامر لمجموعة كبيرة من البيانات دفعة واحدة، مثل المرور على الأسماء في قائمة."
+        },
+        {
+          "type": "task",
+          "instruction": "قم بكتابة حلقة للمرور على قائمة الموظفين وطباعتهم:\nemp = [\"أحمد\", \"سارة\"]\nfor x in emp:\n    print(x)",
+          "action": {
+            "kind": "writeCode",
+            "expected": "emp = [\"أحمد\", \"سارة\"]\nfor x in emp:\n    print(x)"
           }
-        ]
-      }
-    ]
-  }
+        }
+      ]
+    }
+  ]
+}
 ];
