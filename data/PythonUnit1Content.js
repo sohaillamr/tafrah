@@ -21,4 +21,4 @@ export const pythonUnit1Content = [
       }
     ]
   }
-];
+];// Trigger Vercel rebuild for UTF-8 fix
