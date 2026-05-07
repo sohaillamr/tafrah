@@ -10,56 +10,58 @@ export default function HomePage() {
   const labels =
     language === "ar"
       ? {
-          heroTitle: "طفرة: منصة التدريب والتوظيف المتخصصة لذوي التوحد في مصر.",
-          heroText: "نحن نوفر بيئة عمل هادئة، تعليمات مباشرة، وفرص عمل حقيقية تضمن حقوقك.",
+          heroTitle: "إطلاق العنان للقدرات البشرية من خلال الذكاء الاصطناعي التكيفي.",
+          heroText: "طفرة هي منظومة ذكاء اصطناعي تقدم تدريباً تقنياً مهنياً لمجتمع التنوع العصبي وذوي الشلل الدماغي، لتحويل الدمج المجتمعي إلى أصل اقتصادي استراتيجي.",
           heroCta: "ابدأ رحلتك الآن",
-          whyTitle: "لماذا طفرة؟",
-          stat1: "٨٠٠,٠٠٠",
-          stat1Text: "شخص من ذوي التوحد في مصر يحتاجون لفرصة عمل تناسبهم.",
-          stat2: "٥٪",
-          stat2Text: "النسبة القانونية التي نساعد الشركات على تحقيقها باحترافية.",
-          stat3: "صفر مشتتات",
-          stat3Text: "منهجية العمل والتدريب لدينا تضمن أعلى درجات التركيز.",
-          howTitle: "كيف نغير حياتك المهنية؟",
-          how1: "تقييم ذكي: اختبار بسيط لتحديد نقاط قوتك.",
-          how2: "تعلم مهني: دورات مصغرة في البيانات، التصميم، واختبار البرمجيات.",
-          how3: "عمل حقيقي: استلام تاسكات من شركات كبرى بمقابل مادي عادل.",
+          whyTitle: "الركائز الأساسية",
+          stat1: "التنوع العصبي (التوحد)",
+          stat1Text: "تقديم واجهات تكيفية حسياً ومسارات عمل منظمة.",
+          stat2: "التنوع الحركي (الشلل الدماغي)",
+          stat2Text: "تصفح محسّن حركياً وتفاعل مدعوم بالصوت.",
+          stat3: "احتياجات التعلم الإدراكية",
+          stat3Text: "إدارة مبسطة للعبء المعرفي عبر ذكاء نور الاصطناعي.",
+          techTitle: "المحرك التقني التكيفي (Neuro-Adaptive Engine)",
+          techText: "محركنا التكيفي لا يقتصر على تغيير الألوان أو الخطوط؛ بل يعيد هيكلة المعلومات بالكامل بناءً على احتياجات المستخدم عبر (Nour AI). فإذا كان المستخدم يعاني من صعوبات التعلم، يقوم المحرك بتبسيط العبء المعرفي (Cognitive Buffering). وإذا كان المستخدم يعاني من الشلل الدماغي (CP)، يتم تفعيل واجهات تناسب القيود الحركية بمساعدة مدخلات مساعدة، مما يضمن بنية تحتية شاملة وداعمة (Inclusive Infrastructure).",
+          howTitle: "مسار الـ 5% المهني",
+          how1: "الربط المباشر: جسر بين التدريب التقني المتخصص وحصة التوظيف القانونية في الشركات والبنوك.",
+          how2: "التعلم التكيفي: تخصيص التجربة للأنماط المعرفية المختلفة.",
+          how3: "التمكين المهني: بيئة تمكينية لضمان تحويل القدرات إلى قيمة عملية.",
           partnersTitle: "شركاء النجاح",
-          partnersSubtitle: "نفخر بالتعاون مع مؤسسات رائدة تشاركنا رؤيتنا",
+          partnersSubtitle: "نفخر بالتعاون مع مؤسسات رائدة تشاركنا رؤيتنا في التمكين التقني الشامل",
           ershadName: "أكاديمية إرشاد",
-          ershadDesc: "أكاديمية إرشاد هي منصة تعليمية رائدة متخصصة في تقديم برامج تدريبية متكاملة في مجالات التربية الخاصة، الإرشاد الأسري، والصحة النفسية. تهدف المنصة إلى تيسير الوصول إلى العلم النفسي والتربوي بأسلوب مبسط وعملي يلامس الاحتياجات اليومية للأفراد والأسر وذوي الاحتياجات الخاصة، مما يساهم في بناء مجتمع أكثر تماسكاً ووعياً وتوازناً.",
+          ershadDesc: "أكاديمية إرشاد هي منصة تعليمية رائدة متخصصة في تقديم برامج تدريبية متكاملة في مجالات التربية الخاصة، الإرشاد الأسري، والصحة النفسية. تهدف المنصة إلى تيسير الوصول إلى العلم النفسي والتربوي بأسلوب مبسط وعملي.",
           ershadCta: "زيارة أكاديمية إرشاد",
           helpTitle: "تحتاج مساعدة الآن؟",
           helpText:
-            "تواصل مباشرة مع جمعية متخصصة للحصول على دعم واستشارات لذوي التوحد وأسرهم.",
-          helpCta: "الانتقال إلى الجمعية المصرية للتوحد",
+            "تواصل مباشرة مع جمعية متخصصة للحصول على دعم واستشارات.",
+          helpCta: "الجمعية المصرية للتوحد",
           helpNote: "يفتح الرابط في نافذة جديدة.",
           hrTitle: "هل أنت صاحب شركة؟",
-          hrText: "حقق نسبة الـ ٥٪ ووظف كفاءات استثنائية في تدقيق البيانات والبرمجيات.",
+          hrText: "حقق نسبة الـ 5% القانونية واستقطب كفاءات استثنائية من جميع الأطياف في مجالات التقنية وتحليل البيانات.",
           hrCta: "تواصل معنا كشركة",
           logoAlt: "شعار طفرة",
         }
       : {
-          heroTitle:
-            "Tafrah: A training and employment platform specialized for autistic people in Egypt.",
-          heroText:
-            "We provide a calm work environment, direct instructions, and real job opportunities that protect your rights.",
+          heroTitle: "Unlocking Human Potential Through Adaptive Intelligence.",
+          heroText: "Tafrah is an AI-driven ecosystem providing professional technical training for the neurodivergent community and individuals with Cerebral Palsy, turning social inclusion into a strategic economic asset.",
           heroCta: "Start your journey now",
-          whyTitle: "Why Tafrah?",
-          stat1: "800,000",
-          stat1Text: "Autistic people in Egypt who need a suitable job opportunity.",
-          stat2: "5%",
-          stat2Text: "The legal ratio we help companies achieve professionally.",
-          stat3: "Zero distractions",
-          stat3Text: "Our training approach ensures maximum focus.",
-          howTitle: "How we change your career",
-          how1: "Smart assessment: a simple test to identify your strengths.",
-          how2: "Professional learning: short courses in data, design, and software testing.",
-          how3: "Real work: tasks from major companies with fair pay.",
+          whyTitle: "The Three Pillars",
+          stat1: "Neurodivergence (Autism)",
+          stat1Text: "Sensory-adaptive rendering and structured workflows.",
+          stat2: "Physical Diversity (CP)",
+          stat2Text: "Motor-optimized navigation and voice-assisted interaction.",
+          stat3: "Cognitive Learning Needs",
+          stat3Text: "Simplified cognitive load management through Nour AI.",
+          techTitle: "The Neuro-Adaptive Engine",
+          techText: "Our Neuro-Adaptive Engine goes beyond merely changing colors or fonts; it dynamically adapts the entire hierarchy of information through Nour AI. If a user has a learning disability, it provides cognitive buffering to simplify the load. For individuals with Cerebral Palsy (CP), it optimizes inputs for motor efficiency, creating a truly robust and inclusive infrastructure tailored for empowerment.",
+          howTitle: "The 5% Pathway",
+          how1: "Direct Link: A bridge between specialized technical training and the mandatory legal employment quota.",
+          how2: "Adaptive Intelligence: Tailoring the learning experience to the specific cognitive profile of the user.",
+          how3: "Professional Empowerment: Turning inclusion capabilities into strategic value for organizations.",
           partnersTitle: "Success Partners",
           partnersSubtitle: "We're proud to collaborate with leading organizations that share our vision",
           ershadName: "Ershad Academy",
-          ershadDesc: "Ershad Academy is a leading educational platform specializing in comprehensive training programs in special education, family counseling, and mental health. The platform aims to facilitate access to psychological and educational knowledge in a simplified and practical approach that addresses the daily needs of individuals, families, and people with special needs, contributing to building a more cohesive, aware, and balanced society.",
+          ershadDesc: "Ershad Academy is a leading educational platform specializing in comprehensive training programs in special education, family counseling, and mental health. The platform aims to facilitate access to psychological and educational knowledge in a simplified and practical approach.",
           ershadCta: "Visit Ershad Academy",
           helpTitle: "Need help now?",
           helpText:
@@ -67,7 +69,7 @@ export default function HomePage() {
           helpCta: "Visit the Egyptian Autistic Society",
           helpNote: "Opens in a new tab.",
           hrTitle: "Are you a company owner?",
-          hrText: "Meet the 5% requirement and hire exceptional talent in data and software QA.",
+          hrText: "Meet the 5% requirement by employing exceptional talent empowered by our inclusive digital infrastructure.",
           hrCta: "Contact us as a company",
           logoAlt: "Tafrah logo",
         };
@@ -85,10 +87,10 @@ export default function HomePage() {
             priority
           />
           <div className="flex max-w-4xl flex-col gap-4">
-            <h1 className="text-[#2E5C8A] font-semibold">
+            <h1 className="text-[#2E5C8A] font-semibold text-2xl md:text-3xl">
               {labels.heroTitle}
             </h1>
-            <p>
+            <p className="text-lg">
               {labels.heroText}
             </p>
           </div>
@@ -101,26 +103,32 @@ export default function HomePage() {
         </section>
 
         <section className="flex flex-col gap-6">
-          <h2 className="font-semibold text-[#2E5C8A]">{labels.whyTitle}</h2>
+          <h2 className="font-semibold text-[#2E5C8A] text-xl">{labels.whyTitle}</h2>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="flex flex-col gap-3 rounded-sm border border-[#D9E6F2] bg-white p-6">
-              <div className="text-[24px] font-semibold text-[#2E5C8A]">{labels.stat1}</div>
+              <div className="text-[20px] font-semibold text-[#2E5C8A]">{labels.stat1}</div>
               <p>{labels.stat1Text}</p>
             </div>
             <div className="flex flex-col gap-3 rounded-sm border border-[#D9E6F2] bg-white p-6">
-              <div className="text-[24px] font-semibold text-[#2E5C8A]">{labels.stat2}</div>
+              <div className="text-[20px] font-semibold text-[#2E5C8A]">{labels.stat2}</div>
               <p>{labels.stat2Text}</p>
             </div>
             <div className="flex flex-col gap-3 rounded-sm border border-[#D9E6F2] bg-white p-6">
-              <div className="text-[24px] font-semibold text-[#2E5C8A]">{labels.stat3}</div>
+              <div className="text-[20px] font-semibold text-[#2E5C8A]">{labels.stat3}</div>
               <p>{labels.stat3Text}</p>
             </div>
           </div>
         </section>
 
+        {/* Product / Technology Section */}
+        <section className="flex flex-col gap-4 rounded-sm border border-[#D9E6F2] bg-white p-6 md:p-8">
+          <h2 className="font-semibold text-[#2E5C8A] text-xl">{labels.techTitle}</h2>
+          <p className="leading-relaxed text-[#495057]">{labels.techText}</p>
+        </section>
+
         <section className="flex flex-col gap-6">
-          <h2 className="font-semibold text-[#2E5C8A]">{labels.howTitle}</h2>
-          <ul className="list-inside list-disc rounded-sm border border-[#D9E6F2] bg-[#F5F9FF] px-6 py-4">
+          <h2 className="font-semibold text-[#2E5C8A] text-xl">{labels.howTitle}</h2>
+          <ul className="list-inside list-disc rounded-sm border border-[#D9E6F2] bg-[#F5F9FF] px-6 py-4 space-y-2">
             <li>{labels.how1}</li>
             <li>{labels.how2}</li>
             <li>{labels.how3}</li>
@@ -145,11 +153,10 @@ export default function HomePage() {
 
         <section className="flex flex-col gap-6">
           <div className="flex flex-col gap-1">
-            <h2 className="font-semibold text-[#2E5C8A]">{labels.partnersTitle}</h2>
+            <h2 className="font-semibold text-[#2E5C8A] text-xl">{labels.partnersTitle}</h2>
             <p className="text-sm text-[#495057]">{labels.partnersSubtitle}</p>
           </div>
           <div className="grid grid-cols-1 gap-6">
-            {/* Ershad Academy */}
             <a
               href="https://www.ershadacademy.com"
               target="_blank"
@@ -169,7 +176,7 @@ export default function HomePage() {
                 <h3 className="text-lg font-semibold text-[#2E5C8A]">{labels.ershadName}</h3>
                 <p className="text-sm leading-relaxed text-[#495057]">{labels.ershadDesc}</p>
                 <span className="inline-flex items-center gap-1 text-sm font-medium text-[#2E5C8A] group-hover:underline">
-                  {labels.ershadCta} ←
+                  {labels.ershadCta} &rarr;
                 </span>
               </div>
             </a>
