@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import TopBar from "../../components/TopBar";
-import { useLanguage } from "../../components/LanguageProvider";
+import TopBar from "../components/TopBar";
+import { useLanguage } from "../components/LanguageProvider";
 
 export default function AdaptiveOnboarding() {
   const { language } = useLanguage();
@@ -133,7 +133,7 @@ export default function AdaptiveOnboarding() {
                   <button
                     key={key}
                     onClick={() => setDisabilityType(key)}
-                    className={\`p-4 border-2 rounded-lg text-left transition-colors \${disabilityType === key ? 'border-[#2E5C8A] bg-[#E9 EFF5]' : 'border-gray-200 hover:border-[#2E5C8A]'}\`}
+                    className={`p-4 border-2 rounded-lg text-left transition-colors ${disabilityType === key ? 'border-[#2E5C8A] bg-[#E9 EFF5]' : 'border-gray-200 hover:border-[#2E5C8A]'}`}
                     aria-pressed={disabilityType === key}
                   >
                     <span className="font-semibold text-lg">{label}</span>
@@ -218,8 +218,8 @@ export default function AdaptiveOnboarding() {
                   <div>
                     <label className="font-semibold block mb-2">{l.voiceCommand}</label>
                     <div className="flex gap-4">
-                      <button onClick={() => setUiPrefs({...uiPrefs, voiceCommand: true})} className={\`px-4 py-2 rounded \${uiPrefs.voiceCommand ? 'bg-[#2E5C8A] text-white' : 'bg-gray-200'}\`}>{l.on}</button>
-                      <button onClick={() => setUiPrefs({...uiPrefs, voiceCommand: false})} className={\`px-4 py-2 rounded \${!uiPrefs.voiceCommand ? 'bg-[#2E5C8A] text-white' : 'bg-gray-200'}\`}>{l.off}</button>
+                      <button onClick={() => setUiPrefs({...uiPrefs, voiceCommand: true})} className={`px-4 py-2 rounded ${uiPrefs.voiceCommand ? 'bg-[#2E5C8A] text-white' : 'bg-gray-200'}`}>{l.on}</button>
+                      <button onClick={() => setUiPrefs({...uiPrefs, voiceCommand: false})} className={`px-4 py-2 rounded ${!uiPrefs.voiceCommand ? 'bg-[#2E5C8A] text-white' : 'bg-gray-200'}`}>{l.off}</button>
                     </div>
                   </div>
                 </div>
@@ -231,15 +231,15 @@ export default function AdaptiveOnboarding() {
                    <div>
                     <label className="font-semibold block mb-2">{l.summarization}</label>
                     <div className="flex gap-4">
-                      <button onClick={() => setUiPrefs({...uiPrefs, summarization: true})} className={\`px-4 py-2 rounded \${uiPrefs.summarization ? 'bg-[#2E5C8A] text-white' : 'bg-gray-200'}\`}>{l.on}</button>
-                      <button onClick={() => setUiPrefs({...uiPrefs, summarization: false})} className={\`px-4 py-2 rounded \${!uiPrefs.summarization ? 'bg-[#2E5C8A] text-white' : 'bg-gray-200'}\`}>{l.off}</button>
+                      <button onClick={() => setUiPrefs({...uiPrefs, summarization: true})} className={`px-4 py-2 rounded ${uiPrefs.summarization ? 'bg-[#2E5C8A] text-white' : 'bg-gray-200'}`}>{l.on}</button>
+                      <button onClick={() => setUiPrefs({...uiPrefs, summarization: false})} className={`px-4 py-2 rounded ${!uiPrefs.summarization ? 'bg-[#2E5C8A] text-white' : 'bg-gray-200'}`}>{l.off}</button>
                     </div>
                   </div>
                   <div>
                     <label className="font-semibold block mb-2">{l.tts}</label>
                     <div className="flex gap-4">
-                      <button onClick={() => setUiPrefs({...uiPrefs, textToSpeech: true})} className={\`px-4 py-2 rounded \${uiPrefs.textToSpeech ? 'bg-[#2E5C8A] text-white' : 'bg-gray-200'}\`}>{l.on}</button>
-                      <button onClick={() => setUiPrefs({...uiPrefs, textToSpeech: false})} className={\`px-4 py-2 rounded \${!uiPrefs.textToSpeech ? 'bg-[#2E5C8A] text-white' : 'bg-gray-200'}\`}>{l.off}</button>
+                      <button onClick={() => setUiPrefs({...uiPrefs, textToSpeech: true})} className={`px-4 py-2 rounded ${uiPrefs.textToSpeech ? 'bg-[#2E5C8A] text-white' : 'bg-gray-200'}`}>{l.on}</button>
+                      <button onClick={() => setUiPrefs({...uiPrefs, textToSpeech: false})} className={`px-4 py-2 rounded ${!uiPrefs.textToSpeech ? 'bg-[#2E5C8A] text-white' : 'bg-gray-200'}`}>{l.off}</button>
                     </div>
                   </div>
                 </div>

@@ -1,0 +1,1 @@
+const fs = require("fs"); let t = fs.readFileSync("app/onboarding/page.tsx", "utf8"); t = t.replace(/\\\\`/g, "`").replace(/\\\\\\$/g, "$$"); fs.writeFileSync("app/onboarding/page.tsx", t); console.log("Fixed");
