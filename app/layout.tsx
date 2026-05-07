@@ -5,6 +5,7 @@ import Footer from "./components/Footer";
 import { LanguageProvider } from "./components/LanguageProvider";
 import { AuthProvider } from "./components/AuthProvider";
 import { ToastProvider } from "./components/Toast";
+import ThemeRegistry from "../components/Adaptive/ThemeRegistry";
 import "./globals.css";
 
 const cairo = Cairo({
@@ -56,7 +57,7 @@ export default async function RootLayout({
         <LanguageProvider initialLanguage={initialLanguage}>
           <AuthProvider>
             <ToastProvider>
-              {children}
+              <ThemeRegistry>{children}</ThemeRegistry>
               <Footer />
             </ToastProvider>
           </AuthProvider>

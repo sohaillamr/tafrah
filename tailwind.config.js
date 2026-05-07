@@ -1,8 +1,11 @@
 module.exports = {
-  content: ["./app/**/*.{js,ts,jsx,tsx}"],
+  content: [
+    "./components/**/*.{js,ts,jsx,tsx}","./app/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
       colors: {
+        autism: { bg: "#E2E8F0", text: "#334155", panel: "#F1F5F9" },
+        cp: { focus: "#FFD700" },
         primary: "#6B90B5", // Soft Blue
         secondary: "#FFD54F", // Warm Yellow
         error: "#FFB74D", // Soft Orange/Warm Yellow instead of bright red
