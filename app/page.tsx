@@ -13,6 +13,7 @@ export default function HomePage() {
           heroTitle: "إطلاق العنان للقدرات البشرية من خلال الذكاء الاصطناعي التكيفي.",
           heroText: "طفرة هي منظومة ذكاء اصطناعي تقدم تدريباً تقنياً مهنياً لمجتمع التنوع العصبي وذوي الشلل الدماغي، لتحويل الدمج المجتمعي إلى أصل اقتصادي استراتيجي.",
           heroCta: "ابدأ رحلتك الآن",
+          cardMicroCopy: "هل تحتاج مساعدة في استخراج بطاقة الخدمات المتكاملة؟ نحن هنا لدعمك.",
           whyTitle: "الركائز الأساسية",
           stat1: "التنوع العصبي (التوحد)",
           stat1Text: "تقديم واجهات تكيفية حسياً ومسارات عمل منظمة.",
@@ -26,6 +27,7 @@ export default function HomePage() {
           how1: "الربط المباشر: جسر بين التدريب التقني المتخصص وحصة التوظيف القانونية في الشركات والبنوك.",
           how2: "التعلم التكيفي: تخصيص التجربة للأنماط المعرفية المختلفة.",
           how3: "التمكين المهني: بيئة تمكينية لضمان تحويل القدرات إلى قيمة عملية.",
+          how4: "الاستعداد القانوني والإداري: لا نكتفي بالتدريب بل نوفر دعماً وإرشاداً شاملاً لمستفيدينا لاستخراج \"بطاقة الخدمات المتكاملة\"، لضمان الاعتراف القانوني بهم وجاهزيتهم للحصول على حقوقهم الوطنية وفرص التوظيف.",
           partnersTitle: "شركاء النجاح",
           partnersSubtitle: "نفخر بالتعاون مع مؤسسات رائدة تشاركنا رؤيتنا في التمكين التقني الشامل",
           ershadName: "أكاديمية إرشاد",
@@ -36,8 +38,8 @@ export default function HomePage() {
             "تواصل مباشرة مع جمعية متخصصة للحصول على دعم واستشارات.",
           helpCta: "الجمعية المصرية للتوحد",
           helpNote: "يفتح الرابط في نافذة جديدة.",
-          hrTitle: "هل أنت صاحب شركة؟",
-          hrText: "حقق نسبة الـ 5% القانونية واستقطب كفاءات استثنائية من جميع الأطياف في مجالات التقنية وتحليل البيانات.",
+          hrTitle: "هل أنت صاحب شركة؟ (جسر التوظيف)",
+          hrText: "بالنسبة لشركائنا من الشركات، تضمن طفرة حصول كل مرشح على التقييم الدقيق و \"بطاقة الخدمات المتكاملة\". نحن نتولى إزالة العوائق الإدارية، لنسهل على البنوك والشركات استيفاء متطلبات التنوع القانونية والحصول على أفضل الكفاءات الاستثنائية بفعالية وبدون تعقيدات.",
           hrCta: "تواصل معنا كشركة",
           logoAlt: "شعار طفرة",
         }
@@ -45,6 +47,7 @@ export default function HomePage() {
           heroTitle: "Unlocking Human Potential Through Adaptive Intelligence.",
           heroText: "Tafrah is an AI-driven ecosystem providing professional technical training for the neurodivergent community and individuals with Cerebral Palsy, turning social inclusion into a strategic economic asset.",
           heroCta: "Start your journey now",
+          cardMicroCopy: "Need help with your Integrated Service Card? We've got you covered.",
           whyTitle: "The Three Pillars",
           stat1: "Neurodivergence (Autism)",
           stat1Text: "Sensory-adaptive rendering and structured workflows.",
@@ -58,6 +61,7 @@ export default function HomePage() {
           how1: "Direct Link: A bridge between specialized technical training and the mandatory legal employment quota.",
           how2: "Adaptive Intelligence: Tailoring the learning experience to the specific cognitive profile of the user.",
           how3: "Professional Empowerment: Turning inclusion capabilities into strategic value for organizations.",
+          how4: "Legal & Administrative Readiness: We don't just train; we facilitate. Tafrah provides comprehensive support and guidance for our beneficiaries to obtain their Integrated Service Card, ensuring they are legally recognized and ready to access their national rights and employment quotas.",
           partnersTitle: "Success Partners",
           partnersSubtitle: "We're proud to collaborate with leading organizations that share our vision",
           ershadName: "Ershad Academy",
@@ -68,8 +72,8 @@ export default function HomePage() {
             "Reach out directly to a specialized organization for support and guidance.",
           helpCta: "Visit the Egyptian Autistic Society",
           helpNote: "Opens in a new tab.",
-          hrTitle: "Are you a company owner?",
-          hrText: "Meet the 5% requirement by employing exceptional talent empowered by our inclusive digital infrastructure.",
+          hrTitle: "Are you a company owner? (Bridge to Employment)",
+          hrText: "For our corporate partners, Tafrah guarantees that every candidate is pre-vetted and possesses the Integrated Service Card. We handle the administrative friction, making it easier for banks and companies to meet their legal diversity requirements with zero hassle.",
           hrCta: "Contact us as a company",
           logoAlt: "Tafrah logo",
         };
@@ -94,12 +98,15 @@ export default function HomePage() {
               {labels.heroText}
             </p>
           </div>
-          <Link
-            href="/auth/select"
-            className="inline-flex min-h-12 items-center justify-center rounded-md bg-[#2E5C8A] px-8 text-white"
-          >
-            {labels.heroCta}
-          </Link>
+          <div className="flex flex-col items-center gap-2">
+            <Link
+              href="/auth/select"
+              className="inline-flex min-h-12 items-center justify-center rounded-md bg-[#2E5C8A] px-8 text-white mt-2"
+            >
+              {labels.heroCta}
+            </Link>
+            <p className="text-sm font-medium text-[#2E5C8A] opacity-80 mt-1">{labels.cardMicroCopy}</p>
+          </div>
         </section>
 
         <section className="flex flex-col gap-6">
@@ -120,7 +127,6 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Product / Technology Section */}
         <section className="flex flex-col gap-4 rounded-sm border border-[#D9E6F2] bg-white p-6 md:p-8">
           <h2 className="font-semibold text-[#2E5C8A] text-xl">{labels.techTitle}</h2>
           <p className="leading-relaxed text-[#495057]">{labels.techText}</p>
@@ -132,6 +138,7 @@ export default function HomePage() {
             <li>{labels.how1}</li>
             <li>{labels.how2}</li>
             <li>{labels.how3}</li>
+            <li>{labels.how4}</li>
           </ul>
         </section>
 
