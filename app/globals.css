@@ -7,13 +7,71 @@ html.assistant-active footer {
   display: none !important;
 }
 
+/* Base Theme */
+:root {
+  --bg-color: #f8f9fa;
+  --text-color: #212529;
+  --accent-color: #2e5c8a;
+  --panel-bg: #ffffff;
+  --card-border: #d9e6f2;
+  --font-type: "Open Sans", ui-sans-serif, system-ui, sans-serif;
+  --letter-spacing: 0.02em;
+  --button-padding: 0.5rem 1rem;
+}
+
+/* High Contrast Theme */
+[data-theme="high-contrast"] {
+  --bg-color: #000000;
+  --text-color: #ffffff;
+  --accent-color: #ffff00;
+  --panel-bg: #111111;
+  --card-border: #ffffff;
+}
+
+/* Muted Tones */
+[data-theme="muted"] {
+  --bg-color: #e0e0e0;
+  --text-color: #333333;
+  --accent-color: #555555;
+  --panel-bg: #d0d0d0;
+  --card-border: #bfbfbf;
+}
+
+/* Pastel Theme */
+[data-theme="pastel"] {
+  --bg-color: #fdfbf7;
+  --text-color: #5c4d4d;
+  --accent-color: #8da399;
+  --panel-bg: #ffffff;
+  --card-border: #e6e0d8;
+}
+
+/* Dyslexia Font */
+[data-font="dyslexia"] {
+  --font-type: "OpenDyslexic", "Comic Sans MS", cursive, sans-serif;
+}
+
+/* Spaced Text */
+[data-density="spaced"] {
+  line-height: 2.2;
+  --letter-spacing: 0.05em;
+}
+
+/* Motor / CP Scaling */
+[data-scale="small"] {
+  --button-padding: 0.25rem 0.5rem;
+}
+[data-scale="giant"] {
+  --button-padding: 1.5rem 3rem;
+  font-size: 1.25rem;
+}
+
 body {
-  background-color: #f8f9fa;
-  color: #212529;
+  background-color: var(--bg-color);
+  color: var(--text-color);
   font-size: 18px;
-  line-height: 1.8;
-  font-family: "Open Sans", ui-sans-serif, system-ui, sans-serif;
-  letter-spacing: 0.02em; /* Ensure fonts aren't too dense */
+  font-family: var(--font-type);
+  letter-spacing: var(--letter-spacing);
 }
 
 @layer base {

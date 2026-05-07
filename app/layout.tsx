@@ -35,8 +35,24 @@ export default async function RootLayout({
   const stored = cookieStore.get("tafrah_lang")?.value;
   const initialLanguage = stored === "en" || stored === "ar" ? stored : "ar";
   const htmlDir = initialLanguage === "ar" ? "rtl" : "ltr";  return (
-    <html lang={initialLanguage} dir={htmlDir}>
-      <body className={cairo.className}>
+    <html lang={initialLanguage} dir={htmlDir}>      <head>
+        <script
+          dangerouslySetInnerHTML={{
+             __html: `
+              try {
+                const prefs = localStorage.getItem('uiPreferences');
+                if (prefs) {
+                  const p = JSON.parse(prefs);
+                  if (p.theme) document.documentElement.setAttribute('data-theme', p.theme);
+                  if (p.fontType) document.documentElement.setAttribute('data-font', p.fontType);
+                  if (p.textDensity) document.documentElement.setAttribute('data-density', p.textDensity);
+                  if (p.scale) document.documentElement.setAttribute('data-scale', p.scale);
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
+      </head>      <body className={cairo.className}>
         <LanguageProvider initialLanguage={initialLanguage}>
           <AuthProvider>
             <ToastProvider>

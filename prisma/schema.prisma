@@ -14,8 +14,7 @@ model User {
   passwordHash  String
   name          String
   role          String   @default("student") // student | hr | admin
-  status        String   @default("pending") // pending | verified | banned
-  companyName   String?
+  status        String   @default("pending") // pending | verified | banned  disabilityType String? // AUTISM | CP | LEARNING_DIS  companyName   String?
   commercialReg String?
   quizScore     Int?
   avatarUrl     String?
