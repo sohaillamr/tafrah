@@ -1,258 +1,110 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import TopBar from "../components/TopBar";
-import { useLanguage } from "../components/LanguageProvider";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useThemeStore } from '../../lib/store/themeStore';
 
-export default function AdaptiveOnboarding() {
-  const { language } = useLanguage();
+export default function OnboardingWizard() {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [disabilityType, setDisabilityType] = useState<string | null>(null);
-  
-  // Adaptive settings
-  const [uiPrefs, setUiPrefs] = useState({
-    theme: "light",          // For Autism: light, high-contrast, muted, pastel
-    textDensity: "standard", // For Autism: standard, spaced
-    fontType: "sans",        // For Autism: sans, dyslexia
-    scale: "medium",         // For CP: small, medium, giant
-    voiceCommand: false,     // For CP
-    summarization: false,    // For Learning Disabilities
-    textToSpeech: false      // For Learning Disabilities
-  });
+  const { profile, setProfile, toggleFocusMode, toggleReadingGuide, toggleTTS } = useThemeStore();
+  const [answers, setAnswers] = useState({ interaction: '', visual: '', reading: '' });
 
-  const goNext = () => setStep(s => s + 1);
-  const goBack = () => setStep(s => s - 1);
-
-  const savePreferences = async () => {
-    try {
-      const res = await fetch("/api/users/preferences", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ disabilityType, uiSettings: uiPrefs })
-      });
-      
-      // Update global theme/store implicitly if using Context or Zustand,
-      // but here we simply navigate after saving.
-      if (res.ok) {
-        // Save to localStorage so a rapid theme engine (next-themes or equivalent) can pick it up.
-        localStorage.setItem("uiPreferences", JSON.stringify(uiPrefs));
-        document.documentElement.setAttribute('data-theme', uiPrefs.theme);
-        // trigger global update or re-render
-        window.dispatchEvent(new Event("ui-prefs-updated"));
-        
-        router.push("/dashboard");
-      }
-    } catch (err) {
-      console.error("Failed to save preferences", err);
+  const handleNext = () => {
+    if (step === 2) {
+      if (answers.reading === 'yes') setProfile('ld');
+      else if (answers.interaction === 'buttons') setProfile('cp');
+      else setProfile('autism');
     }
+    if (step < 3) setStep(s => s + 1);
+    else saveAndRedirect();
   };
 
-  const l = language === 'ar' ? {
-    step1Title: "مرحباً بك في رحلتك",
-    step1Desc: "لتقديم أفضل تجربة، يرجى اختيار ملفك المناسب:",
-    types: {
-      AUTISM: "التنوع العصبي (التوحد)",
-      CP: "التنوع الحركي (الشلل الدماغي)",
-      LEARNING_DIS: "صعوبات التعلم"
-    },
-    next: "التالي",
-    back: "الخلف",
-    finish: "إنهاء وبدء المعسكر",
-    autismSettings: "إعدادات الراحة الحسية",
-    cpSettings: "إعدادات الوصول الحركي",
-    ldSettings: "إعدادات الدعم الإدراكي",
-    visualSens: "الحساسية البصرية",
-    mutedTones: "ألوان هادئة",
-    highContrast: "تباين عالي",
-    pastelTheme: "ألوان باستيل",
-    textDensity: "كثافة النص",
-    spaced: "متباعد (مبسط)",
-    standard: "عادي",
-    font: "الخط",
-    dyslexia: "مُيسر لعسر القراءة",
-    sans: "بدون تذييل",
-    scale: "حجم الواجهة (الأزرار)",
-    small: "صغير",
-    medium: "متوسط",
-    giant: "كبير جداً",
-    voiceCommand: "الأوامر الصوتية",
-    summarization: "التلخيص التلقائي (نور AI)",
-    tts: "تحويل النص إلى كلام تلقائياً",
-    on: "تشغيل",
-    off: "إيقاف"
-  } : {
-    step1Title: "Welcome to Your Journey",
-    step1Desc: "To provide the best experience, please select your profile:",
-    types: {
-      AUTISM: "Neurodivergence (Autism)",
-      CP: "Physical Diversity (Cerebral Palsy)",
-      LEARNING_DIS: "Learning Disabilities"
-    },
-    next: "Next",
-    back: "Back",
-    finish: "Finish and Start Boot-camp",
-    autismSettings: "Sensory Comfort Settings",
-    cpSettings: "Motor Accessibility Settings",
-    ldSettings: "Cognitive Support Settings",
-    visualSens: "Visual Sensitivity",
-    mutedTones: "Muted Tones",
-    highContrast: "High Contrast",
-    pastelTheme: "Pastel Theme",
-    textDensity: "Text Density",
-    spaced: "Spaced / Simplified",
-    standard: "Standard",
-    font: "Font Type",
-    dyslexia: "Dyslexia-friendly",
-    sans: "Clean Sans-Serif",
-    scale: "Interface Scale",
-    small: "Small",
-    medium: "Medium",
-    giant: "Giant Buttons (XL)",
-    voiceCommand: "Voice Command Support",
-    summarization: "Automatic Summarization (Nour AI)",
-    tts: "Text-to-Speech",
-    on: "On",
-    off: "Off"
+  const saveAndRedirect = async () => {
+    // Ideally this would save to the DB, but we update store and persist to local storage for now.
+    document.cookie="tafrah_onboarded=true; path=/"; router.push("/dashboard");
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F9FF]">
-      <TopBar />
-      <main className="max-w-2xl mx-auto py-12 px-6">
-        <div className="bg-white p-8 rounded-lg shadow-sm border border-[#D9E6F2]">
-          
+    <div className={`min-h-screen bg-gray-50 flex items-center justify-center p-4`}>
+      <div className="bg-white p-8 max-w-2xl w-full rounded-2xl shadow-lg relative overflow-hidden">
+        <AnimatePresence mode="wait">
           {step === 1 && (
-            <div className="flex flex-col gap-6">
-              <h1 className="text-2xl font-bold text-[#2E5C8A] text-center" aria-live="polite">{l.step1Title}</h1>
-              <p className="text-center text-gray-600">{l.step1Desc}</p>
-              
-              <div className="flex flex-col gap-4">
-                {Object.entries(l.types).map(([key, label]) => (
-                  <button
-                    key={key}
-                    onClick={() => setDisabilityType(key)}
-                    className={`p-4 border-2 rounded-lg text-left transition-colors ${disabilityType === key ? 'border-[#2E5C8A] bg-[#E9 EFF5]' : 'border-gray-200 hover:border-[#2E5C8A]'}`}
-                    aria-pressed={disabilityType === key}
-                  >
-                    <span className="font-semibold text-lg">{label}</span>
-                  </button>
-                ))}
+            <motion.div key="step1" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }}>
+              <h2 className="text-3xl font-bold mb-6">Welcome. Let&apos;s get started.</h2>
+              <div className="space-y-4">
+                <input type="email" placeholder="Email or Student ID" className="w-full p-4 border rounded-xl" />
+                <input type="password" placeholder="Password" className="w-full p-4 border rounded-xl" />
+                <button onClick={handleNext} className="w-full py-4 bg-[#2E5C8A] text-white rounded-xl font-bold mt-4">Continue to Setup</button>
               </div>
-              
-              <button 
-                disabled={!disabilityType}
-                onClick={goNext}
-                className="mt-6 bg-[#2E5C8A] text-white py-3 px-6 rounded disabled:opacity-50 font-bold"
-              >
-                {l.next}
-              </button>
-            </div>
+            </motion.div>
           )}
 
           {step === 2 && (
-            <div className="flex flex-col gap-6">
-              <h1 className="text-2xl font-bold text-[#2E5C8A]" aria-live="polite">
-                {disabilityType === 'AUTISM' && l.autismSettings}
-                {disabilityType === 'CP' && l.cpSettings}
-                {disabilityType === 'LEARNING_DIS' && l.ldSettings}
-              </h1>
-
-              {/* Autism Content */}
-              {disabilityType === 'AUTISM' && (
-                <div className="space-y-6">
-                  <div>
-                    <label className="font-semibold block mb-2">{l.visualSens}</label>
-                    <select 
-                      className="w-full p-2 border rounded"
-                      value={uiPrefs.theme} 
-                      onChange={e => setUiPrefs({...uiPrefs, theme: e.target.value})}
-                    >
-                      <option value="light">{l.standard}</option>
-                      <option value="high-contrast">{l.highContrast}</option>
-                      <option value="muted">{l.mutedTones}</option>
-                      <option value="pastel">{l.pastelTheme}</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="font-semibold block mb-2">{l.textDensity}</label>
-                    <select 
-                      className="w-full p-2 border rounded"
-                      value={uiPrefs.textDensity} 
-                      onChange={e => setUiPrefs({...uiPrefs, textDensity: e.target.value})}
-                    >
-                      <option value="standard">{l.standard}</option>
-                      <option value="spaced">{l.spaced}</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="font-semibold block mb-2">{l.font}</label>
-                    <select 
-                      className="w-full p-2 border rounded"
-                      value={uiPrefs.fontType} 
-                      onChange={e => setUiPrefs({...uiPrefs, fontType: e.target.value})}
-                    >
-                      <option value="sans">{l.sans}</option>
-                      <option value="dyslexia">{l.dyslexia}</option>
-                    </select>
-                  </div>
+            <motion.div key="step2" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }}>
+              <h2 className="text-3xl font-bold mb-6">Discovery Assessment</h2>
+              <div className="space-y-6">
+                <div>
+                  <p className="font-semibold mb-2">How do you prefer to interact with the screen?</p>
+                  <select className="w-full p-4 border rounded-xl" onChange={e => setAnswers({...answers, interaction: e.target.value})}>
+                    <option value="">Select preference</option>
+                    <option value="keyboard">Keyboard shortcuts</option>
+                    <option value="buttons">Large touch targets / buttons</option>
+                  </select>
                 </div>
-              )}
-
-              {/* CP Content */}
-              {disabilityType === 'CP' && (
-                <div className="space-y-6">
-                  <div>
-                     <label className="font-semibold block mb-2">{l.scale}</label>
-                     <select 
-                      className="w-full p-2 border rounded"
-                      value={uiPrefs.scale} 
-                      onChange={e => setUiPrefs({...uiPrefs, scale: e.target.value})}
-                    >
-                      <option value="small">{l.small}</option>
-                      <option value="medium">{l.medium}</option>
-                      <option value="giant">{l.giant}</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="font-semibold block mb-2">{l.voiceCommand}</label>
-                    <div className="flex gap-4">
-                      <button onClick={() => setUiPrefs({...uiPrefs, voiceCommand: true})} className={`px-4 py-2 rounded ${uiPrefs.voiceCommand ? 'bg-[#2E5C8A] text-white' : 'bg-gray-200'}`}>{l.on}</button>
-                      <button onClick={() => setUiPrefs({...uiPrefs, voiceCommand: false})} className={`px-4 py-2 rounded ${!uiPrefs.voiceCommand ? 'bg-[#2E5C8A] text-white' : 'bg-gray-200'}`}>{l.off}</button>
-                    </div>
-                  </div>
+                <div>
+                  <p className="font-semibold mb-2">Which visual style is most comfortable for your eyes?</p>
+                  <select className="w-full p-4 border rounded-xl" onChange={e => setAnswers({...answers, visual: e.target.value})}>
+                    <option value="">Select visual style</option>
+                    <option value="standard">Standard</option>
+                    <option value="muted">Muted / Less Bright Colors</option>
+                    <option value="contrast">High Contrast</option>
+                  </select>
                 </div>
-              )}
-
-              {/* Learning Dis Content */}
-              {disabilityType === 'LEARNING_DIS' && (
-                <div className="space-y-6">
-                   <div>
-                    <label className="font-semibold block mb-2">{l.summarization}</label>
-                    <div className="flex gap-4">
-                      <button onClick={() => setUiPrefs({...uiPrefs, summarization: true})} className={`px-4 py-2 rounded ${uiPrefs.summarization ? 'bg-[#2E5C8A] text-white' : 'bg-gray-200'}`}>{l.on}</button>
-                      <button onClick={() => setUiPrefs({...uiPrefs, summarization: false})} className={`px-4 py-2 rounded ${!uiPrefs.summarization ? 'bg-[#2E5C8A] text-white' : 'bg-gray-200'}`}>{l.off}</button>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="font-semibold block mb-2">{l.tts}</label>
-                    <div className="flex gap-4">
-                      <button onClick={() => setUiPrefs({...uiPrefs, textToSpeech: true})} className={`px-4 py-2 rounded ${uiPrefs.textToSpeech ? 'bg-[#2E5C8A] text-white' : 'bg-gray-200'}`}>{l.on}</button>
-                      <button onClick={() => setUiPrefs({...uiPrefs, textToSpeech: false})} className={`px-4 py-2 rounded ${!uiPrefs.textToSpeech ? 'bg-[#2E5C8A] text-white' : 'bg-gray-200'}`}>{l.off}</button>
-                    </div>
-                  </div>
+                <div>
+                  <p className="font-semibold mb-2">Do you find reading long blocks of text challenging?</p>
+                  <select className="w-full p-4 border rounded-xl" onChange={e => setAnswers({...answers, reading: e.target.value})}>
+                    <option value="">Select option</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                  </select>
                 </div>
-              )}
-
-              <div className="flex justify-between mt-6">
-                <button onClick={goBack} className="text-gray-500 py-3 px-6 hover:bg-gray-100 rounded">{l.back}</button>
-                <button onClick={savePreferences} className="bg-[#2E5C8A] text-white py-3 px-6 rounded font-bold">{l.finish}</button>
+                <button onClick={handleNext} className="w-full py-4 bg-[#2E5C8A] text-white rounded-xl font-bold">Show My Recommendation</button>
               </div>
-            </div>
+            </motion.div>
           )}
-        </div>
-      </main>
+
+          {step === 3 && (
+            <motion.div key="step3" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }}>
+              <h2 className="text-3xl font-bold mb-4">Adaptability Wizard</h2>
+              <p className="mb-6 text-gray-600">Based on your choices, we recommend the <strong>{profile.toUpperCase()}</strong> mode.</p>
+              
+              <div className="p-6 border rounded-xl bg-gray-50 mb-6">
+                <h3 className="font-bold mb-2">Sample Course Preview</h3>
+                <p>This is how text will look. Hover over here and try the tools below to tailor your workspace.</p>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                <label className="flex items-center gap-3">
+                  <input type="checkbox" className="w-5 h-5" onChange={toggleFocusMode} />
+                  <span>Toggle Focus Mode (Reduces clutter)</span>
+                </label>
+                <label className="flex items-center gap-3">
+                  <input type="checkbox" className="w-5 h-5" onChange={toggleReadingGuide} />
+                  <span>Toggle Reading Assist (Highlight Bar)</span>
+                </label>
+                <label className="flex items-center gap-3">
+                  <input type="checkbox" className="w-5 h-5" onChange={toggleTTS} />
+                  <span>Enable Text-to-Speech</span>
+                </label>
+              </div>
+
+              <button onClick={handleNext} className="w-full py-4 bg-green-600 text-white rounded-xl font-bold text-xl">Save My Workspace</button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

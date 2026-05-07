@@ -19,7 +19,7 @@ export async function GET() {
         name: true,
         role: true,
         status: true,
-        companyName: true,
+        
         avatarUrl: true,
         bio: true,
         jobTitle: true,

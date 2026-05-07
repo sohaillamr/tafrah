@@ -31,8 +31,7 @@ export default function TopBar() {
       : {
           home: "Home",
           courses: "Courses",
-          jobs: "Jobs",
-          assistant: "Assistant",
+                    assistant: "Assistant",
           login: "Login",
           menu: "Menu",
           navLabel: "Main navigation",
@@ -43,7 +42,7 @@ export default function TopBar() {
           logoutLabel: "Logout",
         };
 
-  const dashboardHref = user?.role === "admin" ? "/admin" : user?.role === "hr" ? "/dashboard/hr" : "/dashboard/student";
+  const dashboardHref = user?.role === "admin" ? "/admin" : "/dashboard";
 
   const handleLogout = async () => {
     await logout();
@@ -93,12 +92,7 @@ export default function TopBar() {
               {labels.courses}
             </Link>
           </li>
-          <li>
-            <Link href="/jobs" className="min-h-12 inline-flex items-center">
-              {labels.jobs}
-            </Link>
-          </li>
-          <li>
+                    <li>
             <Link href="/assistant" className="min-h-12 inline-flex items-center">
               {labels.assistant}
             </Link>

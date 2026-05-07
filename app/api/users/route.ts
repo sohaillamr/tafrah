@@ -38,15 +38,13 @@ export async function GET(req: NextRequest) {
           name: true,
           role: true,
           status: true,
-          companyName: true,
+          
           createdAt: true,
           available: true,
-          _count: { select: { enrollments: true, applications: true } },
-        },
+          _count: { select: { enrollments: true } } },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,
-        take: limit,
-      }),
+        take: limit }),
       prisma.user.count({ where }),
     ]);
 

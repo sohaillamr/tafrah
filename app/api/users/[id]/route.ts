@@ -52,16 +52,13 @@ export async function PATCH(
       const user = await prisma.user.update({
         where: { id: userId },
         data,
-        select: { id: true, name: true, email: true, role: true, status: true },
-      });
+        select: { id: true, name: true, email: true, role: true, status: true } });
 
       await prisma.activityLog.create({
         data: {
           userId: session.userId,
           action: "admin_update_user",
-          details: `Updated user #${userId}: ${JSON.stringify(data)}`,
-        },
-      });
+          details: `Updated user #${userId}: ${JSON.stringify(data)}` } });
 
       return NextResponse.json({ user });
     }
@@ -82,9 +79,7 @@ export async function PATCH(
       data,
       select: {
         id: true, name: true, email: true, role: true, status: true,
-        bio: true, jobTitle: true, available: true,
-      },
-    });
+        bio: true, jobTitle: true, available: true } });
 
     return NextResponse.json({ user });
   } catch (error: unknown) {
@@ -123,14 +118,11 @@ export async function GET(
         bio: true,
         jobTitle: true,
         available: true,
-        companyName: true,
+        
         createdAt: true,
         enrollments: isSelfOrAdmin ? {
-          include: { course: { select: { titleAr: true, titleEn: true, slug: true } } },
-        } : false,
-        _count: { select: { enrollments: true, applications: isSelfOrAdmin } },
-      },
-    });
+          include: { course: { select: { titleAr: true, titleEn: true, slug: true } } } } : false,
+        _count: { select: { enrollments: true } } } });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -166,9 +158,7 @@ export async function DELETE(
       data: {
         userId: session.userId,
         action: "admin_delete_user",
-        details: `Deleted user #${userId}`,
-      },
-    });
+        details: `Deleted user #${userId}` } });
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {

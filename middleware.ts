@@ -74,6 +74,9 @@ export async function middleware(req: NextRequest) {
   const isProtectedPage = protectedRoutes.some((r) => pathname.startsWith(r));
 
   if (isProtectedPage) {
+    if (pathname.startsWith("/dashboard") && !req.cookies.get("tafrah_onboarded")) {
+      return NextResponse.redirect(new URL("/onboarding", req.url));
+    }
     const token = req.cookies.get("tafrah_token")?.value;
     if (!token) {
       const loginUrl = new URL("/auth/login", req.url);
@@ -113,7 +116,7 @@ export async function middleware(req: NextRequest) {
     if (token) {
       try {
         const payload = decodeJwt(token) as { role?: string };
-        const dest = payload.role === "admin" ? "/admin" : payload.role === "hr" ? "/dashboard/hr" : "/dashboard/student";
+        const dest = payload.role === "admin" ? "/admin" : "/dashboard";
         return NextResponse.redirect(new URL(dest, req.url));
       } catch {
         // Corrupted token, ignore and let them see the login page

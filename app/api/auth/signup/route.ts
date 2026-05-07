@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { email, password, name, role, companyName, commercialReg, quizScore } = body;
+    const { email, password, name, role, quizScore } = body;
 
     if (!email || !password || !name) {
       return NextResponse.json(
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Better email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
+    const emailRegex = /^[^s@]+@[^s@]+.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email)) {
       return NextResponse.json(
         { error: "Invalid email format" },
@@ -66,18 +66,16 @@ export async function POST(req: NextRequest) {
     const passwordHash = await bcrypt.hash(password, 12);
 
     const safeName = sanitize(clamp(name, 100));
-    const safeCompany = companyName ? sanitize(clamp(companyName, 200)) : null;
+    
 
     const user = await prisma.user.create({
       data: {
         email: email.toLowerCase().trim(),
         passwordHash,
         name: safeName,
-        role: ["student", "hr"].includes(role) ? role : "student",
+        role: ["student", "admin"].includes(role) ? role : "student",
         status: "pending",
-        companyName: safeCompany,
-        commercialReg: commercialReg || null,
-        quizScore: typeof quizScore === "number" ? quizScore : null,
+        quizScore: typeof quizScore === "number" ? quizScore : null
       },
     });
 
