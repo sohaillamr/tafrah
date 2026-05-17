@@ -68,13 +68,29 @@ export async function POST(req: NextRequest) {
     const safeName = sanitize(clamp(name, 100));
     
 
+    const userRole = ["student", "admin", "center_admin", "hr"].includes(role) ? role : "student";
+    
+    // Create Center for center_admin if needed
+    let centerId = null;
+    if (userRole === "center_admin") {
+      const center = await prisma.center.create({
+        data: {
+          name: `${safeName}'s Center`,
+          location: "Not Specified",
+          licenseKey: `LIC-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+        }
+      });
+      centerId = center.id;
+    }
+
     const user = await prisma.user.create({
       data: {
         email: email.toLowerCase().trim(),
         passwordHash,
         name: safeName,
-        role: ["student", "admin"].includes(role) ? role : "student",
+        role: userRole,
         status: "pending",
+        centerId: centerId,
         quizScore: typeof quizScore === "number" ? quizScore : null
       },
     });

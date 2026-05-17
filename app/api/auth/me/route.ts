@@ -19,12 +19,14 @@ export async function GET() {
         name: true,
         role: true,
         status: true,
-        
+        category: true,
+        uiPreferences: true,
         avatarUrl: true,
         bio: true,
         jobTitle: true,
         available: true,
         createdAt: true,
+        centerId: true,
       },
     });
 

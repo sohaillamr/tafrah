@@ -91,8 +91,7 @@ function LoginForm() {
       }
 
       const role = result.user?.role;
-      if (role === "admin") window.location.href = "/admin";
-      else if (role === "hr") window.location.href = "/dashboard/hr";
+      if (role === "admin") window.location.href = "/admin";      else if (role === "center_admin") window.location.href = "/dashboard/center";      else if (role === "hr") window.location.href = "/dashboard/hr";
       else window.location.href = "/dashboard/student";
     } catch {
       setHasError(true);

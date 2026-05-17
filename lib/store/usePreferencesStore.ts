@@ -1,33 +1,48 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
-interface SensoryPreferences {
-  motionEnabled: boolean;
-  highContrast: boolean;
-  lineSpacing: 'standard' | 'wide';
-  saturationLevel: 'standard' | 'muted' | 'grayscale';
-  isFocusMode: boolean;
-  setMotion: (val: boolean) => void;
-  setContrast: (val: boolean) => void;
-  setLineSpacing: (val: 'standard' | 'wide') => void;
-  setSaturation: (val: 'standard' | 'muted' | 'grayscale') => void;
-  toggleFocusMode: () => void;
+interface UiPreferences {
+  // Autism
+  highContrastText?: boolean;
+  soundNotifications?: boolean;
+  // CP
+  largeButtons?: boolean;
+  keyboardOnly?: boolean;
+  // LD
+  dyslexicFont?: boolean;
+  simplifiedText?: boolean;
 }
 
-export const usePreferencesStore = create<SensoryPreferences>()(
-  persist(
-    (set) => ({
-      motionEnabled: true,
-      highContrast: false,
-      lineSpacing: 'standard',
-      saturationLevel: 'standard',
-      isFocusMode: false,
-      setMotion: (val) => set({ motionEnabled: val }),
-      setContrast: (val) => set({ highContrast: val }),
-      setLineSpacing: (val) => set({ lineSpacing: val }),
-      setSaturation: (val) => set({ saturationLevel: val }),
-      toggleFocusMode: () => set((state) => ({ isFocusMode: !state.isFocusMode })),
-    }),
-    { name: 'tafrah-sensory-prefs' }
-  )
-);
+interface UserPreferencesState {
+  category: string;
+  preferences: UiPreferences;
+  isLoaded: boolean;
+  isFocusMode: boolean;
+  setFocusMode: (val: boolean) => void;
+  loadPreferences: () => Promise<void>;
+}
+
+export const usePreferencesStore = create<UserPreferencesState>((set) => ({
+  category: 'NONE',
+  preferences: {},
+  isLoaded: false,
+  isFocusMode: false,
+  setFocusMode: (val) => set({ isFocusMode: val }),
+  loadPreferences: async () => {
+    try {
+      const res = await fetch('/api/auth/me');
+      if (res.ok) {
+        const { user } = await res.json();
+        if (user) {
+          set({
+            category: user.category || 'NONE',
+            preferences: user.uiPreferences || {},
+            isLoaded: true
+          });
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load preferences:', e);
+      set({ isLoaded: true });
+    }
+  }
+}));

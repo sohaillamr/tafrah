@@ -8,7 +8,8 @@ import TopBar from "@/app/components/TopBar";
 import Breadcrumbs from "@/app/components/Breadcrumbs";
 import { useLanguage } from "@/app/components/LanguageProvider";
 import { useAuth } from "@/app/components/AuthProvider";
-import { Lock, Target, MapPin, FileText, Trophy, Star, ArrowRight, RefreshCw, Monitor, FolderOpen, Lightbulb, Pencil, Bot, AlertTriangle, CheckCircle } from "lucide-react";
+import { usePreferencesStore } from "@/lib/store/usePreferencesStore";
+import { Lock, Target, MapPin, FileText, Trophy, Star, ArrowRight, RefreshCw, Monitor, FolderOpen, Lightbulb, Pencil, Bot, AlertTriangle, CheckCircle, Volume2, Sparkles, Loader2 } from "lucide-react";
 import { unit1Content } from "@/data/Unit1Content";
 import { unit2Content } from "@/data/Unit2Content";
 import { unit3Content } from "@/data/Unit3Content";
@@ -162,7 +163,9 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
 
   const { language } = useLanguage();
   const { user } = useAuth();
-  
+  const { category: userCategory, preferences } = usePreferencesStore();
+  const [isSummarizing, setIsSummarizing] = useState(false);
+
   const {
     currentStep, validatedSteps, nextStep, prevStep, markStepValid, initCourse, reset,
     needsSync, markSynced
@@ -1570,6 +1573,39 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
               </div>
             </div>
             <div className="flex flex-col gap-3">
+              {(userCategory === 'LEARNING_HARDENING' || preferences?.simplifiedText) && (
+                <button
+                  type="button"
+                  disabled={isSummarizing}
+                  onClick={async () => {
+                    setIsSummarizing(true);
+                    try {
+                      const res = await fetch("/api/assistant", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          messages: [{ role: "user", content: `Please provide a simple, 1-2 sentence summary of this instruction. Keep it extremely basic for someone with learning difficulties without complicated jargon: "${step?.instruction}"` }]
+                        })
+                      });
+                      if (res.ok) {
+                        const data = await res.json();
+                        setNourHelp(data.reply);
+                      } else {
+                        setNourHelp("I'm sorry, I couldn't summarize that right now.");
+                      }
+                    } catch (e) {
+                      setNourHelp("Connection failed. Try again.");
+                    }
+                    setIsSummarizing(false);
+                  }}
+                  className="min-h-11 rounded-xl border-2 border-dashed border-teal-500/30 bg-teal-50 px-4 font-medium text-teal-700 hover:border-teal-500/50 hover:bg-teal-100 transition-all text-left"
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    {isSummarizing ? <Loader2 size={18} className="animate-spin text-teal-700" /> : <Sparkles size={18} className="text-teal-700" />}
+                    Simplify Text with Nour AI
+                  </span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setNourHelp(labels.nourHelp)}

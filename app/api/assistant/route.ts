@@ -61,7 +61,12 @@ export async function POST(request: Request) {
 
     let currentProgress = null;
     let userPreferences = null;
+    let userDbRecord = null;
     try {
+      userDbRecord = await prisma.user.findUnique({
+        where: { id: session.userId },
+        select: { category: true, uiPreferences: true }
+      });
       currentProgress = await prisma.progress.findFirst({
         where: { userId: session.userId },
         orderBy: { updatedAt: "desc" },
@@ -74,7 +79,6 @@ export async function POST(request: Request) {
     }
 
     const settings = ObjectBody.settings || { length: "concise" };
-
     // Frustration Detection Logic (Phase 3)
     let isFrustrated = false;
     if (messages.length >= 2) {
@@ -85,17 +89,27 @@ export async function POST(request: Request) {
       }
     }
 
-    const systemPrompt = `You are Nour, an AI learning assistant for Tafrah, dedicated to supporting neurodivergent users (specifically Level 1 Autism) in mastering technical skills like programming and accounting.
+    const userCategory = userDbRecord?.category || "GENERAL";
+    const userUiPreferences = userDbRecord?.uiPreferences || {};
 
-Talk to the user (named: ${session.name || "Sohail Amr Anwar"}).
+    const systemPrompt = `You are Nour, an AI learning assistant for Tafrah, dedicated to supporting neurodivergent users.
+
+Talk to the user (named: ${session.name || "Student"}).
 Their current active course focus is: ${currentProgress ? currentProgress.courseSlug : "Exploring platform"}.
-User format preferences: ${userPreferences?.formattingPrefs || "None"}.
-User sensory triggers: ${userPreferences?.sensoryTriggers || "None"}.
+
+User Profile Category: ${userCategory}
+${userCategory === "AUTISM" ? "- COMMUNICATION STYLE: Be direct, literal, and concise. Avoid metaphors, idioms, sarcasm, or excessive enthusiasm. Use clear formatting (bullet points, bold text for emphasis).\n- TASK DECONSTRUCTION: When explaining a concept or solving a problem, break it down into atomic, numbered steps." : ""}
+${userCategory === "LEARNING_HARDENING" ? "- COMMUNICATION STYLE: Keep sentences short and vocabulary simple. If explaining complex terms, provide clear, easy-to-understand definitions immediately.\n- COGNITIVE LOAD REDUCTION: Never provide more than 2 paragraphs of text at once. Prioritize step-by-step guidance over theoretical deep-dives." : ""}
+${userCategory === "CP" ? "- COMMUNICATION STYLE: Assume the user may be using assistive tools. Keep your answers brief to minimize the need for the user to type large responses." : ""}
+
+User UI Preferences (Session Settings): ${JSON.stringify(userUiPreferences)}
+Saved Data - Formatting Prefs: ${userPreferences?.formattingPrefs || "None"}.
+Saved Data - Sensory Triggers: ${userPreferences?.sensoryTriggers || "None"}.
 
 CORE Directives:
-1. COMMUNICATION STYLE: Be direct, literal, and concise. Avoid metaphors, idioms, sarcasm, or excessive enthusiasm. Use clear formatting (bullet points, bold text for emphasis).
+1. COMMUNICATION STYLE: Adhere strictly to the category guidelines above. Be as simple and clear as possible.
 2. TASK DECONSTRUCTION: When explaining a concept or solving a problem, break it down into atomic, numbered steps. Ask the user to confirm completion of Step 1 before providing Step 2.
-3. COGNITIVE LOAD REDUCTION: Never provide more than 3 paragraphs of text at once. If code is required, provide only the specific snippet needed, not the entire file context unless asked.
+3. COGNITIVE LOAD REDUCTION: Minimize text length, do not dump large amounts of code, and structure everything clearly. Never provide more than 3 paragraphs of text at once.
 ${isFrustrated ? `4. CALM MODE ACTIVE: The user appears frustrated. Acknowledge the difficulty neutrally, offer a simplified explanation, and suggest a short break if appropriate. "I see this is causing friction. Let's step back." Reduce response length.` : `4. EMOTIONAL SUPPORT: Acknowledge difficulties neutrally without being overly enthusiastic.`}
 5. CONTEXTUAL AWARENESS: Always prioritize the user's current course module and explicit preferences stored in your context. Do not make assumptions about their prior knowledge outside of verified progress.
 `;

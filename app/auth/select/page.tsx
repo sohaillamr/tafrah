@@ -45,13 +45,13 @@ export default function AuthSelectPage() {
             {labels.hr}
           </a>
           <a
-            href="/auth/user-signup"
+            href="/auth/center-signup"
             className="inline-flex min-h-12 items-center justify-center rounded-sm bg-[#5c8a2e] px-6 text-center text-white"
           >
             Join as Center
           </a>
           <a
-            href="/auth/quiz"
+            href="/auth/user-signup"
             className="inline-flex min-h-12 items-center justify-center rounded-sm bg-[#2E5C8A] px-6 text-center text-white"
           >
             {labels.user}
