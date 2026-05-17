@@ -8,6 +8,13 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+enum UserCategory {
+  AUTISM
+  CP
+  LEARNING_HARDENING
+  NONE
+}
+
 model User {
   id            Int      @id @default(autoincrement())
   email         String   @unique
@@ -15,7 +22,8 @@ model User {
   name          String
   role          String   @default("student") // student | hr | admin
   status        String   @default("pending") // pending | verified | banned
-  disabilityType String? // AUTISM | CP | LEARNING_DIS
+  category      UserCategory @default(NONE)
+  uiPreferences Json?
   quizScore     Int?
   avatarUrl     String?
   bio           String?
@@ -34,6 +42,8 @@ model User {
   skillProfile     SkillProfile?
   centerId         Int?
   center           Center?       @relation(fields: [centerId], references: [id])
+  chapterId        Int?
+  chapter          Chapter?      @relation(fields: [chapterId], references: [id])
 
   @@index([status])
   @@index([role])
@@ -231,9 +241,22 @@ model AuditLog {
 model Center {
   id        Int      @id @default(autoincrement())
   name      String
-  code      String   @unique
+  licenseKey String  @unique
   location  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   students  User[]
+  chapters  Chapter[]
+}
+
+model Chapter {
+  id        Int      @id @default(autoincrement())
+  name      String
+  centerId  Int
+  center    Center   @relation(fields: [centerId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  students  User[]
+  
+  @@index([centerId])
 }
