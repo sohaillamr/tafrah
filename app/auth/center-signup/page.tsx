@@ -44,8 +44,8 @@ export default function CenterSignupPage() {
       : {
         home: "Home",
         portal: "Registration Portal",
-        title: "Create trainee account",
-        header: "Create user account",
+        title: "Create center account",
+        header: "Create center account",
         intro: "Please enter your details clearly and simply.",
         name: "Full name",
         email: "Email",

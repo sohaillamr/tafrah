@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Better email validation
-    const emailRegex = /^[^s@]+@[^s@]+.[a-zA-Z]{2,}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email)) {
       return NextResponse.json(
         { error: "Invalid email format" },
