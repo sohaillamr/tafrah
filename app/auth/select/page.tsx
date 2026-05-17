@@ -9,19 +9,19 @@ export default function AuthSelectPage() {
   const labels =
     language === "ar"
       ? {
-          home: "الرئيسية",
-          portal: "بوابة التسجيل",
-          title: "مرحباً بك في طفرة. من فضلك اختر نوع الحساب:",
-          hr: "أنا صاحب عمل / مسؤول موارد بشرية (HR)",
-          user: "أنا مستخدم / باحث عن فرصة",
-        }
+        home: "الرئيسية",
+        portal: "بوابة التسجيل",
+        title: "مرحباً بك في طفرة. من فضلك اختر نوع الحساب:",
+        hr: "أنا صاحب عمل / مسؤول موارد بشرية (HR)",
+        user: "أنا مستخدم / باحث عن فرصة",
+      }
       : {
-          home: "Home",
-          portal: "Registration Portal",
-          title: "Welcome to Tafrah. Please choose your account type:",
-          hr: "I am an employer / HR representative",
-          user: "I am a user / opportunity seeker",
-        };
+        home: "Home",
+        portal: "Registration Portal",
+        title: "Welcome to Tafrah. Please choose your account type:",
+        hr: "I am an employer / HR representative",
+        user: "I am a user / opportunity seeker",
+      };
 
   return (
     <div className="min-h-screen">
@@ -43,6 +43,12 @@ export default function AuthSelectPage() {
             className="inline-flex min-h-12 items-center justify-center rounded-sm bg-[#2E5C8A] px-6 text-center text-white"
           >
             {labels.hr}
+          </a>
+          <a
+            href="/auth/user-signup"
+            className="inline-flex min-h-12 items-center justify-center rounded-sm bg-[#5c8a2e] px-6 text-center text-white"
+          >
+            Join as Center
           </a>
           <a
             href="/auth/quiz"

@@ -62,6 +62,7 @@ export async function middleware(req: NextRequest) {
     }
   }
 
+  // --- Staff dashboard protection (separate admin vault) ---
   if (pathname.startsWith("/staff/dashboard") || pathname.startsWith("/api/staff/admin")) {
     const adminCookie = req.cookies.get("__tafrah_admin_vault")?.value;
     if (!adminCookie) {
@@ -74,9 +75,7 @@ export async function middleware(req: NextRequest) {
   const isProtectedPage = protectedRoutes.some((r) => pathname.startsWith(r));
 
   if (isProtectedPage) {
-    if (pathname.startsWith("/dashboard") && !req.cookies.get("tafrah_onboarded")) {
-      return NextResponse.redirect(new URL("/onboarding", req.url));
-    }
+    // 1. Auth check FIRST — must have a valid token
     const token = req.cookies.get("tafrah_token")?.value;
     if (!token) {
       const loginUrl = new URL("/auth/login", req.url);
@@ -91,8 +90,13 @@ export async function middleware(req: NextRequest) {
       // Decode JWT without signature verification at Edge (since env vars can be delayed)
       // Strict signature and DB verification are handled via Node.js in API endpoints.
       const payload = decodeJwt(token) as { role?: string };
-      
-      // Admin route protection — enforce admin role
+
+      // 2. Onboarding check — only AFTER confirming authenticated
+      if (pathname.startsWith("/dashboard") && !req.cookies.get("tafrah_onboarded")) {
+        return NextResponse.redirect(new URL("/onboarding", req.url));
+      }
+
+      // 3. Admin route protection — enforce admin role
       if (pathname.startsWith("/admin")) {
         if (payload.role !== "admin") {
           const unauthorizedUrl = new URL("/dashboard", req.url);

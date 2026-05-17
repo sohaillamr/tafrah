@@ -23,43 +23,43 @@ export default function UserSignupPage() {
   const labels =
     language === "ar"
       ? {
-          home: "الرئيسية",
-          portal: "بوابة التسجيل",
-          title: "إنشاء حساب متدرب",
-          header: "إنشاء حساب مستخدم",
-          intro: "يرجى إدخال بياناتك بشكل واضح وبسيط.",
-          name: "الاسم بالكامل",
-          email: "البريد الإلكتروني",
-          password: "كلمة المرور",
-          submit: "إنشاء الحساب",
-          login: "لديك حساب بالفعل؟ تسجيل الدخول",
-          nameRequired: "يرجى إدخال الاسم.",
-          emailRequired: "يرجى إدخال البريد الإلكتروني.",
-          emailInvalid: "صيغة البريد الإلكتروني غير صحيحة.",
-          passwordRequired: "يرجى إدخال كلمة المرور.",
-          passwordShort: "كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
-          successMsg: "تم إنشاء الحساب بنجاح.",
-          breadcrumbAria: "مسار التنقل",
-        }
+        home: "الرئيسية",
+        portal: "بوابة التسجيل",
+        title: "إنشاء حساب متدرب",
+        header: "إنشاء حساب مستخدم",
+        intro: "يرجى إدخال بياناتك بشكل واضح وبسيط.",
+        name: "الاسم بالكامل",
+        email: "البريد الإلكتروني",
+        password: "كلمة المرور",
+        submit: "إنشاء الحساب",
+        login: "لديك حساب بالفعل؟ تسجيل الدخول",
+        nameRequired: "يرجى إدخال الاسم.",
+        emailRequired: "يرجى إدخال البريد الإلكتروني.",
+        emailInvalid: "صيغة البريد الإلكتروني غير صحيحة.",
+        passwordRequired: "يرجى إدخال كلمة المرور.",
+        passwordShort: "كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
+        successMsg: "تم إنشاء الحساب بنجاح.",
+        breadcrumbAria: "مسار التنقل",
+      }
       : {
-          home: "Home",
-          portal: "Registration Portal",
-          title: "Create trainee account",
-          header: "Create user account",
-          intro: "Please enter your details clearly and simply.",
-          name: "Full name",
-          email: "Email",
-          password: "Password",
-          submit: "Create account",
-          login: "Already have an account? Sign in",
-          nameRequired: "Please enter your name.",
-          emailRequired: "Please enter your email.",
-          emailInvalid: "Invalid email format.",
-          passwordRequired: "Please enter a password.",
-          passwordShort: "Password must be at least 6 characters.",
-          successMsg: "Account created successfully.",
-          breadcrumbAria: "Breadcrumb",
-        };
+        home: "Home",
+        portal: "Registration Portal",
+        title: "Create trainee account",
+        header: "Create user account",
+        intro: "Please enter your details clearly and simply.",
+        name: "Full name",
+        email: "Email",
+        password: "Password",
+        submit: "Create account",
+        login: "Already have an account? Sign in",
+        nameRequired: "Please enter your name.",
+        emailRequired: "Please enter your email.",
+        emailInvalid: "Invalid email format.",
+        passwordRequired: "Please enter a password.",
+        passwordShort: "Password must be at least 6 characters.",
+        successMsg: "Account created successfully.",
+        breadcrumbAria: "Breadcrumb",
+      };
 
   function validate() {
     const errs: Record<string, string> = {};
@@ -93,7 +93,7 @@ export default function UserSignupPage() {
       setEmail("");
       setPassword("");
       setErrors({});
-      setTimeout(() => { window.location.href = "/dashboard/student"; }, 1500);
+      setTimeout(() => { window.location.href = "/onboarding"; }, 1500);
     } catch {
       setStatus("error");
       setServerError(language === "ar" ? "حدث خطأ. حاول مرة أخرى." : "Something went wrong. Try again.");
