@@ -10,13 +10,15 @@ export async function PUT(request: Request) {
     }
 
     const data = await request.json();
-    const { disabilityType, uiSettings } = data;
+    const { category, uiSettings } = data;
 
     // Update User
-    await prisma.user.update({
-      where: { id: session.userId },
-      data: { disabilityType }
-    });
+    if (category) {
+      await prisma.user.update({
+        where: { id: session.userId },
+        data: { category }
+      });
+    }
 
     // Update UserPreferences
     await prisma.userPreference.upsert({
