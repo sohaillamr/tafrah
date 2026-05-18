@@ -93,6 +93,40 @@ const cleanArabicText = (value: string, language: string) => {
   }
 };
 
+const coursePracticeMap: Record<string, string[]> = {
+  "finance-1": [
+    "اربط المصطلح بمثال واقعي واحد: أصل، خصم، حقوق ملكية، إيراد، أو مصروف.",
+    "اكتب قاعدة التحقق في سطر واحد: ما الذي يجب أن يتوازن؟",
+    "راجع المصدر: Principles of Financial Accounting أو CFI، ثم قارن التعريف بتعريف طفرة المبسط.",
+    "تدريب عملي هادئ: اختر رقما صغيرا، وسجله مرة كحركة مالية ومرة كتقرير مختصر.",
+    "سؤال تفكير: ما الخطأ الأكثر احتمالاً في هذا النوع من العمل؟ وكيف تمنعه؟",
+  ],
+  "programming-1": [
+    "اقرأ المثال مرة بدون كتابة، ثم اكتبه ببطء في المحرر.",
+    "غيّر اسما واحدا أو رقما واحدا في الكود، ثم توقع النتيجة قبل التشغيل.",
+    "راجع المصدر: Python Tutorial أو Microsoft Learn، ثم اكتب التعريف بكلماتك.",
+    "تدريب عملي هادئ: اكتب سطر كود صغيرا، ثم أضف تعليق يشرح هدفه.",
+    "سؤال تفكير: ما الخطأ الأكثر احتمالاً في هذا الكود؟ وكيف تلاحظه؟",
+  ],
+  "data-entry-1": [
+    "راجع الصف أو الخلية قبل الانتقال. الدقة أهم من السرعة.",
+    "اكتب قاعدة واحدة تمنع الخطأ: تنسيق رقم، تاريخ، اسم، أو عنوان خلية.",
+    "راجع المصدر: Microsoft Excel basic tasks أو Google Applied Digital Skills، ثم طبق خطوة واحدة فقط.",
+    "تدريب عملي هادئ: افحص ثلاث خلايا وتأكد أن النوع مناسب: نص، رقم، أو تاريخ.",
+    "سؤال تفكير: ما العلامة التي تخبرك أن البيانات تحتاج مراجعة؟",
+  ],
+};
+
+const buildCoursePracticeSteps = (courseSlug: string, unitNumber: number): UnitStep[] => {
+  const prompts = coursePracticeMap[courseSlug] || coursePracticeMap["data-entry-1"];
+  return prompts.map((instruction, index) => ({
+    id: `${courseSlug}-unit-${unitNumber}-practice-${index}`,
+    type: "info",
+    instruction,
+    chapterTitle: "تدريب تطبيقي ومراجعة من المصادر",
+  }));
+};
+
 type CourseState = {
   courseKey: string;
   currentStep: number;
@@ -189,11 +223,12 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
 
   const unitIndexFromUrl = searchParams.get("unit");
   const unitIndex = unitIndexFromUrl ? parseInt(unitIndexFromUrl) : 0;
+  const courseKey = courseSlug || String(courseId);
 
   // Initialize course explicitly so we don't mix progression between units or courses
   useEffect(() => {
-    initCourse(`${courseId}-${unitIndex}`);
-  }, [courseId, unitIndex, initCourse]);
+    initCourse(`${courseKey}-${unitIndex}`);
+  }, [courseKey, unitIndex, initCourse]);
 
   // Background Sync to API Endpoint (30s delay)
   useEffect(() => {
@@ -426,7 +461,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
 
   const unitParam = searchParams?.get("unit");
   const unitNumber = Math.max(1, Math.min(7, Number(unitParam) || 1));
-  const activeCourseId = courseId;
+  const activeCourseId = courseKey;
   const isPythonCourse = courseSlug === "programming-1" || category === "python" || category === "البرمجة";
   const dataEntryUnits: { chapters: { steps: Record<string, unknown>[]; [key: string]: unknown }[]; [key: string]: unknown }[] = [unit1Content[0], unit2Content[0], unit3Content[0], unit4Content[0], unit5Content[0], unit6Content[0], unit7Content[0]];
   const pythonUnits: { chapters: { steps: Record<string, unknown>[]; [key: string]: unknown }[]; [key: string]: unknown }[] = [pythonUnit1Content[0], pythonUnit2Content[0], pythonUnit3Content[0], pythonUnit4Content[0], pythonUnit5Content[0], pythonUnit6Content[0], pythonUnit7Content[0]];
@@ -434,7 +469,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const financeUnits: { chapters: { steps: Record<string, unknown>[]; [key: string]: unknown }[]; [key: string]: unknown }[] = [financeUnit1Content[0], financeUnit2Content[0], financeUnit3Content[0], financeUnit4Content[0], financeUnit5Content[0], financeUnit6Content[0], financeUnit7Content[0]];
   const allUnits = isPythonCourse ? pythonUnits : isFinanceCourse ? financeUnits : dataEntryUnits;
   const currentUnit = allUnits[unitNumber - 1];
-  const steps = useMemo(() => buildSteps(currentUnit), [currentUnit]);
+  const steps = useMemo(() => [...buildSteps(currentUnit), ...buildCoursePracticeSteps(courseKey, unitNumber)], [currentUnit, courseKey, unitNumber]);
   const step = steps[currentStep];
   const canGoNext = validatedSteps[currentStep];
   const isAvailable = true; // previously: courseId === "data-entry-1" || courseId === "programming-1";
@@ -476,8 +511,31 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     const decoys = language === "ar"
       ? ["الأصول", "الخصوم", "الإيرادات", "المصروفات", "قائمة الدخل", "الميزانية", "نظام ERP"]
       : ["Assets", "Liabilities", "Revenue", "Expenses", "Income statement", "Budget", "ERP system"];
-    return [correct, ...decoys.filter((option) => option && option !== correct)].slice(0, 4);
-  }, [step?.action?.label, language]);
+    const instruction = cleanArabicText(step?.instruction ?? "", language);
+    const targetedDecoys =
+      /المحاسبة|accounting/i.test(instruction)
+        ? language === "ar" ? ["مجموعة أرقام بلا قواعد", "رأي شخصي عن المال", "قائمة مشتريات يومية"] : ["Numbers without rules", "A personal money opinion", "A shopping list"]
+      : /لابتوب|أصول|assets/i.test(instruction)
+        ? language === "ar" ? ["لا، لأنه مصروف يومي", "خصوم لأنه جهاز إلكتروني", "إيراد لأنه يساعد على العمل"] : ["No, it is a daily expense", "Liability because it is electronic", "Revenue because it helps work"]
+      : /استدانت|خصوم|liabilities/i.test(instruction)
+        ? language === "ar" ? ["أصول (Assets)", "إيرادات (Revenue)", "مصروفات (Expenses)"] : ["Assets", "Revenue", "Expenses"]
+      : /حقوق الملكية|تتوازن|equation/i.test(instruction)
+        ? ["40", "100", "140"]
+      : /1005|كوده|chart/i.test(instruction)
+        ? language === "ar" ? ["الخصوم لأنه يبدأ بـ 2", "الإيرادات لأنه يبدأ بـ 4", "حساب غير مصنف"] : ["Liabilities because it starts with 2", "Revenue because it starts with 4", "Unclassified account"]
+      : /دفتر اليومية|journal/i.test(instruction)
+        ? language === "ar" ? ["حفظ الرصيد النهائي فقط", "إصدار التقرير السنوي فقط", "تلوين الجدول"] : ["Store final balance only", "Issue annual report only", "Color the table"]
+      : /زادت الأصول|مدين|debit/i.test(instruction)
+        ? language === "ar" ? ["في الجانب الأيسر (الدائن)", "في التقرير النهائي فقط", "لا نسجل الزيادة"] : ["Left side / credit", "Only in final report", "Do not record the increase"]
+      : /النقد|ledger/i.test(instruction)
+        ? language === "ar" ? ["في دفتر اليومية فقط", "في قائمة الدخل", "في فاتورة البيع"] : ["Only in journal", "Income statement", "Sales invoice"]
+      : /49|المراجعة|trial/i.test(instruction)
+        ? language === "ar" ? ["كل شيء صحيح", "الأرباح زادت", "لا نحتاج مراجعة"] : ["Everything is correct", "Profit increased", "No review needed"]
+      : /ERP|Dynamics/i.test(instruction)
+        ? language === "ar" ? ["بعد نهاية الشهر فقط", "بعد إدخالها يدويا مرة أخرى", "لن تظهر"] : ["At month end only", "After manual re-entry", "It will not appear"]
+      : decoys;
+    return [correct, ...targetedDecoys.filter((option) => option && option !== correct)].slice(0, 4);
+  }, [step?.action?.label, step?.instruction, language]);
 
   const columns = useMemo(() => ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"], []);
   const rows = useMemo(() => Array.from({ length: 10 }, (_, index) => index + 1), []);
@@ -571,7 +629,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            courseSlug: courseId,
+            courseSlug: courseKey,
             unitIndex: unitNumber - 1,
             stepIndex: steps.length - 1,
             quizPassed: false,
@@ -580,13 +638,13 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
         }).catch(() => {});
       }
     }
-  }, [isCompleted, unitNumber, user, courseId, steps.length]);
+  }, [isCompleted, unitNumber, user, courseKey, steps.length]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     // Load from API first, fallback to localStorage
     if (user) {
-      fetch(`/api/progress?courseSlug=${courseId}`)
+      fetch(`/api/progress?courseSlug=${courseKey}`)
         .then((r) => r.json())
         .then((d) => {
           const done: Record<number, boolean> = {};
@@ -620,7 +678,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
       setUnitsDone(done);
       setQuizzesPassed(passed);
     }
-  }, [user, courseId]);
+  }, [user, courseKey]);
 
   useEffect(() => {
     if (unitNumber !== 2) return;
@@ -850,7 +908,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const handleUnitChange = (target: number) => {
     if (target > 1 && !quizzesPassed[target - 1]) return;
     const query = target > 1 ? `?unit=${target}` : "";
-    router.push(`/courses/${courseId}/learn${query}`);
+    router.push(`/courses/${courseKey}/learn${query}`);
   };
 
   const currentQuiz = isPythonCourse ? (pythonQuizzes as Record<number, typeof quizzes[1]>)[unitNumber] : isFinanceCourse ? (financeQuizzes as Record<number, typeof quizzes[1]>)[unitNumber] : quizzes[unitNumber];
@@ -875,7 +933,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            courseSlug: courseId,
+            courseSlug: courseKey,
             unitIndex: unitNumber - 1,
             stepIndex: steps.length - 1,
             quizPassed: true,
@@ -956,7 +1014,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
             items={[
               { label: labels.home, href: "/" },
               { label: labels.courses, href: "/courses" },
-              { label: courseId ? `${labels.course} ${courseId}` : labels.course },
+              { label: courseKey ? `${labels.course} ${courseKey}` : labels.course },
               { label: labels.learn },
             ]}
           />

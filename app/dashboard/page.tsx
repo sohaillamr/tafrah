@@ -79,6 +79,33 @@ export default function DashboardPage() {
         centerOnly: "Center accounts use the center dashboard only.",
       };
 
+  if (isAr) {
+    Object.assign(labels, {
+      title: "لوحة تعلمي",
+      subtitle: "تتبع هادئ وواضح للتقدم، النقاط، والتدريب اليومي.",
+      xp: "نقاط XP",
+      completed: "وحدات مكتملة",
+      today: "وحدات اليوم",
+      dailyLimit: "الحد اليومي",
+      limitText: "يمكنك إنهاء وحدتين فقط يوميا للحفاظ على التعلم بدون إجهاد.",
+      practice: "أسئلة نور الإضافية",
+      practiceText: "بعد وحدات اليوم، أجب على أسئلة قصيرة لزيادة XP بدون فتح وحدة جديدة.",
+      courses: "دوراتي",
+      continue: "متابعة التعلم",
+      locked: "تم الوصول للحد اليومي. استخدم أسئلة نور للتدريب.",
+      noCourses: "لا توجد دورات بعد.",
+      browse: "تصفح الدورات",
+      centerOnly: "حساب المركز يستخدم لوحة المركز فقط.",
+      starterPractice: "تدريب تمهيدي",
+      unit: "وحدة",
+      loading: "جاري التحميل...",
+      left: "متبقي",
+    });
+  }
+  const activePracticePrompts = isAr
+    ? ["اشرح الفكرة بجملة واحدة.", "اختر مثالا بسيطا من حياتك اليومية.", "ما الخطوة الأولى إذا كررت هذا الدرس غدا؟"]
+    : practicePrompts.en;
+
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
@@ -121,7 +148,7 @@ export default function DashboardPage() {
   const practiceCards = useMemo(() => {
     const source = recentModules.length ? recentModules : completedUnits.slice(-1);
     return source.flatMap((module) =>
-      practicePrompts[language].map((prompt, index) => ({
+      activePracticePrompts.map((prompt, index) => ({
         id: `${module.courseSlug}-${module.unitIndex}-${index}`,
         title: `${module.courseSlug} · ${isAr ? "وحدة" : "Unit"} ${module.unitIndex + 1}`,
         prompt,

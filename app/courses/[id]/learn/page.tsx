@@ -39,8 +39,14 @@ export default async function CourseLearnPage(props: PageProps) {
   }
 
   // Database Validation
-  const course = await prisma.course.findUnique({
-    where: { slug: id },
+  const numericId = Number(id);
+  const course = await prisma.course.findFirst({
+    where: {
+      OR: [
+        { slug: id },
+        ...(Number.isInteger(numericId) ? [{ id: numericId }] : []),
+      ],
+    },
   });
 
   if (!course || course.isArchived) {
