@@ -110,19 +110,37 @@ export default function CenterDashboard() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-[#2E5C8A]">Center Administration</h1>
           <div className="flex gap-4">
-            <button 
+            <button
               onClick={() => { generateInviteLink(); setIsInviteModalOpen(true); }}
               className="px-6 py-2 bg-green-600 text-white rounded-md font-semibold"
             >
               + Add Student
             </button>
-            <button 
+            <button
               onClick={() => setIsChapterModalOpen(true)}
               disabled={selectedStudents.length === 0}
               className={`px-6 py-2 rounded-md font-semibold text-white ${selectedStudents.length > 0 ? 'bg-[#2E5C8A]' : 'bg-gray-300'}`}
             >
               Assign Chapter
             </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
+            <h3 className="text-gray-500 text-sm font-medium">Total Students</h3>
+            <p className="text-3xl font-bold text-[#2E5C8A] mt-2">{students.length}</p>
+          </div>
+          <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
+            <h3 className="text-gray-500 text-sm font-medium">Active Chapters Issued</h3>
+            <p className="text-3xl font-bold text-[#2E5C8A] mt-2">{students.filter(s => s.chapter).length}</p>
+          </div>
+          <div className="bg-white p-6 rounded-xl shadow border border-[#F5A623] bg-orange-50">
+            <h3 className="text-orange-600 text-sm font-medium">Pending Modules Alerts</h3>
+            <p className="text-3xl font-bold text-orange-700 mt-2">
+              {students.filter(s => s.category === 'CP' || s.category === 'LEARNING_HARDENING').length}
+            </p>
+            <p className="text-xs text-orange-600 mt-1">CP/LD students queued for Alpha sync</p>
           </div>
         </div>
 

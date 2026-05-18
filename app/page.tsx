@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 import Link from "next/link";
@@ -17,6 +17,11 @@ export default function HomePage() {
           whyTitle: "الركائز الأساسية",
           stat1: "التنوع العصبي (التوحد)",
           stat1Text: "تقديم واجهات تكيفية حسياً ومسارات عمل منظمة.",
+          stat1Badge: "معتمد ومتاح للعمل",
+          stat2Badge: "إصدار ألفا التقني / متاح الشهر القادم",
+          roadmapTitle: "خارطة الطريق التقنية",
+          roadmapAutism: "النمط النشط: التوحد من المستوى الأول (مكتمل ومتاح للعمل)",
+          roadmapCPLD: "تحت الاختبار المغلق: دمج الشلل الدماغي وصعوبات التعلم",,
           stat2: "التنوع الحركي (الشلل الدماغي)",
           stat2Text: "تصفح محسّن حركياً وتفاعل مدعوم بالصوت.",
           stat3: "احتياجات التعلم الإدراكية",
@@ -50,7 +55,7 @@ export default function HomePage() {
           cardMicroCopy: "Need help with your Integrated Service Card? We've got you covered.",
           whyTitle: "The Three Pillars",
           stat1: "Neurodivergence (Autism)",
-          stat1Text: "Sensory-adaptive rendering and structured workflows.",
+          stat1Text: "Sensory-adaptive rendering and structured workflows.", stat1Badge: "Validated & Live", stat2Badge: "Technical Alpha / Launching Next Month", roadmapTitle: "Technical Roadmap", roadmapAutism: "Active: Autism Level 1 Engine (Finalized)", roadmapCPLD: "Closed Lab Validation: CP hardware-mapping & LD cognitive-filters",
           stat2: "Physical Diversity (CP)",
           stat2Text: "Motor-optimized navigation and voice-assisted interaction.",
           stat3: "Cognitive Learning Needs",

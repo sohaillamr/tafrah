@@ -174,10 +174,10 @@ function LoginForm() {
         <section className="flex flex-col gap-3">
           <p>{labels.noAccount}</p>
           <div className="flex flex-col gap-2">
-            <Link href="/auth/quiz" className="min-h-12 inline-flex items-center">
+            <Link href="/auth/select" className="min-h-12 inline-flex items-center">
               {labels.signupUser}
             </Link>
-            <Link href="/auth/hr-signup" className="min-h-12 inline-flex items-center">
+            <Link href="/auth/select" className="min-h-12 inline-flex items-center">
               {labels.signupCompany}
             </Link>
             <Link href="/auth/recovery" className="min-h-12 inline-flex items-center">

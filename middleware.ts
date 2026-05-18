@@ -92,7 +92,7 @@ export async function middleware(req: NextRequest) {
       const payload = decodeJwt(token) as { role?: string };
 
       // 2. Onboarding check — only AFTER confirming authenticated
-      if (pathname.startsWith("/dashboard") && !req.cookies.get("tafrah_onboarded")) {
+      if (pathname.startsWith("/dashboard") && payload.role === "student" && !req.cookies.get("tafrah_onboarded")) {
         return NextResponse.redirect(new URL("/onboarding", req.url));
       }
 

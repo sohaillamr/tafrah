@@ -67,14 +67,10 @@ export default function GlobalThemeProvider({ children }: { children: React.Reac
       {showPopup && (
         <button
           id="tts-button"
-          onClick={(e) => {
+          onMouseDown={(e) => {
             e.preventDefault();
             e.stopPropagation();
             speakText();
-          }}
-          onMouseDown={(e) => {
-             e.preventDefault();
-             e.stopPropagation();
           }}
           style={{ left: popupPos.x, top: popupPos.y }}
           className="fixed z-[9999] rounded-full bg-[#5c8a2e] px-4 py-2 text-sm shadow-xl text-white font-bold transition-all hover:bg-green-700 pointer-events-auto"
