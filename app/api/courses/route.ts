@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { applyCourseOverride } from "@/lib/data/course-overrides";
 
 export async function GET(req: NextRequest) {
   try {
@@ -36,9 +37,7 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    const normalizedCourses = courses.map((course) =>
-      course.slug === "finance-1" ? { ...course, modules: 7, hours: Math.max(course.hours, 6) } : course
-    );
+    const normalizedCourses = courses.map(applyCourseOverride);
 
     return NextResponse.json({ courses: normalizedCourses });
   } catch (error: unknown) {

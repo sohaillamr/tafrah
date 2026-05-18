@@ -76,6 +76,26 @@ export default function CoursesPage() {
           diffLabels: { beginner: "Beginner", intermediate: "Intermediate", advanced: "Advanced" } as Record<string, string>,
         };
 
+  if (language === "ar") {
+    Object.assign(labels, {
+      home: "الرئيسية",
+      courses: "الدورات",
+      guestNote: "يمكنك تصفح الدورات كزائر. يلزم تسجيل الدخول للاشتراك والتنفيذ.",
+      title: "مكتبة الدورات",
+      intro: "اختر دورة واضحة من القائمة التالية.",
+      search: "البحث",
+      searchPlaceholder: "ابحث عن اسم الدورة أو المهارة...",
+      category: "التصنيف",
+      difficulty: "مستوى الصعوبة",
+      duration: "المدة",
+      hours: "ساعات",
+      view: "عرض التفاصيل",
+      comingSoon: "قريبا",
+      categoryLabels: { "data-entry": "إدخال البيانات", finance: "المالية", design: "التصميم", qa: "اختبار البرمجيات", programming: "البرمجة" },
+      diffLabels: { beginner: "مبتدئ", intermediate: "متوسط", advanced: "متقدم" },
+    });
+  }
+
   const filteredCourses = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
     return courses.filter((course) => {

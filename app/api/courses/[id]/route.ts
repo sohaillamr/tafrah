@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
+import { applyCourseOverride } from "@/lib/data/course-overrides";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -23,7 +24,7 @@ export async function GET(
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
-    const normalizedCourse = course.slug === "finance-1" ? { ...course, modules: 7, hours: Math.max(course.hours, 6) } : course;
+    const normalizedCourse = applyCourseOverride(course);
     const res = NextResponse.json({ course: normalizedCourse });
     res.headers.set("Cache-Control", "public, s-maxage=60, stale-while-revalidate=120");
     return res;

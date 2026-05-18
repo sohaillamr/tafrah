@@ -22,6 +22,18 @@ type Chat = {
 
 type Language = "ar" | "en";
 
+const cleanText = (text: string, language: Language) => {
+  if (!text) return text;
+  if (language === "ar" && /[ØÙÃ]/.test(text)) {
+    try {
+      return decodeURIComponent(escape(text));
+    } catch {
+      return text;
+    }
+  }
+  return text;
+};
+
 const getInitialMessages = (language: Language): Message[] => [
   {
     role: "assistant",
@@ -126,6 +138,26 @@ export default function AssistantPage() {
           suggestion2: "Explain a task more simply",
           suggestion3: "How do I start training?",
         };
+
+  if (language === "ar") {
+    Object.assign(labels, {
+      title: "نور",
+      subtitle: "مساعدك الهادئ في طفرة",
+      placeholder: "اكتب رسالتك هنا...",
+      send: "إرسال",
+      newChat: "محادثة جديدة",
+      chats: "المحادثات",
+      noChats: "لا توجد محادثات سابقة",
+      loading: "نور يكتب...",
+      missingKey: "المساعد غير مفعل. تواصل مع الدعم الفني.",
+      error: "حدث خطأ. حاول مرة أخرى.",
+      noReply: "لا يوجد رد.",
+      deleteChat: "حذف",
+      suggestion1: "ما الدورات المتاحة؟",
+      suggestion2: "اشرح لي المهمة بشكل أبسط",
+      suggestion3: "كيف أبدأ التدريب؟",
+    });
+  }
 
   const activeChat = useMemo(() => {
     return chats.find((chat) => chat.id === activeChatId) || chats[0];
@@ -622,7 +654,7 @@ export default function AssistantPage() {
                   {activeMessages.slice(-2).map((msg, idx) => (
                     <div key={idx} className={`p-4 rounded-xl max-w-lg w-full font-medium ${msg.role === 'user' ? 'bg-[#2E5C8A] text-white self-end' : 'bg-gray-100 text-gray-800 self-start'}`}>
                       <span className="text-xs opacity-70 block mb-1">{msg.role === 'user' ? (language === 'ar' ? 'أنت' : 'You') : 'Nour'}</span>
-                      <div className="whitespace-pre-wrap text-start">{msg.text}</div>
+                      <div className="whitespace-pre-wrap text-start">{cleanText(msg.text, language)}</div>
                     </div>
                   ))}
                 </div>
@@ -654,10 +686,10 @@ export default function AssistantPage() {
                     }`}
                   >
                     {message.role === "user" ? (
-                      <div className="whitespace-pre-wrap">{message.text}</div>
+                      <div className="whitespace-pre-wrap">{cleanText(message.text, language)}</div>
                     ) : (
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {message.text}
+                        {cleanText(message.text, language)}
                       </ReactMarkdown>
                     )}
                   </motion.div>

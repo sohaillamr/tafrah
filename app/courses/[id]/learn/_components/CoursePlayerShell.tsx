@@ -84,6 +84,15 @@ const buildSteps = (unit: { chapters: { steps: Record<string, unknown>[]; [key: 
   );
 };
 
+const cleanArabicText = (value: string, language: string) => {
+  if (!value || language !== "ar" || !/[ØÙÃ]/.test(value)) return value;
+  try {
+    return decodeURIComponent(escape(value));
+  } catch {
+    return value;
+  }
+};
+
 type CourseState = {
   courseKey: string;
   currentStep: number;
@@ -463,7 +472,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const completedUnits = Object.values(quizzesPassed).filter(Boolean).length;
   const courseProgressValue = Math.round((completedUnits / 7) * 100);
   const financeChoiceOptions = useMemo(() => {
-    const correct = step?.action?.label ?? "";
+    const correct = cleanArabicText(step?.action?.label ?? "", language);
     const decoys = language === "ar"
       ? ["الأصول", "الخصوم", "الإيرادات", "المصروفات", "قائمة الدخل", "الميزانية", "نظام ERP"]
       : ["Assets", "Liabilities", "Revenue", "Expenses", "Income statement", "Budget", "ERP system"];
@@ -772,14 +781,14 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
       if (isPythonCourse) {
         isValid = pythonSelectOption === step.action.label;
       } else if (isFinanceCourse) {
-        isValid = selectedChoice === step.action.label;
+        isValid = selectedChoice === cleanArabicText(step.action.label ?? "", language);
       } else {
         isValid = selectedPassword === "Tafrah#2026!Success";
       }
     }
     if (step.action?.kind === "writeCode") {
       const userCode = codeValue.trim().replace(/\r\n/g, "\n");
-      const expectedCode = (step.action.expected ?? "").trim().replace(/\r\n/g, "\n");
+      const expectedCode = cleanArabicText(step.action.expected ?? "", language).trim().replace(/\r\n/g, "\n");
       const normalizeQuotes = (s: string) => s.replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"');
       isValid = normalizeQuotes(userCode) === normalizeQuotes(expectedCode);
       if (isValid) {
@@ -954,7 +963,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
         )}
 
         <section className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="font-semibold">{unitTitle}</h1>
+          <h1 className="font-semibold">{cleanArabicText(unitTitle, language)}</h1>
           <button
             type="button"
             onClick={() => setFocusMode((prev) => !prev)}
@@ -971,7 +980,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-semibold">{labels.unitNav}</h2>
             <span className="rounded-full bg-[#F5F9FF] px-3 py-1 text-sm text-[#2E5C8A]">
-              {labels.currentUnit}: {unitTitle}
+              {labels.currentUnit}: {cleanArabicText(unitTitle, language)}
             </span>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -1048,7 +1057,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                   <div key={question.id} className="rounded-2xl border border-[#E2E8F0] bg-white p-5 shadow-sm">
                     <p className="mb-4 text-base font-semibold leading-relaxed">
                       <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#2E5C8A] text-sm text-white me-3">{qIndex + 1}</span>
-                      {language === "ar" ? question.text : question.textEn}
+                      {cleanArabicText(language === "ar" ? question.text : question.textEn, language)}
                     </p>
                     <div className="flex flex-col gap-2.5">
                       {question.options.map((option: { id: string; text: string; textEn: string }) => {
@@ -1075,7 +1084,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                               <span className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                                 isSelected || isCorrect ? "bg-[#2E5C8A] text-white" : "bg-[#E2E8F0] text-[#6C757D]"
                               }`}>{option.id.toUpperCase()}</span>
-                              {language === "ar" ? option.text : option.textEn}
+                              {cleanArabicText(language === "ar" ? option.text : option.textEn, language)}
                             </span>
                           </button>
                         );
@@ -1165,9 +1174,10 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
             <aside className="flex flex-col gap-1 self-start rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-sm">
               <h2 className="mb-2 font-semibold">{labels.stepsTitle}</h2>
               {currentUnit.chapters.map((chapter, chapterIndex) => {
-                const chTitle = (chapter as { title?: string; chapter_title?: string }).title ??
-                  (chapter as { chapter_title?: string }).chapter_title;
-                const isActiveChapter = step?.chapterTitle === chTitle;
+                const rawChTitle = (chapter as { title?: string; chapter_title?: string }).title ??
+                  (chapter as { chapter_title?: string }).chapter_title ?? "";
+                const chTitle = cleanArabicText(rawChTitle, language);
+                const isActiveChapter = step?.chapterTitle === rawChTitle;
                 return (
                   <div
                     key={(chapter as { id?: string; chapter_id?: string }).id ?? (chapter as { chapter_id?: string }).chapter_id}
@@ -1584,7 +1594,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                   />
                 ))}
               </div>
-              <h2 className="font-semibold">{step?.chapterTitle}</h2>
+              <h2 className="font-semibold">{cleanArabicText(step?.chapterTitle || "", language)}</h2>
               <p className="text-sm text-[#6C757D]">
                 {labels.stepLabel} {currentStep + 1} {labels.of} {steps.length}
               </p>
@@ -1605,7 +1615,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                     {step?.type === "info" ? labels.infoOnly : labels.taskLabel}
                   </span>
                 </div>
-                <p className="text-lg leading-relaxed">{step?.instruction}</p>
+                <p className="text-lg leading-relaxed">{cleanArabicText(step?.instruction || "", language)}</p>
               </div>
             </div>
             <div className="flex flex-col gap-3">
@@ -1719,7 +1729,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                   <span className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#2E7D32] text-white shadow-md"><Trophy size={24} /></span>
                   <div>
                     <p className="text-lg font-semibold text-[#1B5E20]">
-                      {unitTitle} — {labels.completed}
+                      {cleanArabicText(unitTitle, language)} — {labels.completed}
                     </p>
                     {quizzesPassed[unitNumber] ? (
                       <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#2E5C8A] to-[#3D7AB5] px-5 py-1.5 text-sm font-semibold text-white shadow-sm">

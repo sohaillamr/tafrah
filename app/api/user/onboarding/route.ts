@@ -102,7 +102,13 @@ export async function PATCH(request: Request) {
       },
     });
 
-    return NextResponse.json(updatedUser, { status: 200 });
+    const response = NextResponse.json(updatedUser, { status: 200 });
+    response.cookies.set("tafrah_onboarded", "true", {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+      sameSite: "lax",
+    });
+    return response;
   } catch (error) {
     console.error("Error updating user onboarding:", error);
     return NextResponse.json(

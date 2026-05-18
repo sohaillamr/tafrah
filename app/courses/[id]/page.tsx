@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Check, UserRound, Clock, BookOpen, BarChart3, ShieldCheck, Lock, FileText } from "lucide-react";
+import { Check, Clock, BookOpen, BarChart3, Lock, FileText, ExternalLink, Library } from "lucide-react";
 import TopBar from "../../components/TopBar";
 import Breadcrumbs from "../../components/Breadcrumbs";
 import { useLanguage } from "../../components/LanguageProvider";
@@ -185,6 +185,24 @@ const financeSyllabusCleanEnglish = [
   { title: "Module 7: Mini Finance Project", lessons: ["Choose a small project", "Record revenue", "Record expenses", "Present the result"], quiz: true },
 ];
 
+const courseResources = {
+  "data-entry": [
+    { label: "Microsoft Excel basic tasks", href: "https://support.microsoft.com/en-us/office/basic-tasks-in-excel-dc775dd1-fa52-430f-9c3c-d998d1735fca" },
+    { label: "Google Applied Digital Skills", href: "https://applieddigitalskills.withgoogle.com/" },
+    { label: "Microsoft accessibility learning guidance", href: "https://support.microsoft.com/accessibility" },
+  ],
+  programming: [
+    { label: "Microsoft Learn: Python for beginners", href: "https://learn.microsoft.com/en-us/training/paths/beginner-python/" },
+    { label: "Python official tutorial", href: "https://docs.python.org/3/tutorial/" },
+    { label: "Python official style guide", href: "https://peps.python.org/pep-0008/" },
+  ],
+  finance: [
+    { label: "Microsoft Learn: Dynamics 365 Finance", href: "https://learn.microsoft.com/en-us/dynamics365/finance/" },
+    { label: "CFI accounting fundamentals", href: "https://corporatefinanceinstitute.com/course/accounting-fundamentals/" },
+    { label: "OpenStax Principles of Accounting", href: "https://openstax.org/details/books/principles-financial-accounting" },
+  ],
+};
+
 const pythonSyllabusEnglish = [
   {
     title: "Module 1: Introduction to Programming",
@@ -264,7 +282,7 @@ export default function CourseDetailsPage() {
       .catch(() => {});
   }, [user, course]);
 
-  const labels =
+  const labels: any =
     language === "ar"
       ? {
           home: "الرئيسية",
@@ -316,6 +334,38 @@ export default function CourseDetailsPage() {
           comingSoonNote: "This course will be available soon.",
           syllabusData: course?.slug === "programming-1" || course?.category === "programming" ? pythonSyllabusEnglish : course?.category === "finance" ? financeSyllabusCleanEnglish : syllabusEnglish,
         };
+
+  if (language === "ar") {
+    Object.assign(labels, {
+      home: "الرئيسية",
+      courses: "الدورات",
+      loading: "جاري التحميل...",
+      notAvailable: "الدورة غير متاحة حاليا",
+      guestNote: "أنت تتصفح كزائر. سجل الدخول للاشتراك في الدورة.",
+      duration: "المدة",
+      hours: "ساعات",
+      modules: "عدد الوحدات",
+      level: "المستوى",
+      evidence: "تم بناء المحتوى على مراجع ودورات موثوقة، ثم تبسيطه ليناسب التعلم الهادئ خطوة بخطوة.",
+      loginToEnroll: "سجل الدخول للاشتراك",
+      goToLesson: "ابدأ الدرس",
+      enroll: "اشترك الآن - مجاني",
+      enrolling: "جاري الاشتراك...",
+      learn: "ماذا ستتعلم؟",
+      syllabus: "منهج الدورة",
+      quiz: "اختبار قصير بعد هذه الوحدة.",
+      resources: "مصادر ومراجع المحتوى",
+      centerDashboard: "العودة إلى لوحة المركز",
+      comingSoon: "قريبا",
+      comingSoonNote: "هذه الدورة ستكون متاحة قريبا.",
+    });
+  } else {
+    Object.assign(labels, {
+      evidence: "Course content is based on trusted references and well-known learning resources, then simplified for calm step-by-step learning.",
+      resources: "Content sources and references",
+      centerDashboard: "Back to center dashboard",
+    });
+  }
 
   if (loading || authLoading) {
     return (
@@ -382,6 +432,10 @@ export default function CourseDetailsPage() {
   const difficultyLabel = language === "ar"
     ? (course.difficulty === "beginner" ? "مبتدئ" : course.difficulty === "intermediate" ? "متوسط" : "متقدم")
     : (course.difficulty.charAt(0).toUpperCase() + course.difficulty.slice(1));
+  const cleanDifficultyLabel = language === "ar"
+    ? (course.difficulty === "beginner" ? "مبتدئ" : course.difficulty === "intermediate" ? "متوسط" : "متقدم")
+    : difficultyLabel;
+  const resources = courseResources[course.category as keyof typeof courseResources] || courseResources["data-entry"];
 
   return (
     <div className="min-h-screen">
@@ -425,12 +479,12 @@ export default function CourseDetailsPage() {
               <BookOpen size={14} /> {labels.modules}: {course.modules}
             </span>
             <span className="inline-flex items-center gap-2 rounded-full border border-[#D9E6F2] bg-[#F5F9FF] px-4 py-2 text-sm font-medium text-[#2E5C8A]">
-              <BarChart3 size={14} /> {labels.level}: {difficultyLabel}
+              <BarChart3 size={14} /> {labels.level}: {cleanDifficultyLabel}
             </span>
           </div>
-          <div className="flex items-center gap-3 rounded-xl border border-[#2E7D32]/20 bg-[#E8F5E9] p-4 text-[#1B5E20]">
-            <ShieldCheck size={20} className="shrink-0" />
-            {labels.accredited}
+          <div className="flex items-center gap-3 rounded-xl border border-[#D9E6F2] bg-[#F5F9FF] p-4 text-[#2E5C8A]">
+            <Library size={20} className="shrink-0" />
+            {labels.evidence}
           </div>
           <button
             type="button"
@@ -503,15 +557,14 @@ export default function CourseDetailsPage() {
         </section>
 
         <section className="flex flex-col gap-4 rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-sm">
-          <h2 className="font-semibold">{labels.trainer}</h2>
-          <div className="flex items-center gap-4 rounded-xl bg-[#F5F9FF] p-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#2E5C8A] to-[#3D7AB5] text-white shadow-sm">
-              <UserRound size={24} />
-            </div>
-            <div>
-              <p className="font-semibold text-[#2E5C8A]">{labels.trainerName}</p>
-              <p className="text-[#495057]">{labels.trainerBio}</p>
-            </div>
+          <h2 className="font-semibold">{labels.resources}</h2>
+          <div className="grid gap-3 md:grid-cols-3">
+            {resources.map((resource) => (
+              <a key={resource.href} href={resource.href} target="_blank" rel="noreferrer" className="flex min-h-16 items-center justify-between gap-3 rounded-xl border border-[#D9E6F2] bg-[#F5F9FF] p-4 font-medium text-[#2E5C8A]">
+                <span>{resource.label}</span>
+                <ExternalLink size={16} className="shrink-0" />
+              </a>
+            ))}
           </div>
         </section>
       </main>

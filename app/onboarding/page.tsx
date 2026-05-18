@@ -33,10 +33,11 @@ export default function OnboardingWizard() {
   const isAr = language === "ar";
   const [prefs, setPrefs] = useState(DEFAULT_PREFS);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
   const labels = isAr
     ? {
         title: "اختر تفضيلاتك",
-        intro: "يمكنك تغيير هذه الإعدادات لاحقاً. اختر ما يجعل التعلم أهدأ وأسهل.",
+        intro: "يمكنك تغيير هذه الإعدادات لاحقا. اختر ما يجعل التعلم أهدأ وأسهل.",
         mutedColors: "ألوان هادئة",
         highContrastText: "تباين أعلى للنص",
         reduceMotion: "تقليل الحركة والانتقالات",
@@ -47,7 +48,8 @@ export default function OnboardingWizard() {
         largeText: "نص أكبر",
         finish: "حفظ وفتح لوحة التحكم",
         saving: "جاري الحفظ...",
-        pipeline: "دعم CP و LD ضمن خارطة الطريق وليس جزءاً من هذا المعالج حالياً.",
+        failed: "لم نتمكن من حفظ التفضيلات. حاول مرة أخرى.",
+        pipeline: "دعم CP و LD ضمن خارطة الطريق، وليس جزءا من هذا المعالج حاليا.",
       }
     : {
         title: "Choose your preferences",
@@ -62,18 +64,23 @@ export default function OnboardingWizard() {
         largeText: "Larger text",
         finish: "Save and open dashboard",
         saving: "Saving...",
+        failed: "We could not save preferences. Please try again.",
         pipeline: "CP and LD support are on the roadmap and are not part of this wizard yet.",
       };
 
   async function save() {
     setSaving(true);
-    await fetch("/api/user/onboarding", {
+    setError("");
+    const res = await fetch("/api/user/onboarding", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         category: "AUTISM",
         uiPreferences: {
           ...prefs,
+          highContrast: prefs.highContrastText,
+          scale: prefs.largeText ? "large" : "normal",
+          density: prefs.simplifiedText ? "spaced" : "normal",
           computedAttrs: {
             "data-profile": "autism",
             "data-theme": prefs.highContrastText ? "high-contrast" : prefs.mutedColors ? "muted" : "pastel",
@@ -83,12 +90,18 @@ export default function OnboardingWizard() {
         },
       }),
     });
-    document.cookie = "tafrah_onboarded=true; path=/; max-age=31536000";
-    router.push("/dashboard");
+    setSaving(false);
+    if (!res.ok) {
+      setError(labels.failed);
+      return;
+    }
+    document.cookie = "tafrah_onboarded=true; path=/; max-age=31536000; samesite=lax";
+    router.replace("/dashboard");
+    router.refresh();
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#F8F9FA]">
       <TopBar />
       <main className="mx-auto flex max-w-3xl flex-col gap-6 px-6 py-12 text-[#212529]">
         <section className="rounded-sm border border-[#D9E6F2] bg-[#F5F9FF] p-6">
@@ -108,11 +121,12 @@ export default function OnboardingWizard() {
             >
               <span className="font-medium">{labels[key]}</span>
               <span className={`h-6 w-11 rounded-full p-1 ${prefs[key] ? "bg-[#2E5C8A]" : "bg-[#ADB5BD]"}`}>
-                <span className={`block h-4 w-4 rounded-full bg-white ${prefs[key] ? "translate-x-5" : ""}`} />
+                <span className={`block h-4 w-4 rounded-full bg-white transition-transform ${prefs[key] ? (isAr ? "-translate-x-5" : "translate-x-5") : ""}`} />
               </span>
             </button>
           ))}
         </section>
+        {error ? <p className="rounded-sm border border-[#FF9800] bg-[#FFF3E0] p-3">{error}</p> : null}
         <button type="button" onClick={save} disabled={saving} className="min-h-12 rounded-sm bg-[#2E5C8A] px-8 font-semibold text-white disabled:opacity-60">
           {saving ? labels.saving : labels.finish}
         </button>
