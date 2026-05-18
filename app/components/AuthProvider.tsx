@@ -6,10 +6,10 @@ import { useAuthStore } from "@/lib/store/auth";
 interface User {
   id: number;
   email: string;
+  phone?: string | null;
   name: string;
   role: string;
   status: string;
-  companyName?: string;
   avatarUrl?: string;
   bio?: string;
   jobTitle?: string;

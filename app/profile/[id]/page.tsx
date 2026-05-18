@@ -30,8 +30,8 @@ const RechartsBar = dynamic(
 
 interface UserProfile {
   id: number; name: string; email: string; role: string; status: string;
-  bio?: string; jobTitle?: string; available: boolean; companyName?: string;
-  createdAt: string; _count: { enrollments: number; applications: number; };
+  bio?: string; jobTitle?: string; available: boolean;
+  createdAt: string; _count: { enrollments: number; };
 }
 
 export default function ProfilePage() {
@@ -107,7 +107,7 @@ export default function ProfilePage() {
           loading: "Loading...",
           notFound: "User not found",
           coursesLabel: "Courses Completed",
-          appsLabel: "Applications Submitted",
+          appsLabel: "Learning Progress",
           editName: "Name",
           editBio: "Bio",
           editJobTitle: "Job Title",
@@ -142,7 +142,7 @@ export default function ProfilePage() {
 
   const stats = [
     { label: labels.coursesLabel, value: String(userData._count.enrollments) },
-    { label: labels.appsLabel, value: String(userData._count.applications) },
+    { label: labels.appsLabel, value: userData.status || "active" },
   ];
 
   function startEditing() {
@@ -233,7 +233,6 @@ export default function ProfilePage() {
               <div>
                 <h1 className="font-semibold">{userData.name}</h1>
                 <p>{userData.jobTitle || userData.email}</p>
-                {userData.companyName && <p className="text-sm text-[#6C757D]">{userData.companyName}</p>}
                 <div className="mt-2 flex items-center gap-2">
                   <span className={`h-3 w-3 rounded-full ${userData.available ? "bg-[#28A745]" : "bg-[#6C757D]"}`} />
                   <span>{userData.available ? labels.available : labels.notAvailable}</span>

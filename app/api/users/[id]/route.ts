@@ -7,7 +7,7 @@ import { sanitize, clamp } from "@/lib/sanitize";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-const VALID_ROLES = ["student", "hr", "admin"];
+const VALID_ROLES = ["student", "center_admin", "admin"];
 const VALID_STATUSES = ["pending", "verified", "banned"];
 
 // PATCH /api/users/[id] — update user (admin: status change; self: profile update)

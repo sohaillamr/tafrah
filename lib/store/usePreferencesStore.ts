@@ -3,6 +3,12 @@ import { create } from 'zustand';
 interface UiPreferences {
   // Autism
   highContrastText?: boolean;
+  mutedColors?: boolean;
+  reduceMotion?: boolean;
+  reduceSound?: boolean;
+  focusMode?: boolean;
+  ttsEnabled?: boolean;
+  largeText?: boolean;
   soundNotifications?: boolean;
   // CP
   largeButtons?: boolean;

@@ -65,6 +65,15 @@ html.assistant-active footer {
   --button-padding: 1.5rem 3rem;
   font-size: 1.25rem;
 }
+[data-scale="large"] {
+  font-size: 1.12rem;
+}
+[data-reduce-motion="true"] *,
+[data-profile="autism"] * {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
 
 body {
   background-color: var(--bg-color);
@@ -154,10 +163,6 @@ body {
   --text-color: #334155;
   --panel-bg: #F1F5F9;
   --container-pad: 20%;
-}
-[data-profile="autism"] * {
-  animation: none !important;
-  transition: none !important;
 }
 
 /* CP / MOTOR ADAPTIVE MODE */

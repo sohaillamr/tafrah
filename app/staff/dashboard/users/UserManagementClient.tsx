@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Shield, Ban, CheckCircle, Briefcase, Mail } from 'lucide-react';
+import { Ban, CheckCircle, Mail } from 'lucide-react';
 
 export default function UserManagementClient({ initialUsers }: { initialUsers: any[] }) {
   const [users, setUsers] = useState(initialUsers);
@@ -41,7 +41,7 @@ export default function UserManagementClient({ initialUsers }: { initialUsers: a
                 <div className='text-xs opacity-70'>{u.name}</div>
               </td>
               <td className='p-3 text-xs uppercase'>
-                 <span className={'px-2 py-1 bg-gray-900 border rounded ' + (u.role==='admin' ? 'border-red-500 text-red-500' : u.role==='hr' ? 'border-purple-500 text-purple-500' : 'border-green-500 text-green-500')}>
+                 <span className={'px-2 py-1 bg-gray-900 border rounded ' + (u.role==='admin' ? 'border-red-500 text-red-500' : u.role==='center_admin' ? 'border-purple-500 text-purple-500' : 'border-green-500 text-green-500')}>
                    {u.role}
                  </span>
               </td>
@@ -57,8 +57,8 @@ export default function UserManagementClient({ initialUsers }: { initialUsers: a
                 ) : (
                    <button onClick={()=>handleAction(u.id, 'ban')} disabled={loading} className='px-3 py-1 border border-red-500 hover:bg-red-500/20 text-red-500 text-xs font-bold uppercase transition focus:outline-none'>BAN</button>
                 )}
-                {u.role !== 'hr' && (
-                  <button onClick={()=>handleAction(u.id, 'make_hr')} disabled={loading} className='px-3 py-1 border border-purple-500 hover:bg-purple-500/20 text-purple-500 text-xs font-bold uppercase transition focus:outline-none'>MAKE HR</button>
+                {u.role !== 'center_admin' && (
+                  <button onClick={()=>handleAction(u.id, 'make_center_admin')} disabled={loading} className='px-3 py-1 border border-purple-500 hover:bg-purple-500/20 text-purple-500 text-xs font-bold uppercase transition focus:outline-none'>MAKE CENTER</button>
                 )}
                 {u.role !== 'student' && (
                   <button onClick={()=>handleAction(u.id, 'make_student')} disabled={loading} className='px-3 py-1 border border-green-500 hover:bg-green-500/20 text-green-500 text-xs font-bold uppercase transition focus:outline-none'>MAKE STUDENT</button>

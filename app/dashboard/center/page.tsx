@@ -1,260 +1,211 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import TopBar from '../../components/TopBar';
+import { useEffect, useMemo, useState } from "react";
+import TopBar from "../../components/TopBar";
 
 type Student = {
   id: number;
   name: string;
   email: string;
+  phone?: string | null;
   category: string;
   chapter: { name: string } | null;
-  progress: any[];
+  enrollments: { progress: number; completed: boolean; course: { titleEn: string; slug: string } }[];
+  progress: { quizPassed: boolean; quizScore: number | null; unitIndex: number; courseSlug: string }[];
 };
 
-type Chapter = {
-  id: number;
-  name: string;
-};
+type Chapter = { id: number; name: string };
 
 export default function CenterDashboard() {
-  const router = useRouter();
   const [students, setStudents] = useState<Student[]>([]);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
-  const [isChapterModalOpen, setIsChapterModalOpen] = useState(false);
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-  const [selectedChapterId, setSelectedChapterId] = useState<number | ''>('');
-  const [inviteLink, setInviteLink] = useState('');
-  const [centerId, setCenterId] = useState('');
+  const [chapterId, setChapterId] = useState("");
+  const [chapterName, setChapterName] = useState("");
+  const [studentForm, setStudentForm] = useState({ name: "", phone: "", email: "", password: "" });
+  const [message, setMessage] = useState("");
+
+  async function fetchData() {
+    const [studentsRes, chaptersRes] = await Promise.all([fetch("/api/center/students"), fetch("/api/center/chapters")]);
+    if (studentsRes.ok) setStudents(await studentsRes.json());
+    if (chaptersRes.ok) setChapters(await chaptersRes.json());
+  }
 
   useEffect(() => {
     fetchData();
   }, []);
 
-  const fetchData = async () => {
-    try {
-      const studsRes = await fetch('/api/center/students');
-      if (studsRes.ok) {
-        const data = await studsRes.json();
-        setStudents(data);
-      } else {
-        router.push('/');
-      }
+  const stats = useMemo(() => {
+    const total = students.length;
+    const active = students.filter((student) => student.enrollments.some((enrollment) => enrollment.progress > 0 && !enrollment.completed)).length;
+    const completed = students.filter((student) => student.enrollments.some((enrollment) => enrollment.completed)).length;
+    const averageProgress = total
+      ? Math.round(students.reduce((sum, student) => sum + averageStudentProgress(student), 0) / total)
+      : 0;
+    return { total, active, completed, averageProgress };
+  }, [students]);
 
-      const chapsRes = await fetch('/api/center/chapters');
-      if (chapsRes.ok) {
-        const data = await chapsRes.json();
-        setChapters(data);
-      }
-      
-      const meRes = await fetch('/api/auth/me');
-      if (meRes.ok) {
-        const me = await meRes.json();
-        if (me.user?.centerId) {
-          setCenterId(me.user.centerId.toString());
-        }
-      }
-    } catch (e) {
-      console.error(e);
+  const recommendations = [
+    stats.averageProgress < 30
+      ? "Nour recommends shorter first sessions: 10-15 minutes, one unit step at a time."
+      : "Nour recommends keeping the current pace and reviewing quiz mistakes weekly.",
+    students.some((student) => averageStudentProgress(student) === 0)
+      ? "Some students have not started. Assign one starter course and schedule a calm onboarding session."
+      : "All listed students have activity. Continue monitoring completion consistency.",
+    "For autistic learners, keep center instructions predictable: same place, same order, same language each session.",
+  ];
+
+  async function createStudent(event: React.FormEvent) {
+    event.preventDefault();
+    setMessage("");
+    const res = await fetch("/api/center/students", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(studentForm),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setMessage(data.error || "Could not create student.");
+      return;
     }
-  };
+    setStudentForm({ name: "", phone: "", email: "", password: "" });
+    setMessage("Student account created and connected to your center.");
+    fetchData();
+  }
 
-  const calculateProgress = (progArray: any[]) => {
-    if (!progArray || progArray.length === 0) return 0;
-    const passed = progArray.filter((p: any) => p.quizPassed).length;
-    return Math.round((passed / progArray.length) * 100);
-  };
+  async function createChapter(event: React.FormEvent) {
+    event.preventDefault();
+    if (!chapterName.trim()) return;
+    await fetch("/api/center/chapters", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: chapterName }),
+    });
+    setChapterName("");
+    fetchData();
+  }
 
-  const handleSelectStudent = (id: number) => {
-    if (selectedStudents.includes(id)) {
-      setSelectedStudents(selectedStudents.filter(sid => sid !== id));
-    } else {
-      setSelectedStudents([...selectedStudents, id]);
-    }
-  };
-
-  const assignChapter = async () => {
-    if (!selectedChapterId || selectedStudents.length === 0) return;
-    try {
-      const res = await fetch('/api/center/assign-chapter', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          studentIds: selectedStudents,
-          chapterId: Number(selectedChapterId)
-        })
-      });
-      if (res.ok) {
-        setIsChapterModalOpen(false);
-        setSelectedStudents([]);
-        fetchData();
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const generateInviteLink = () => {
-    if (centerId) {
-      const link = `${window.location.origin}/auth/quiz?centerId=${centerId}`;
-      setInviteLink(link);
-    }
-  };
+  async function assignChapter() {
+    if (!chapterId || selectedStudents.length === 0) return;
+    await fetch("/api/center/assign-chapter", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ studentIds: selectedStudents, chapterId: Number(chapterId) }),
+    });
+    setSelectedStudents([]);
+    setChapterId("");
+    fetchData();
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-[#F8F9FA]">
       <TopBar />
-      <main className="flex-1 max-w-6xl w-full mx-auto p-6 mt-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-[#2E5C8A]">Center Administration</h1>
-          <div className="flex gap-4">
-            <button
-              onClick={() => { generateInviteLink(); setIsInviteModalOpen(true); }}
-              className="px-6 py-2 bg-green-600 text-white rounded-md font-semibold"
-            >
-              + Add Student
-            </button>
-            <button
-              onClick={() => setIsChapterModalOpen(true)}
-              disabled={selectedStudents.length === 0}
-              className={`px-6 py-2 rounded-md font-semibold text-white ${selectedStudents.length > 0 ? 'bg-[#2E5C8A]' : 'bg-gray-300'}`}
-            >
-              Assign Chapter
-            </button>
-          </div>
-        </div>
+      <main className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-10 text-[#212529]">
+        <section>
+          <h1 className="text-3xl font-semibold text-[#2E5C8A]">Center dashboard</h1>
+          <p className="mt-2 text-[#495057]">Manage connected autistic learners. Course access belongs to students; this dashboard tracks and supports them.</p>
+        </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
-            <h3 className="text-gray-500 text-sm font-medium">Total Students</h3>
-            <p className="text-3xl font-bold text-[#2E5C8A] mt-2">{students.length}</p>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow border border-gray-100">
-            <h3 className="text-gray-500 text-sm font-medium">Active Chapters Issued</h3>
-            <p className="text-3xl font-bold text-[#2E5C8A] mt-2">{students.filter(s => s.chapter).length}</p>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow border border-[#F5A623] bg-orange-50">
-            <h3 className="text-orange-600 text-sm font-medium">Pending Modules Alerts</h3>
-            <p className="text-3xl font-bold text-orange-700 mt-2">
-              {students.filter(s => s.category === 'CP' || s.category === 'LEARNING_HARDENING').length}
-            </p>
-            <p className="text-xs text-orange-600 mt-1">CP/LD students queued for Alpha sync</p>
-          </div>
-        </div>
+        <section className="grid gap-4 md:grid-cols-4">
+          <Stat label="Students" value={stats.total} />
+          <Stat label="Active learners" value={stats.active} />
+          <Stat label="Completed course" value={stats.completed} />
+          <Stat label="Average progress" value={`${stats.averageProgress}%`} />
+        </section>
 
-        <div className="bg-white rounded-xl shadow overflow-hidden">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-100 border-b">
-                <th className="p-4 w-12">
-                  <input 
-                    type="checkbox" 
-                    onChange={(e) => {
-                      if (e.target.checked) setSelectedStudents(students.map(s => s.id));
-                      else setSelectedStudents([]);
-                    }}
-                    checked={students.length > 0 && selectedStudents.length === students.length}
-                  />
-                </th>
-                <th className="p-4 font-semibold text-gray-700">Name</th>
-                <th className="p-4 font-semibold text-gray-700">Category</th>
-                <th className="p-4 font-semibold text-gray-700">Current Chapter</th>
-                <th className="p-4 font-semibold text-gray-700">LMS Progress</th>
-              </tr>
-            </thead>
-            <tbody>
-              {students.map(student => (
-                <tr key={student.id} className="border-b hover:bg-gray-50">
-                  <td className="p-4 w-12">
-                    <input 
-                      type="checkbox" 
-                      checked={selectedStudents.includes(student.id)}
-                      onChange={() => handleSelectStudent(student.id)}
-                    />
-                  </td>
-                  <td className="p-4">
-                    <p className="font-semibold text-gray-900">{student.name}</p>
-                    <p className="text-sm text-gray-500">{student.email}</p>
-                  </td>
-                  <td className="p-4">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-full">
-                      {student.category || 'NONE'}
-                    </span>
-                  </td>
-                  <td className="p-4 text-gray-700">
-                    {student.chapter?.name || 'Unassigned'}
-                  </td>
-                  <td className="p-4">
-                    <div className="w-full bg-gray-200 rounded-full h-2.5">
-                      <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${calculateProgress(student.progress)}%` }}></div>
-                    </div>
-                    <p className="text-xs text-right mt-1 text-gray-500">{calculateProgress(student.progress)}%</p>
-                  </td>
-                </tr>
-              ))}
-              {students.length === 0 && (
+        <section className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+          <form onSubmit={createStudent} className="flex flex-col gap-3 rounded-sm border border-[#D9E6F2] bg-white p-5">
+            <h2 className="text-xl font-semibold text-[#2E5C8A]">Create connected student</h2>
+            {[
+              ["name", "Student name", "text"],
+              ["phone", "Phone", "tel"],
+              ["email", "Email", "email"],
+              ["password", "Temporary password", "text"],
+            ].map(([key, label, type]) => (
+              <label key={key} className="flex flex-col gap-1">
+                {label}
+                <input type={type} value={(studentForm as any)[key]} onChange={(event) => setStudentForm((prev) => ({ ...prev, [key]: event.target.value }))} className="min-h-12 rounded-sm border border-[#DEE2E6] px-3" required />
+              </label>
+            ))}
+            <button className="min-h-12 rounded-sm bg-[#2E5C8A] px-5 font-semibold text-white">Create student</button>
+            {message ? <p className="rounded-sm bg-[#F5F9FF] p-3 text-sm">{message}</p> : null}
+          </form>
+
+          <div className="flex flex-col gap-4 rounded-sm border border-[#D9E6F2] bg-[#F5F9FF] p-5">
+            <h2 className="text-xl font-semibold text-[#2E5C8A]">Nour recommendations</h2>
+            {recommendations.map((item) => (
+              <p key={item} className="rounded-sm border border-[#D9E6F2] bg-white p-3 text-sm leading-relaxed">{item}</p>
+            ))}
+            <form onSubmit={createChapter} className="flex gap-2">
+              <input value={chapterName} onChange={(event) => setChapterName(event.target.value)} placeholder="New chapter/group" className="min-h-12 flex-1 rounded-sm border border-[#DEE2E6] px-3" />
+              <button className="min-h-12 rounded-sm border border-[#2E5C8A] px-4 font-semibold text-[#2E5C8A]">Add</button>
+            </form>
+          </div>
+        </section>
+
+        <section className="rounded-sm border border-[#D9E6F2] bg-white">
+          <div className="flex flex-col gap-3 border-b border-[#D9E6F2] p-4 md:flex-row md:items-center md:justify-between">
+            <h2 className="text-xl font-semibold text-[#2E5C8A]">Students</h2>
+            <div className="flex gap-2">
+              <select value={chapterId} onChange={(event) => setChapterId(event.target.value)} className="min-h-12 rounded-sm border border-[#DEE2E6] px-3">
+                <option value="">Choose chapter</option>
+                {chapters.map((chapter) => <option key={chapter.id} value={chapter.id}>{chapter.name}</option>)}
+              </select>
+              <button onClick={assignChapter} disabled={!chapterId || selectedStudents.length === 0} className="min-h-12 rounded-sm bg-[#2E5C8A] px-4 font-semibold text-white disabled:opacity-50">Assign</button>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-[#F5F9FF]">
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-gray-500">No students found.</td>
+                  <th className="p-3 text-start">Select</th>
+                  <th className="p-3 text-start">Student</th>
+                  <th className="p-3 text-start">Chapter</th>
+                  <th className="p-3 text-start">Courses</th>
+                  <th className="p-3 text-start">Progress</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {students.map((student) => {
+                  const progress = averageStudentProgress(student);
+                  return (
+                    <tr key={student.id} className="border-t border-[#D9E6F2]">
+                      <td className="p-3"><input type="checkbox" checked={selectedStudents.includes(student.id)} onChange={() => setSelectedStudents((prev) => prev.includes(student.id) ? prev.filter((id) => id !== student.id) : [...prev, student.id])} /></td>
+                      <td className="p-3"><strong>{student.name}</strong><br /><span className="text-[#6C757D]">{student.email}</span></td>
+                      <td className="p-3">{student.chapter?.name || "Unassigned"}</td>
+                      <td className="p-3">{student.enrollments.length || 0}</td>
+                      <td className="p-3">
+                        <div className="h-3 rounded-full bg-[#DEE2E6]"><div className="h-3 rounded-full bg-[#2E5C8A]" style={{ width: `${progress}%` }} /></div>
+                        <span className="text-xs text-[#6C757D]">{progress}%</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {students.length === 0 ? <tr><td colSpan={5} className="p-8 text-center text-[#6C757D]">No students yet.</td></tr> : null}
+              </tbody>
+            </table>
+          </div>
+        </section>
       </main>
+    </div>
+  );
+}
 
-      {/* Chapter Modal */}
-      {isChapterModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-4">Assign Chapter</h2>
-            <p className="text-gray-600 mb-6">Select a chapter to assign to the {selectedStudents.length} selected students.</p>
-            <select 
-              className="w-full border p-3 rounded-lg mb-6"
-              value={selectedChapterId}
-              onChange={(e) => setSelectedChapterId(Number(e.target.value))}
-            >
-              <option value="">Select Chapter</option>
-              {chapters.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-            <div className="flex justify-end gap-2">
-              <button className="px-4 py-2 text-gray-600 font-semibold" onClick={() => setIsChapterModalOpen(false)}>Cancel</button>
-              <button className="px-4 py-2 bg-[#2E5C8A] text-white rounded-lg font-semibold" onClick={assignChapter}>Confirm</button>
-            </div>
-          </div>
-        </div>
-      )}
+function averageStudentProgress(student: Student) {
+  if (student.enrollments.length > 0) {
+    return Math.round(student.enrollments.reduce((sum, enrollment) => sum + enrollment.progress, 0) / student.enrollments.length);
+  }
+  if (student.progress.length > 0) {
+    return Math.round((student.progress.filter((item) => item.quizPassed).length / student.progress.length) * 100);
+  }
+  return 0;
+}
 
-      {/* Invite Modal */}
-      {isInviteModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-xl w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-4">Add Students</h2>
-            <p className="text-gray-600 mb-6">Send this unique invitation link to your students. They will be automatically mapped to your center upon signup.</p>
-            <input 
-              type="text" 
-              readOnly 
-              value={inviteLink} 
-              className="w-full border p-3 rounded-lg mb-6 bg-gray-50 text-gray-700" 
-            />
-            <div className="flex justify-end gap-2">
-              <button className="px-4 py-2 text-gray-600 font-semibold" onClick={() => setIsInviteModalOpen(false)}>Close</button>
-              <button 
-                className="px-4 py-2 bg-[#2E5C8A] text-white rounded-lg font-semibold" 
-                onClick={() => {
-                  navigator.clipboard.writeText(inviteLink);
-                  alert('Link copied to clipboard!');
-                }}
-              >
-                Copy Link
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+function Stat({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div className="rounded-sm border border-[#D9E6F2] bg-white p-5">
+      <p className="text-sm text-[#6C757D]">{label}</p>
+      <p className="mt-2 text-3xl font-semibold text-[#2E5C8A]">{value}</p>
     </div>
   );
 }

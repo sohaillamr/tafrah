@@ -1,152 +1,376 @@
-# Tafrah Platform Architecture & Technical Overview
+# Tafrah V4
 
-## 📖 Platform Description
+Tafrah V4 is a Next.js education and accessibility platform focused on neuro-inclusive learning, adaptive user preferences, course progression, center-based student management, support workflows, and an AI learning assistant named Nour.
 
-**Tafrah** is a multi-sided educational, workforce accessibility, and job-matching platform designed with a native emphasis on neuro-inclusion and accessibility. It acts as an integrated ecosystem connecting three primary user groups:
-1. **Students/Candidates:** Learn via tech and finance courses, track progress, utilize AI for semantic assistance, and apply for jobs tailored to their capabilities.
-2. **HR Professionals:** Source verified candidates, post targeted job openings, and streamline application processes.
-3. **Administrators:** Monitor global system metrics, handle support queues (tickets), and oversee user lifecycle management.
+The application is built as a full-stack Next.js App Router project with Prisma/PostgreSQL for persistent data, JWT cookies for authentication, Tailwind CSS for the interface, Zustand for client-side preference state, and Groq-backed AI endpoints for assistant and speech workflows. A separate `tafrah-video/` package contains a Remotion project for video generation work.
 
-By seamlessly bridging Learning Management System (LMS) capabilities with an HR Job Board and AI-driven accessibility tooling, Tafrah ensures an equitable, frictionless pipeline from education directly into employment. 
+> Current repository status: this README reflects the codebase as reviewed on 2026-05-18. The project is not build-clean at the moment; see [Known Issues](#known-issues).
 
----
+## Table of Contents
 
-## 🏗️ System Architecture
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Repository Structure](#repository-structure)
+- [Application Routes](#application-routes)
+- [API Routes](#api-routes)
+- [Data Model](#data-model)
+- [Authentication and Authorization](#authentication-and-authorization)
+- [AI Assistant](#ai-assistant)
+- [Course Content](#course-content)
+- [Environment Variables](#environment-variables)
+- [Local Development](#local-development)
+- [Database Workflow](#database-workflow)
+- [Scripts](#scripts)
+- [Deployment Notes](#deployment-notes)
+- [Known Issues](#known-issues)
+- [Companion Video Package](#companion-video-package)
 
-Tafrah leverages a modern, highly scalable full-stack TypeScript architecture built around modern React paradigms and Edge computing.
+## Features
 
-* **Core Framework:** Next.js 15.5 (App Router)
-* **Language:** TypeScript (v5.5)
-* **Database Engine:** PostgreSQL
-* **ORM:** Prisma (v5.22)
-* **Styling & UI:** Tailwind CSS, PostCSS, Framer Motion (for animations), and Lucide-React (icons)
-* **State Management:** Zustand (for lightweight, decentralized global client state)
-* **Security & Tokens:** Stateless JWT (`jose`), `bcryptjs`, CSRF protection, and custom Rate Limiting.
-* **Specialized Subsystems:** `tafrah-video` (a video generation pipeline utilizing Remotion for dynamic video/marketing content).
+- Bilingual Arabic/English UI shell with RTL/LTR switching through `tafrah_lang`.
+- Student authentication, signup, recovery, onboarding, dashboard, profile, messages, and course learning flows.
+- Adaptive UI preference layer for categories such as autism, cerebral palsy, and learning difficulties.
+- Course catalog, enrollment tracking, unit progress, quiz progress, and completion worker hooks.
+- Admin panel for users, courses, support tickets, activity logs, and system statistics.
+- Separate staff vault under `/staff` with admin authentication, user management, system pulse, and impersonation tooling.
+- Center management APIs for center students, chapters, and chapter assignment.
+- Support ticket API and contact form wiring.
+- Internal message API for user-to-user communication.
+- Nour AI assistant API with Groq streaming responses, rate limiting, progress-aware context, user preference context, and basic frustration detection.
+- Speech-to-text endpoint for assistant voice workflows.
+- Security middleware for protected routes, same-origin checks on mutating API requests, and security headers.
 
-### Directory & Component Structure
+## Tech Stack
 
-The monolith is organized into distinct logical bounds to separate concerns effectively:
-* **`app/`**: Contains the Next.js App Router root, UI pages, Layouts, and the backend JSON APIs (`app/api/`).
-* **`app/api/`**: Houses all backend request handlers, structured by feature domain.
-* **`components/`**: Reusable frontend elements (`TopBar`, `Breadcrumbs`, `Toast`, `BetaNote`).
-* **`data/`**: Static data layers (course metadata, JSON quizzes, Python/Finance unit content).
-* **`lib/`**: Core utilities, database singletons, JWT authentication strategies, and sanitizers.
-* **`prisma/`**: Database schema definitions (`schema.prisma`) and seed logic.
-* **`tafrah-video/`**: Microservice directory containing the Remotion application for automated video generation.
+- Framework: Next.js `15.5.10` with App Router
+- Runtime UI: React `18.3.1`
+- Language: TypeScript `5.5.4`
+- Styling: Tailwind CSS `3.4.7`, PostCSS, global CSS
+- Database: PostgreSQL through Prisma
+- ORM: Prisma `5.22.0`
+- Authentication: JWT via `jose`, password hashing via `bcryptjs`
+- State: Zustand
+- UI/visuals: Lucide React, Framer Motion, Recharts
+- AI provider: Groq API
+- Deployment config: Vercel and Netlify files are present
+- Video companion: Remotion in `tafrah-video/`
 
----
-
-## ⚙️ Core Modules & Pipelines
-
-### 1. Authentication & Authorization Pipeline
-* **Flow:** Implements a headless, stateless JWT workflow. Users register with role-specific entry points (`/auth/user-signup`, `/auth/hr-signup`).
-* **Functions:** Passwords are cryptographically hashed using `bcryptjs`. Session persistence is managed securely, with Next.js Edge Middleware (`middleware.ts`) intercepting unauthenticated or unauthorized route attempts (e.g., stopping a Student from accessing an HR dashboard).
-
-### 2. Learning Management System (LMS) Module
-* **Flow:** Curriculum content is largely statically hosted in `/data/` (for speed and localization) while real-time user progress is tracked in the PostgreSQL database.
-* **Functions:** 
-  * `/api/courses/`: Retrieves curriculum data.
-  * `/api/enrollments/` & `/api/progress/`: Manages step matrices, milestone tracking, and quiz evaluations. 
-* **Accessibility:** Component styling heavily utilizes highly legible utility-class strategies (Tailwind) to allow easy adjustment of contrast ratios, tailored for neuro-divergent users.
-
-### 3. HR & Job Matching Engine
-* **Flow:** Connects educated candidates to hiring managers. HR users create `Job` entities linked to their profiles. Students create `Application` entities against these jobs.
-* **Functions:** `/api/jobs/` orchestrates job definitions, correlates student profiles, and facilitates application bindings. 
-
-### 4. AI Assistant Orchestration layer
-* **Flow:** Provides users with real-time course assistance and semantic documentation breakdowns to aid neuro-inclusion and ease of learning.
-* **Functions:** Operated via `/api/assistant/route.ts`, the backend proxies requests directly to the **Groq API**. It enforces dynamic API key rotation, restricts token/message lengths, checks session bounds, and utilizes rate limiters (`lib/rate-limit.ts`) to prevent abuse (e.g., localized to 30 requests/minute/IP).
-
-### 5. internal Communications & Support Pipeline
-* **Flow:** Ensures robust support and communication between platform layers without relying on external email chains.
-* **Functions:**
-  * **Messaging:** `/api/messages/` handles internal peer-to-peer or HR-to-Candidate inbox features.
-  * **Ticketing:** `/api/tickets/` routes technical or account-based issues directly to the Admin dashboard context.
-
----
-
-## 🗄️ Database Relationships (Prisma Maps)
-
-Tafrah’s entity relations are strictly mapped using Prisma to ensure referential integrity and optimized queries:
-
-* **User Entity:** The absolute core. Segmented by Role (`student`, `hr`, `admin`) and Status (`pending`, `verified`, `banned`). Maintains commercial details, avatars, and aggregate scores.
-* **Course & Progress Schema:** Tracks progression via scalar bounds (0-100), Boolean milestones (completion markers), and unit checks.
-* **Job & Application Trees:** Correlates a `User` acting as `JobPoster` to a `Job`, allowing multiple `Users` (candidates) to attach `Application` records onto that job.
-* **Data Privacy:** Cascading deletes are explicitly defined across relations to guarantee full PII (Personally Identifiable Information) stripping upon account deletion.
-
----
-
-## 🚀 DevOps, Security & Deployment
-
-* **Edge Protection:** Route logic checks are maintained on the Edge via Next.js Middleware. `lib/sanitize.ts` and `lib/csrf.ts` guarantee protection against XSS and Cross-Site Request Forgery scenarios.
-* **Adapter Readiness:** The application configuration dynamically supports multiple deployment adapters (notably verified through `vercel.json` and `netlify.toml` presence) for seamless serverless/edge deployments.
-* **Database Pooling:** Configuration allows connection splitting by distinguishing a pooled connection string (`DATABASE_URL`) from a direct connection (`DIRECT_URL`) for migrations, maximizing concurrency limits on standard PostgreSQL deployments.
-
-***
-
-## Technical Audit and Roadmap
-
-# Nour AI Assistant: Comprehensive Audit & Enhancement Strategy
-
-## Role: Lead AI Architect & Neurodiversity UX Researcher
-
-### 1. Cognitive Load & Sensory-Friendly Communication
-**Audit:** Currently, AI chatbots often lean towards overly conversational, enthusiastic, or metaphorical language. For neurodivergent users, especially those with Level 1 Autism, these traits can introduce unnecessary cognitive overhead, leading to confusion and sensory fatigue. Tone and structure must be literal, structured, and predictable.
-**Enhancement:** Refine the "Task Deconstruction" logic. Nour must automatically decompose complex tasks (e.g., "Build a React component") into discrete, atomic steps (e.g., "Step 1: Create a file named `Button.tsx`"). Only present one step at a time unless the user explicitly requests the entire breakdown. Use bullet points and precise constraints. Eliminate ambiguous idioms like "think outside the box" or "let's dive right in".
-
-### 2. Context Retention & Long-Term Memory
-**Audit:** Most standard LLM integrations rely solely on generic token-window histories (short-term session context), causing users to repeatedly explain their learning style or past progress. This creates friction.
-**Enhancement (Hierarchical Memory Architecture):**
-*   **Short-term (Working Memory):** The immediate active conversation window. Limited to the current sub-task to avoid context pollution.
-*   **Mid-term (Episodic Memory):** Progress on active courses. Stored via platform databases (e.g., Prisma models for `CourseProgress`), tracking which specific modules are completed and currently active. Nour queries this before responding to contextualize answers.
-*   **Long-term (Semantic Memory):** Vector-stored user profiles containing explicitly declared and implicitly learned preferences. Includes: "Prefers code snippets over text," "Avoids lengthy paragraphs," or "Frustrates easily on CSS syntax."
-
-### 3. RAG Optimization
-**Audit:** Nour needs accurate, domain-specific retrieval (e.g., programming curriculums, accounting ledgers) without synthesizing generalized, hallucinated internet advice.
-**Enhancement:** Transition to a "Micro-learning Hybrid Search" RAG model. Index documentation in tight, atomic chunks. When retrieving context, filter by the user's current module. If the user is stuck on "Python Unit 3," restrict RAG to the "Python Unit 3" knowledge base. Prioritize chunks tagged as "troubleshooting" or "examples" over "theory" when a user is actively coding.
-
-### 4. Proactive Support & Emotional Intelligence
-**Audit:** Standard bots are purely reactive. They wait for prompts. This places the burden of recognizing and articulating frustration on the user.
-**Enhancement:** Implement a **Frustration Detection Trigger**.
-*   **Trigger Metrics:** Repeating similar code errors > 3 times, sudden shifts to short negative inputs (e.g., "wrong," "stop," "no"), or significantly increased typing pace/erratic corrections.
-*   **Intervention (Calm Mode):** Nour pauses the technical instruction. Response template: "I notice this particular step is causing repeated errors. This is a common point of friction. Let's take a 5-minute break. When you're ready, we can try a different approach or review a smaller example." Decrease response length and lower tone intensity.
-
-### 5. Technical Integrity (The "Synapse" Integration)
-**Audit:** Integration with core platform state (Synapse) determines Nour's effectiveness. Latency in recognizing a user's completed module breaks the illusion of a continuous mentor.
-**Enhancement:** Move towards an Event-Driven API architecture for Nour. Instead of Nour polling the DB on every message, the platform emits events (`USER_COMPLETED_MODULE`, `USER_FAILED_QUIZ`) to Nour's memory cache. This ensures her context window is updated instantly, providing zero-latency awareness of the user's current state.
-
----
-
-## Revised System Instruction for Nour
+## Repository Structure
 
 ```text
-You are Nour, an AI learning assistant for Tafrah, dedicated to supporting neurodivergent users (specifically Level 1 Autism) in mastering technical skills like programming and accounting.
-
-CORE Directives:
-1. COMMUNICATION STYLE: Be direct, literal, and concise. Avoid metaphors, idioms, sarcasm, or excessive enthusiasm. Use clear formatting (bullet points, bold text for emphasis).
-2. TASK DECONSTRUCTION: When explaining a concept or solving a problem, break it down into atomic, numbered steps. Ask the user to confirm completion of Step 1 before providing Step 2.
-3. COGNITIVE LOAD REDUCTION: Never provide more than 3 paragraphs of text at once. If code is required, provide only the specific snippet needed, not the entire file context unless asked.
-4. CALM MODE: If the user indicates frustration or repeats the same error, acknowledge the difficulty neutrally, offer a simplified explanation, and suggest a short break if appropriate. "I see this is causing friction. Let's step back."
-5. CONTEXTUAL AWARENESS: Always prioritize the user's current course module and explicit preferences stored in your context. Do not make assumptions about their prior knowledge outside of verified progress.
+.
++-- app/                         # Next.js pages, layouts, route handlers, app-local components
+|   +-- api/                     # Backend API routes
+|   +-- auth/                    # Login, signup, recovery, quiz, center signup
+|   +-- courses/                 # Course catalog, detail, and learning player
+|   +-- dashboard/               # Unified learner dashboard and center dashboard
+|   +-- staff/                   # Staff vault login and dashboard
+|   +-- components/              # App-level UI providers and shared components
++-- components/                  # Shared cross-app components
++-- data/                        # Static course and quiz content
++-- lib/                         # Auth, Prisma, security, data fetching, stores
++-- prisma/                      # Prisma schema and seed script
++-- public/                      # Static images and logos
++-- services/                    # Background-like service helpers
++-- tafrah-video/                # Remotion video project
++-- middleware.ts                # Edge middleware for route protection and headers
++-- package.json                 # Main app scripts and dependencies
++-- README.md                    # This file
 ```
 
----
+## Application Routes
 
-## Technical Roadmap
+Primary pages in the current app:
 
-**Phase 1: Foundation (Weeks 1-3)**
-*   Define and integrate the revised System Prompt into the existing OpenAI/LLM API calls.
-*   Standardize the RAG chunking pipeline for Tafrah's specific course data (Python, Finance).
+- `/` - home page
+- `/about` - about page
+- `/our-science` - science/research page
+- `/privacy` - privacy page
+- `/contact` - support/contact page
+- `/auth/select` - account type selection
+- `/auth/login` - user login
+- `/auth/user-signup` - student/user signup
+- `/auth/center-signup` - center signup
+- `/auth/recovery` - account recovery
+- `/auth/quiz` - discovery/adaptive quiz
+- `/onboarding` - onboarding flow
+- `/dashboard` - unified authenticated dashboard
+- `/dashboard/center` - center dashboard
+- `/courses` - course catalog
+- `/courses/[id]` - course details
+- `/courses/[id]/learn` - protected learning player
+- `/assistant` - Nour assistant UI
+- `/messages` - internal messages
+- `/profile/[id]` - user profile
+- `/admin` - application admin panel
+- `/staff/login` - staff vault login
+- `/staff/dashboard` - staff command dashboard
+- `/staff/dashboard/users` - staff user management
 
-**Phase 2: Contextual Hierarchy (Weeks 4-7)**
-*   Implement `UserPreferences` DB schema (Prisma) to store long-term semantic memory (formatting preferences, sensory triggers).
-*   Create middleware for the Chat API to inject mid-term memory (current course progress, last completed quiz) into the LLM system context seamlessly.
+## API Routes
 
-**Phase 3: Frustration Detection & Edge Cases (Weeks 8-10)**
-*   Implement regex and sentiment analysis to score user inputs for frustration/fatigue.
-*   Build the "Calm Mode" fallback logic to intercept high-frustration scores and reroute to specific, lower-cognitive-load response templates.
+Current API route handlers under `app/api`:
 
-**Phase 4: Optimization & Refinement (Weeks 11-12)**
-*   Audit API latency. Ensure DB queries appending context to user turns take < 100ms.
-*   Conduct live user testing sessions with neurodivergent Beta testers to refine the Task Deconstruction parsing.
+| Route | Methods | Purpose |
+| --- | --- | --- |
+| `/api/health` | `GET` | Health check |
+| `/api/auth/signup` | `POST` | Create user account |
+| `/api/auth/login` | `POST` | Login, set `tafrah_token` cookie |
+| `/api/auth/logout` | `GET`, `POST` | Clear session |
+| `/api/auth/me` | `GET` | Return current authenticated user |
+| `/api/auth/recovery` | `POST` | Account recovery workflow |
+| `/api/user/onboarding` | `PATCH` | Save onboarding state/preferences |
+| `/api/users` | `GET` | Admin user list with pagination/filtering |
+| `/api/users/[id]` | `GET`, `PATCH`, `DELETE` | User profile, update, delete |
+| `/api/users/preferences` | `PUT` | Save user preference profile |
+| `/api/courses` | `GET`, `POST` | List courses, create admin course |
+| `/api/courses/[id]` | `GET`, `PATCH`, `DELETE` | Course detail/update/delete |
+| `/api/enrollments` | `GET`, `POST` | List/create enrollments |
+| `/api/progress` | `GET`, `POST` | Read and upsert course unit progress |
+| `/api/messages` | `GET`, `POST` | Conversation list and message creation |
+| `/api/tickets` | `GET`, `POST` | List/create support tickets |
+| `/api/tickets/[id]` | `PATCH`, `DELETE` | Update/delete support tickets |
+| `/api/admin/stats` | `GET` | Admin metrics and charts |
+| `/api/assistant` | `POST` | Nour chat completion stream via Groq |
+| `/api/assistant/stt` | `POST` | Assistant speech-to-text workflow |
+| `/api/assistant/analyze-strengths` | `POST` | Skill/strength analysis |
+| `/api/staff/auth` | `POST` | Staff vault authentication |
+| `/api/staff/admin/pulse` | `GET` | Staff system pulse |
+| `/api/staff/admin/users` | `POST` | Staff user administration |
+| `/api/staff/admin/impersonate` | `POST` | Staff impersonation |
+| `/api/center/students` | `GET` | Center student list |
+| `/api/center/chapters` | `GET`, `POST` | Center chapters |
+| `/api/center/assign-chapter` | `POST` | Assign student to chapter |
+
+## Data Model
+
+The current Prisma schema uses PostgreSQL and defines these models:
+
+- `User` - account identity, role, status, category, UI preferences, profile fields, center/chapter links
+- `UserPreference` - long-term formatting, sensory, theme, motion, mascot, and learning preferences
+- `SkillProfile` - skill metrics, badges, projects, strengths summary, career readiness
+- `Course` - course metadata, availability, archive state, category, difficulty, hours, modules
+- `Enrollment` - user/course enrollment with progress and completion state
+- `Progress` - per-user per-course unit progress, step index, quiz status, score
+- `Message` - internal direct messages
+- `Ticket` - support requests
+- `ActivityLog` - user/admin activity stream
+- `SiteSetting` - key/value site settings
+- `PasswordResetToken` - recovery token tracking
+- `RateLimitEntry` - persisted rate-limit counters
+- `AuditLog` - admin audit entries
+- `Center` - center organization records
+- `Chapter` - center chapters and student grouping
+
+Important: the current Prisma schema does not define `Job` or `Application` models, even though some older UI/docs/seed code still reference job-matching concepts.
+
+## Authentication and Authorization
+
+The main app uses a JWT stored in the `tafrah_token` HTTP-only cookie.
+
+- Tokens are signed in `lib/auth.ts` with `jose`.
+- Passwords are checked with `bcryptjs`.
+- `getSession()` validates the JWT and tries to refresh user role/name/status from the database.
+- `middleware.ts` protects `/admin`, `/dashboard`, `/messages`, `/assistant`, and staff dashboard routes.
+- Mutating `/api/*` requests are guarded with same-origin `Origin`/`Referer` checks.
+- Security headers are set in middleware, including frame protection, content type protection, referrer policy, HSTS, permissions policy, and CSP.
+
+There is also a separate staff vault path using `__tafrah_admin_vault` and helpers in `lib/admin-auth.ts`.
+
+## AI Assistant
+
+Nour is implemented primarily through `app/api/assistant/route.ts`.
+
+Behavior:
+
+- Requires an authenticated user.
+- Rate-limits by user and IP.
+- Accepts recent user/assistant messages.
+- Pulls the user's latest progress, category, UI preferences, and saved `UserPreference`.
+- Builds a neuro-inclusive system prompt with category-specific guidance.
+- Detects simple frustration signals and switches to a calmer response style.
+- Streams Groq chat completions as `text/event-stream`.
+- Tries primary and secondary Groq keys, with a backup model fallback.
+
+Environment variables used:
+
+- `GROQ_API_KEY`
+- `GROQ_API_KEY_SECONDARY`
+- `GROQ_API_KEY_VOICE`
+
+## Course Content
+
+Course metadata lives in the database through `Course`, while lesson content is loaded from static files in `data/` through `lib/data/course-fetcher.ts`.
+
+Current content families include:
+
+- Data entry units: `Unit1Content.js` through `Unit7Content.js`
+- Python units: `PythonUnit1Content.js` through `PythonUnit7Content.js`
+- Finance units: `FinanceUnit1Content.js` through `FinanceUnit4Content.js`
+- Quizzes: `quizzes.js`, `pythonQuizzes.js`, `financeQuizzes.js`
+- Catalog seed/static metadata: `data/courses.json`
+
+The learning route `/courses/[id]/learn` requires authentication and enrollment unless the user is an admin.
+
+## Environment Variables
+
+Create `.env.local` from `.env.example` and fill the values:
+
+```env
+DATABASE_URL="postgresql://..."
+DIRECT_URL="postgresql://..."
+JWT_SECRET="replace-with-a-secure-random-string"
+GROQ_API_KEY=""
+GROQ_API_KEY_SECONDARY=""
+GROQ_API_KEY_VOICE=""
+```
+
+Notes:
+
+- `DATABASE_URL` is used by Prisma at runtime.
+- `DIRECT_URL` is used by Prisma for direct migration access.
+- `JWT_SECRET` must be strong in production.
+- Groq keys are required for the assistant and voice features.
+
+## Local Development
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Prepare Prisma:
+
+```bash
+npm run db:generate
+```
+
+Apply the schema to the configured database:
+
+```bash
+npm run db:push
+```
+
+Start the dev server:
+
+```bash
+npm run dev
+```
+
+Open:
+
+```text
+http://localhost:3000
+```
+
+## Database Workflow
+
+Generate Prisma client:
+
+```bash
+npm run db:generate
+```
+
+Create and apply a development migration:
+
+```bash
+npm run db:migrate
+```
+
+Deploy migrations:
+
+```bash
+npm run db:migrate:deploy
+```
+
+Push schema without a migration:
+
+```bash
+npm run db:push
+```
+
+Open Prisma Studio:
+
+```bash
+npm run db:studio
+```
+
+Seed/reset caveat: `prisma/seed.js` is currently stale and references models/fields that are not present in `prisma/schema.prisma`. Do not rely on `npm run db:seed`, `npm run db:setup`, or `npm run db:reset` until the seed script is reconciled with the schema.
+
+## Scripts
+
+Main app scripts:
+
+| Script | Command | Purpose |
+| --- | --- | --- |
+| `dev` | `next dev` | Start local Next.js server |
+| `build` | `npx prisma generate && next build` | Generate Prisma client and build app |
+| `start` | `next start` | Start production server after build |
+| `lint` | `next lint` | Run Next linting |
+| `db:generate` | `npx prisma generate` | Generate Prisma client |
+| `db:migrate` | `npx prisma migrate dev` | Create/apply local migration |
+| `db:migrate:deploy` | `npx prisma migrate deploy` | Apply migrations in deployment |
+| `db:push` | `npx prisma db push` | Push schema to DB |
+| `db:seed` | `node prisma/seed.js` | Seed demo data, currently stale |
+| `db:setup` | `npx prisma generate && npx prisma db push && node prisma/seed.js` | Full setup, currently blocked by stale seed |
+| `db:studio` | `npx prisma studio` | Open Prisma Studio |
+| `db:reset` | `npx prisma db push --force-reset && node prisma/seed.js` | Reset/seed DB, currently blocked by stale seed |
+
+## Deployment Notes
+
+The repository includes:
+
+- `vercel.json`
+- `netlify.toml`
+- `@netlify/plugin-nextjs`
+
+Before deploying:
+
+- Ensure production `DATABASE_URL`, `DIRECT_URL`, and `JWT_SECRET` are configured.
+- Configure Groq keys if assistant features should be available.
+- Run `npm run build` locally before pushing a release.
+
+## Known Issues
+
+Current known risks:
+
+1. Some older Arabic text in untouched legacy pages may still need UTF-8 copy review.
+2. `lib/auth.ts` signs tokens for `7d`, while `app/api/auth/login/route.ts` sets the cookie `maxAge` to 30 days. The cookie can outlive the token.
+3. Middleware decodes JWTs at the edge without signature verification for route gating. API handlers still verify sessions, but page-level redirects rely on decoded role data.
+4. Playwright is not currently installed in this workspace, so visual browser QA should be added to the project before a larger UI release.
+
+Recent verification:
+
+```text
+npx prisma validate
+Result: schema is valid.
+
+npm run build
+Result: passes.
+```
+
+## Companion Video Package
+
+`tafrah-video/` is a separate Remotion project.
+
+Commands:
+
+```bash
+cd tafrah-video
+npm install
+npm run dev
+npm run build
+npm run lint
+```
+
+It uses React 19, Remotion 4, Tailwind 4, TypeScript 5.9, and its own package lock.
+
+## Suggested Next Steps
+
+1. Fix the syntax error in `app/page.tsx`.
+2. Decide whether job/application functionality should return. If yes, restore Prisma models and API routes; if no, remove stale UI and seed references.
+3. Repair or regenerate mojibaked Arabic text from a clean UTF-8 source.
+4. Align center auth with the main `tafrah_token` session system.
+5. Rewrite `prisma/seed.js` against the current schema.
+6. Run `npm run build` again and address the next surfaced issue.

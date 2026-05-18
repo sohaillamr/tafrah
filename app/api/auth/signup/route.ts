@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { email, password, name, role, quizScore } = body;
+    const { email, password, name, phone, role, quizScore, centerName, centerLocation, licenseKey, centerId } = body;
 
     if (!email || !password || !name) {
       return NextResponse.json(
@@ -38,19 +38,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (password.length < 8) {
+    if (password.length < 6) {
       return NextResponse.json(
-        { error: "Password must be at least 8 characters" },
-        { status: 400 }
-      );
-    }
-
-    const hasUpper = /[A-Z]/.test(password);
-    const hasLower = /[a-z]/.test(password);
-    const hasNum = /[0-9]/.test(password);
-    if (!hasUpper || !hasLower || !hasNum) {
-      return NextResponse.json(
-        { error: "Password must contain uppercase, lowercase, and a number" },
+        { error: "Password must be at least 6 characters" },
         { status: 400 }
       );
     }
@@ -66,31 +56,34 @@ export async function POST(req: NextRequest) {
     const passwordHash = await bcrypt.hash(password, 12);
 
     const safeName = sanitize(clamp(name, 100));
+    const safePhone = typeof phone === "string" ? sanitize(clamp(phone, 30)) : null;
     
 
-    const userRole = ["student", "admin", "center_admin", "hr"].includes(role) ? role : "student";
+    const userRole = ["student", "admin", "center_admin"].includes(role) ? role : "student";
     
     // Create Center for center_admin if needed
-    let centerId = null;
+    let resolvedCenterId: number | null = typeof centerId === "number" ? centerId : null;
     if (userRole === "center_admin") {
       const center = await prisma.center.create({
         data: {
-          name: `${safeName}'s Center`,
-          location: "Not Specified",
-          licenseKey: `LIC-${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+          name: sanitize(clamp(centerName || `${safeName}'s Center`, 120)),
+          location: typeof centerLocation === "string" ? sanitize(clamp(centerLocation, 120)) : null,
+          licenseKey: sanitize(clamp(licenseKey || `TAFRAH-${Math.random().toString(36).slice(2, 10).toUpperCase()}`, 80))
         }
       });
-      centerId = center.id;
+      resolvedCenterId = center.id;
     }
 
     const user = await prisma.user.create({
       data: {
         email: email.toLowerCase().trim(),
+        phone: safePhone,
         passwordHash,
         name: safeName,
         role: userRole,
-        status: "pending",
-        centerId: centerId,
+        status: userRole === "center_admin" ? "pending" : "verified",
+        centerId: userRole === "student" ? resolvedCenterId : resolvedCenterId,
+        category: userRole === "student" ? "AUTISM" : "NONE",
         quizScore: typeof quizScore === "number" ? quizScore : null
       },
     });

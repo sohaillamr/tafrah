@@ -18,6 +18,7 @@ enum UserCategory {
 model User {
   id            Int      @id @default(autoincrement())
   email         String   @unique
+  phone         String?
   passwordHash  String
   name          String
   role          String   @default("student") // student | hr | admin

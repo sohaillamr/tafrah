@@ -1,43 +1,28 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '../../../../lib/prisma';
-import { cookies } from 'next/headers';
-import * as jose from 'jose';
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
 
 export async function POST(request: Request) {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('auth_token')?.value;
-
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret');
-    const { payload } = await jose.jwtVerify(token, secret);
-    
-    if (payload.role !== 'center_admin' && payload.role !== 'admin') {
-       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    const session = await getSession();
+    if (!session || (session.role !== "center_admin" && session.role !== "admin")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const userId = payload.userId as number;
-    const user = await prisma.user.findUnique({ where: { id: userId }});
-    const centerId = user?.centerId;
-
-    if (!centerId) return NextResponse.json({ error: 'No center associated' }, { status: 400 });
-
-    const body = await request.json();
-    const { studentIds, chapterId } = body; // Array of integers
-
+    const centerUser = await prisma.user.findUnique({ where: { id: session.userId }, select: { centerId: true } });
+    if (!centerUser?.centerId) return NextResponse.json({ error: "No center associated" }, { status: 400 });
+    const { studentIds, chapterId } = await request.json();
+    if (!Array.isArray(studentIds) || !chapterId) {
+      return NextResponse.json({ error: "studentIds and chapterId required" }, { status: 400 });
+    }
+    const chapter = await prisma.chapter.findFirst({ where: { id: Number(chapterId), centerId: centerUser.centerId } });
+    if (!chapter) return NextResponse.json({ error: "Chapter not found" }, { status: 404 });
     await prisma.user.updateMany({
-      where: {
-        id: { in: studentIds },
-        centerId // ensure they belong to this center
-      },
-      data: {
-        chapterId
-      }
+      where: { id: { in: studentIds.map(Number) }, centerId: centerUser.centerId, role: "student" },
+      data: { chapterId: chapter.id },
     });
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ ok: true });
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error("Assign chapter error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

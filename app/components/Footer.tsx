@@ -6,32 +6,34 @@ import { useLanguage } from "./LanguageProvider";
 
 export default function Footer() {
   const { language } = useLanguage();
-  const labels =
-    language === "ar"
-      ? {
-          home: "الرئيسية",
-          about: "عن طفرة",
-          privacy: "سياسة الخصوصية",
-          contact: "اتصل بنا",
-          note: "نسخة تجريبية - هذا هو الإصدار الخامس",
-          footerText: "طفرة ٢٠٢٦ - صنع في مصر لدعم عقول استثنائية.",
-          facebook: "فيسبوك",
-          instagram: "إنستجرام",
-          x: "X",
-          linkedin: "لينكدإن",
-        }
-      : {
-          home: "Home",
-          about: "About Tafrah",
-          privacy: "Privacy Policy",
-          contact: "Contact Us",
-          note: "Beta - this is the 5th version",
-          footerText: "Tafrah 2026 - Made in Egypt to support exceptional minds.",
-          facebook: "Facebook",
-          instagram: "Instagram",
-          x: "X",
-          linkedin: "LinkedIn",
-        };
+  const isAr = language === "ar";
+  const labels = isAr
+    ? {
+        home: "الرئيسية",
+        about: "عن طفرة",
+        methodology: "منهجيتنا",
+        privacy: "الخصوصية",
+        contact: "اتصل بنا",
+        note: "التوحد متاح الآن. دعم CP و LD ضمن خارطة الطريق.",
+        footerText: "طفرة 2026 - منصة تعلم تكيفية للأشخاص على طيف التوحد.",
+        facebook: "فيسبوك",
+        instagram: "إنستجرام",
+        x: "X",
+        linkedin: "لينكدإن",
+      }
+    : {
+        home: "Home",
+        about: "About",
+        methodology: "Methodology",
+        privacy: "Privacy",
+        contact: "Contact",
+        note: "Autism support is live. CP and LD support are in the roadmap.",
+        footerText: "Tafrah 2026 - Adaptive learning for autistic learners.",
+        facebook: "Facebook",
+        instagram: "Instagram",
+        x: "X",
+        linkedin: "LinkedIn",
+      };
 
   return (
     <footer className="border-t border-[#D9E6F2] bg-[#F5F9FF]">
@@ -40,57 +42,24 @@ export default function Footer() {
           <div>{labels.footerText}</div>
           <div className="text-sm text-[#2E5C8A]">{labels.note}</div>
         </div>
-        <div className="flex flex-wrap items-center gap-6">
-          <Link href="/" className="min-h-12 inline-flex items-center">
-            {labels.home}
-          </Link>
-          <Link href="/about" className="min-h-12 inline-flex items-center">
-            {labels.about}
-          </Link>
-          <Link href="/privacy" className="min-h-12 inline-flex items-center">
-            {labels.privacy}
-          </Link>
-          <Link href="/contact" className="min-h-12 inline-flex items-center">
-            {labels.contact}
-          </Link>
-        </div>
+        <nav className="flex flex-wrap items-center gap-5">
+          <Link href="/" className="min-h-12 inline-flex items-center">{labels.home}</Link>
+          <Link href="/about" className="min-h-12 inline-flex items-center">{labels.about}</Link>
+          <Link href="/methodology" className="min-h-12 inline-flex items-center">{labels.methodology}</Link>
+          <Link href="/privacy" className="min-h-12 inline-flex items-center">{labels.privacy}</Link>
+          <Link href="/contact" className="min-h-12 inline-flex items-center">{labels.contact}</Link>
+        </nav>
         <div className="flex flex-wrap items-center gap-3">
-          <a
-            href="https://facebook.com/tafrah"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={labels.facebook}
-            className="inline-flex h-12 w-12 items-center justify-center"
-          >
-            <Facebook size={20} className="text-[#2E5C8A]" />
-          </a>
-          <a
-            href="https://instagram.com/tafrah"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={labels.instagram}
-            className="inline-flex h-12 w-12 items-center justify-center"
-          >
-            <Instagram size={20} className="text-[#2E5C8A]" />
-          </a>
-          <a
-            href="https://x.com/tafrah"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={labels.x}
-            className="inline-flex h-12 w-12 items-center justify-center"
-          >
-            <Twitter size={20} className="text-[#2E5C8A]" />
-          </a>
-          <a
-            href="https://linkedin.com/company/tafrah"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={labels.linkedin}
-            className="inline-flex h-12 w-12 items-center justify-center"
-          >
-            <Linkedin size={20} className="text-[#2E5C8A]" />
-          </a>
+          {[
+            ["https://facebook.com/tafrah", labels.facebook, Facebook],
+            ["https://instagram.com/tafrah", labels.instagram, Instagram],
+            ["https://x.com/tafrah", labels.x, Twitter],
+            ["https://linkedin.com/company/tafrah", labels.linkedin, Linkedin],
+          ].map(([href, label, Icon]: any) => (
+            <a key={href} href={href} target="_blank" rel="noopener noreferrer" aria-label={label} className="inline-flex h-12 w-12 items-center justify-center">
+              <Icon size={20} className="text-[#2E5C8A]" />
+            </a>
+          ))}
         </div>
       </div>
     </footer>

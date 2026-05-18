@@ -1,71 +1,86 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { usePreferencesStore } from '../../lib/store/usePreferencesStore';
-import { Volume2 } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { Volume2, X } from "lucide-react";
+import { usePreferencesStore } from "../../lib/store/usePreferencesStore";
 
 export default function ThemeRegistry({ children }: { children: React.ReactNode }) {
   const { preferences, category, isLoaded, loadPreferences } = usePreferencesStore();
-  const [cursorY, setCursorY] = useState(0);
+  const [selection, setSelection] = useState<{ text: string; x: number; y: number } | null>(null);
 
-  // Initialize from API when wrapping the app
   useEffect(() => {
     loadPreferences();
   }, [loadPreferences]);
 
   useEffect(() => {
-    if (isLoaded) {
-      document.documentElement.setAttribute('data-profile', category);
-      if (preferences?.dyslexicFont) {
-        document.documentElement.setAttribute('data-font', 'dyslexia');
-      } else {
-        document.documentElement.removeAttribute('data-font');
-      }
-    }
+    if (!isLoaded) return;
+    document.documentElement.setAttribute("data-profile", category === "AUTISM" ? "autism" : category.toLowerCase());
+    document.documentElement.setAttribute("data-theme", preferences?.highContrastText ? "high-contrast" : preferences?.mutedColors ? "muted" : "pastel");
+    document.documentElement.setAttribute("data-density", preferences?.simplifiedText ? "spaced" : "normal");
+    document.documentElement.setAttribute("data-scale", preferences?.largeText ? "large" : "normal");
+    if (preferences?.reduceMotion) document.documentElement.setAttribute("data-reduce-motion", "true");
+    else document.documentElement.removeAttribute("data-reduce-motion");
   }, [category, preferences, isLoaded]);
 
-  // Derive class names from preferences mapping globally to the children wrapper
-  const containerClasses = [
-    'theme-wrapper',
-    preferences?.dyslexicFont ? 'font-dyslexia' : '',
-    preferences?.highContrastText ? 'contrast-125 saturate-150' : '',
-    preferences?.simplifiedText ? 'simplified-mode' : '', // Might target specific text blocks later
-  ].filter(Boolean).join(' ');
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const onSelection = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        const selected = window.getSelection();
+        const text = selected?.toString().trim() || "";
+        if (!text || text.length < 2 || !selected || selected.rangeCount === 0) {
+          setSelection(null);
+          return;
+        }
+        const rect = selected.getRangeAt(0).getBoundingClientRect();
+        setSelection({
+          text: text.slice(0, 500),
+          x: Math.min(rect.left + rect.width / 2, window.innerWidth - 80),
+          y: Math.max(rect.top - 52, 72),
+        });
+      }, 450);
+    };
+    document.addEventListener("mouseup", onSelection);
+    document.addEventListener("keyup", onSelection);
+    return () => {
+      if (timer) clearTimeout(timer);
+      document.removeEventListener("mouseup", onSelection);
+      document.removeEventListener("keyup", onSelection);
+    };
+  }, []);
 
-  const appContainerClasses = [
-    'app-container min-h-screen',
-    category === 'AUTISM' ? 'px-[5%]' : '', // Slightly constrain width to avoid overwhelming visuals
-    preferences?.largeButtons ? 'scale-ui-105' : '' // Global scaling logic mapping to a tailwind or css custom hook later
-  ].filter(Boolean).join(' ');
+  function speak(text: string) {
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  const wrapperClasses = [
+    "theme-wrapper",
+    preferences?.highContrastText ? "contrast-125 saturate-150" : "",
+    preferences?.simplifiedText ? "simplified-mode" : "",
+    preferences?.largeText ? "text-[112%]" : "",
+  ].filter(Boolean).join(" ");
 
   return (
-    <div className={containerClasses}>
-      <div className={appContainerClasses}>
-        {children}
-      </div>
-
-      {preferences?.soundNotifications && (
-        <button
-          onClick={() => {
-            const text = window.getSelection()?.toString() || document.body.innerText;
-            if (text && 'speechSynthesis' in window) {
-              const msg = new SpeechSynthesisUtterance(text.slice(0, 200));
-              window.speechSynthesis.speak(msg);
-            }
-          }}
-          className="fixed top-24 right-4 bg-[#2E5C8A] text-white p-3 rounded-full shadow-lg z-50 flex items-center gap-2 scale-125"
-          aria-label="Read text aloud"
+    <div className={wrapperClasses}>
+      {children}
+      {selection && (preferences?.ttsEnabled ?? true) ? (
+        <div
+          className="fixed z-50 flex items-center gap-2 rounded-full border border-[#D9E6F2] bg-white p-2 shadow-lg"
+          style={{ left: selection.x, top: selection.y, transform: "translateX(-50%)" }}
         >
-          <Volume2 size={24} />
-        </button>
-      )}
-
-      {category === 'CP' && preferences?.largeButtons && (
-        <div className="fixed bottom-0 left-0 w-full bg-white p-4 shadow-top z-50 flex justify-around border-t-4 border-[#2E5C8A]">
-          <button className="h-20 w-32 font-bold bg-[#E9EFF5] text-[#2E5C8A] rounded-xl text-xl hover:bg-gray-200" onClick={() => window.history.back()}>Back</button>
-          <button className="h-20 w-32 font-bold bg-[#2E5C8A] text-white rounded-xl text-xl hover:bg-[#1a3d5e]" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>Top</button>
+          <button type="button" onClick={() => speak(selection.text)} className="inline-flex min-h-10 items-center gap-2 rounded-full bg-[#2E5C8A] px-4 text-sm font-semibold text-white" aria-label="Nour read selected text">
+            <Volume2 size={16} /> Nour
+          </button>
+          <button type="button" onClick={() => setSelection(null)} className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#495057]" aria-label="Close Nour read button">
+            <X size={16} />
+          </button>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

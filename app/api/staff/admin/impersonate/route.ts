@@ -33,7 +33,7 @@ export async function POST(req: Request) {
       .setExpirationTime("1h")
       .sign(new TextEncoder().encode(process.env.JWT_SECRET!));
 
-    const response = NextResponse.json({ success: true, redirectUrl: "/dashboard/student" });
+    const response = NextResponse.json({ success: true, redirectUrl: "/dashboard" });
     response.headers.set("Set-Cookie", createAuthCookie(token));
     return response;
   } catch (error: any) {

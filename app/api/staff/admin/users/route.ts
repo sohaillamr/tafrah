@@ -17,8 +17,8 @@ export async function POST(req: NextRequest) {
     } else if (action === 'unban') {
       user = await prisma.user.update({ where: { id: userId }, data: { status: 'verified', available: true } });
       await logAdminAction('unban_user', 'Unbanned user ' + userId);
-    } else if (action === 'make_hr' || action === 'make_admin' || action === 'make_student') {
-      const roleMap: any = { make_hr: 'hr', make_admin: 'admin', make_student: 'student' };
+    } else if (action === 'make_center_admin' || action === 'make_admin' || action === 'make_student') {
+      const roleMap: any = { make_center_admin: 'center_admin', make_admin: 'admin', make_student: 'student' };
       user = await prisma.user.update({ where: { id: userId }, data: { role: roleMap[action] } });
       await logAdminAction('change_role', 'Changed user ' + userId + ' role to ' + roleMap[action]);
     }

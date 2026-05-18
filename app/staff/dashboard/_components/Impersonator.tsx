@@ -24,7 +24,7 @@ export function Impersonator() {
       if (!res.ok) throw new Error(data.error || "Impersonation failed");
 
       // Redirect explicitly to standard dashboard (or wherever API points)
-      window.location.href = data.redirectUrl || "/dashboard/student";
+      window.location.href = data.redirectUrl || "/dashboard";
     } catch (err: any) {
       setError(err.message);
     } finally {
