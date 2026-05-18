@@ -11,6 +11,9 @@ export async function POST(req: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    if (session.role === "center_admin") {
+      return NextResponse.json({ error: "Centers manage students and cannot enroll in courses." }, { status: 403 });
+    }
 
     const { courseId } = await req.json();
 
@@ -51,6 +54,9 @@ export async function GET() {
     const session = await getSession();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (session.role === "center_admin") {
+      return NextResponse.json({ enrollments: [] });
     }
 
     const enrollments = await prisma.enrollment.findMany({

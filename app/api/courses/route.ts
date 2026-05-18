@@ -36,7 +36,11 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json({ courses });
+    const normalizedCourses = courses.map((course) =>
+      course.slug === "finance-1" ? { ...course, modules: 7, hours: Math.max(course.hours, 6) } : course
+    );
+
+    return NextResponse.json({ courses: normalizedCourses });
   } catch (error: unknown) {
     console.error("[CRITICAL] Courses API fetch failed:", error);
     return NextResponse.json({ error: "Service unavailable. Please try again later." }, { status: 500 });

@@ -43,10 +43,14 @@ export default function ThemeRegistry({ children }: { children: React.ReactNode 
     };
     document.addEventListener("mouseup", onSelection);
     document.addEventListener("keyup", onSelection);
+    document.addEventListener("selectionchange", onSelection);
+    document.addEventListener("touchend", onSelection);
     return () => {
       if (timer) clearTimeout(timer);
       document.removeEventListener("mouseup", onSelection);
       document.removeEventListener("keyup", onSelection);
+      document.removeEventListener("selectionchange", onSelection);
+      document.removeEventListener("touchend", onSelection);
     };
   }, []);
 
@@ -55,6 +59,7 @@ export default function ThemeRegistry({ children }: { children: React.ReactNode 
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = 0.9;
+    utterance.lang = document.documentElement.lang === "ar" ? "ar-EG" : "en-US";
     window.speechSynthesis.speak(utterance);
   }
 
@@ -73,10 +78,10 @@ export default function ThemeRegistry({ children }: { children: React.ReactNode 
           className="fixed z-50 flex items-center gap-2 rounded-full border border-[#D9E6F2] bg-white p-2 shadow-lg"
           style={{ left: selection.x, top: selection.y, transform: "translateX(-50%)" }}
         >
-          <button type="button" onClick={() => speak(selection.text)} className="inline-flex min-h-10 items-center gap-2 rounded-full bg-[#2E5C8A] px-4 text-sm font-semibold text-white" aria-label="Nour read selected text">
+          <button type="button" onMouseDown={(event) => event.preventDefault()} onTouchStart={(event) => event.preventDefault()} onClick={() => speak(selection.text)} className="inline-flex min-h-10 items-center gap-2 rounded-full bg-[#2E5C8A] px-4 text-sm font-semibold text-white" aria-label="Nour read selected text">
             <Volume2 size={16} /> Nour
           </button>
-          <button type="button" onClick={() => setSelection(null)} className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#495057]" aria-label="Close Nour read button">
+          <button type="button" onMouseDown={(event) => event.preventDefault()} onTouchStart={(event) => event.preventDefault()} onClick={() => setSelection(null)} className="inline-flex h-10 w-10 items-center justify-center rounded-full text-[#495057]" aria-label="Close Nour read button">
             <X size={16} />
           </button>
         </div>

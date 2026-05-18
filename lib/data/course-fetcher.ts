@@ -17,6 +17,9 @@ import { financeUnit1Content } from "../../data/FinanceUnit1Content";
 import { financeUnit2Content } from "../../data/FinanceUnit2Content";
 import { financeUnit3Content } from "../../data/FinanceUnit3Content";
 import { financeUnit4Content } from "../../data/FinanceUnit4Content";
+import { financeUnit5Content } from "../../data/FinanceUnit5Content";
+import { financeUnit6Content } from "../../data/FinanceUnit6Content";
+import { financeUnit7Content } from "../../data/FinanceUnit7Content";
 
 const buildSteps = (unitParam: any): any[] => {
   const unit = Array.isArray(unitParam) ? unitParam[0] : unitParam;
@@ -56,6 +59,9 @@ export async function fetchUnitStepsServerSide(courseSlug: string, category: str
         case 1: unitData = financeUnit2Content; break;
         case 2: unitData = financeUnit3Content; break;
         case 3: unitData = financeUnit4Content; break;
+        case 4: unitData = financeUnit5Content; break;
+        case 5: unitData = financeUnit6Content; break;
+        case 6: unitData = financeUnit7Content; break;
       }
     } else {
       switch (activeUnit) {

@@ -13,6 +13,7 @@ export default function TopBar() {
   const { language, setLanguage } = useLanguage();
   const { user, logout } = useAuth();
   const isAr = language === "ar";
+  const isCenter = user?.role === "center_admin";
   const labels = isAr
     ? {
         home: "الرئيسية",
@@ -45,8 +46,7 @@ export default function TopBar() {
         logoutLabel: "Logout",
       };
 
-  const dashboardHref =
-    user?.role === "admin" ? "/admin" : user?.role === "center_admin" ? "/dashboard/center" : "/dashboard";
+  const dashboardHref = user?.role === "admin" ? "/admin" : isCenter ? "/dashboard/center" : "/dashboard";
 
   const handleLogout = async () => {
     await logout();
@@ -66,23 +66,21 @@ export default function TopBar() {
           </button>
         </div>
         <ul id="mobile-nav-list" className={`flex flex-col gap-3 md:flex md:flex-row md:items-center md:gap-6 ${isOpen ? "flex" : "hidden"}`}>
-          <li><Link href="/" className="min-h-12 inline-flex items-center">{labels.home}</Link></li>
-          <li><Link href="/courses" className="min-h-12 inline-flex items-center">{labels.courses}</Link></li>
-          <li><Link href="/methodology" className="min-h-12 inline-flex items-center">{labels.science}</Link></li>
-          {user && user.role !== "center_admin" ? (
-            <li><Link href="/assistant" className="min-h-12 inline-flex items-center">{labels.assistant}</Link></li>
-          ) : null}
+          <li><Link href="/" className="inline-flex min-h-12 items-center">{labels.home}</Link></li>
+          {!isCenter ? <li><Link href="/courses" className="inline-flex min-h-12 items-center">{labels.courses}</Link></li> : null}
+          <li><Link href="/methodology" className="inline-flex min-h-12 items-center">{labels.science}</Link></li>
+          {!isCenter ? <li><Link href="/assistant" className="inline-flex min-h-12 items-center">{labels.assistant}</Link></li> : null}
           {user ? (
             <>
-              <li><Link href={dashboardHref} className="min-h-12 inline-flex items-center">{labels.dashboard}</Link></li>
+              <li><Link href={dashboardHref} className="inline-flex min-h-12 items-center">{labels.dashboard}</Link></li>
               <li className="flex items-center gap-2">
                 <span className="text-sm text-[#212529]">{user.name}</span>
-                <button type="button" onClick={handleLogout} className="min-h-12 inline-flex items-center text-[#DC3545]">{labels.logoutLabel}</button>
+                <button type="button" onClick={handleLogout} className="inline-flex min-h-12 items-center text-[#DC3545]">{labels.logoutLabel}</button>
               </li>
             </>
           ) : (
             <>
-              <li><Link href="/auth/login" className="min-h-12 inline-flex items-center">{labels.login}</Link></li>
+              <li><Link href="/auth/login" className="inline-flex min-h-12 items-center">{labels.login}</Link></li>
               <li><Link href="/auth/select" className="inline-flex min-h-12 items-center rounded-sm bg-[#2E5C8A] px-4 text-white">{labels.join}</Link></li>
             </>
           )}

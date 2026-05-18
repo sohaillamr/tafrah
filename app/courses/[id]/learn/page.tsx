@@ -27,6 +27,17 @@ export default async function CourseLearnPage(props: PageProps) {
     )
   }
 
+  if (session.role === 'center_admin') {
+    return (
+      <div className='flex h-screen items-center justify-center bg-[#f8f9fa] px-6 text-center'>
+        <div className='max-w-md rounded-sm border border-[#DEE2E6] bg-white p-6'>
+          <h1 className='text-xl font-semibold text-[#2e5c8a]'>Center accounts manage students only.</h1>
+          <p className='mt-3 text-[#495057]'>Please use the center dashboard to create students and review their progress.</p>
+        </div>
+      </div>
+    );
+  }
+
   // Database Validation
   const course = await prisma.course.findUnique({
     where: { slug: id },

@@ -18,6 +18,7 @@ interface CourseData {
 export default function CoursesPage() {
   const { user } = useAuth();
   const isGuest = !user;
+  const isCenterAccount = user?.role === "center_admin";
   const [courses, setCourses] = useState<CourseData[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [search, setSearch] = useState("");
@@ -50,8 +51,8 @@ export default function CoursesPage() {
           hours: "ساعات",
           view: "عرض التفاصيل",
           comingSoon: "قريباً",
-          categories: ["data-entry", "design", "qa", "programming"],
-          categoryLabels: { "data-entry": "إدخال البيانات", "design": "التصميم", "qa": "اختبار البرمجيات", "programming": "البرمجة" } as Record<string, string>,
+          categories: ["data-entry", "finance", "programming", "design", "qa"],
+          categoryLabels: { "data-entry": "إدخال البيانات", "finance": "المالية", "design": "التصميم", "qa": "اختبار البرمجيات", "programming": "البرمجة" } as Record<string, string>,
           difficulties: ["beginner", "intermediate", "advanced"],
           diffLabels: { beginner: "مبتدئ", intermediate: "متوسط", advanced: "متقدم" } as Record<string, string>,
         }
@@ -69,8 +70,8 @@ export default function CoursesPage() {
           hours: "hours",
           view: "View details",
           comingSoon: "Coming soon",
-          categories: ["data-entry", "design", "qa", "programming"],
-          categoryLabels: { "data-entry": "Data Entry", "design": "Design", "qa": "Software Testing", "programming": "Programming" } as Record<string, string>,
+          categories: ["data-entry", "finance", "programming", "design", "qa"],
+          categoryLabels: { "data-entry": "Data Entry", "finance": "Finance", "design": "Design", "qa": "Software Testing", "programming": "Programming" } as Record<string, string>,
           difficulties: ["beginner", "intermediate", "advanced"],
           diffLabels: { beginner: "Beginner", intermediate: "Intermediate", advanced: "Advanced" } as Record<string, string>,
         };
@@ -118,6 +119,11 @@ export default function CoursesPage() {
         {isGuest ? (
           <section className="flex items-center gap-3 rounded-xl border border-[#D9E6F2] bg-[#F5F9FF] p-4">
             {labels.guestNote}
+          </section>
+        ) : null}
+        {isCenterAccount ? (
+          <section className="flex items-center gap-3 rounded-xl border border-[#D9E6F2] bg-[#F5F9FF] p-4">
+            {language === "ar" ? "حساب المركز يدير الطلاب ولا يفتح الدورات. استخدم لوحة المركز لمتابعة الطلاب." : "Center accounts manage students and do not open courses. Use the center dashboard to track students."}
           </section>
         ) : null}
 
@@ -229,7 +235,7 @@ export default function CoursesPage() {
                 </div>
                 {course.available ? (
                   <Link
-                    href={`/courses/${course.slug}`}
+                    href={isCenterAccount ? "/dashboard/center" : `/courses/${course.slug}`}
                     className="min-h-11 inline-flex items-center justify-center rounded-xl bg-[#2E5C8A] px-5 font-medium text-white shadow-sm"
                   >
                     {labels.view}

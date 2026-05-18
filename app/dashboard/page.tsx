@@ -1,95 +1,234 @@
-'use client';
+"use client";
 
-import { useThemeStore } from '../../lib/store/themeStore';
-import { usePreferencesStore } from '../../lib/store/usePreferencesStore';
-import TopBar from '../components/TopBar';
-import { BookOpen, User, CalendarDays } from 'lucide-react';
-import { useLanguage } from '../components/LanguageProvider';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from "react";
+import type { ReactNode } from "react";
+import Link from "next/link";
+import { Award, BookOpen, Brain, CheckCircle2, Flame, HelpCircle, Lock, Sparkles, Trophy } from "lucide-react";
+import TopBar from "@/app/components/TopBar";
+import { useLanguage } from "@/app/components/LanguageProvider";
+import { useAuth } from "@/app/components/AuthProvider";
 
-export default function UnifiedDashboard() {
-  const { profile, focusMode } = useThemeStore();
-  const { preferences, category } = usePreferencesStore();
+type Enrollment = {
+  id: number;
+  progress: number;
+  completed: boolean;
+  course: { slug: string; titleAr: string; titleEn: string; modules: number; category: string };
+};
+
+type ProgressItem = {
+  courseSlug: string;
+  unitIndex: number;
+  quizPassed: boolean;
+  quizScore: number | null;
+  updatedAt: string;
+};
+
+const practicePrompts = {
+  ar: [
+    "اشرح الفكرة بجملة واحدة.",
+    "اختر مثالا بسيطا من حياتك اليومية.",
+    "ما الخطوة الأولى إذا كررت هذا الدرس غدا؟",
+  ],
+  en: [
+    "Explain the idea in one sentence.",
+    "Choose a simple example from daily life.",
+    "What is the first step if you repeat this module tomorrow?",
+  ],
+};
+
+export default function DashboardPage() {
   const { language } = useLanguage();
-  const [userName, setUserName] = useState("Student");
+  const { user, loading: authLoading } = useAuth();
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [progress, setProgress] = useState<ProgressItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const isAr = language === "ar";
+  const labels = isAr
+    ? {
+        title: "لوحة تعلمي",
+        subtitle: "تتبع هادئ وواضح للتقدم، النقاط، والتدريب اليومي.",
+        xp: "نقاط XP",
+        completed: "وحدات مكتملة",
+        today: "وحدات اليوم",
+        dailyLimit: "الحد اليومي",
+        limitText: "يمكنك إنهاء وحدتين فقط يوميا للحفاظ على التعلم بدون إجهاد.",
+        practice: "أسئلة نور الإضافية",
+        practiceText: "بعد وحدات اليوم، أجب على أسئلة قصيرة لزيادة XP بدون فتح وحدة جديدة.",
+        courses: "دوراتي",
+        continue: "متابعة التعلم",
+        locked: "تم الوصول للحد اليومي. استخدم أسئلة نور للتدريب.",
+        noCourses: "لا توجد دورات بعد.",
+        browse: "تصفح الدورات",
+        centerOnly: "حساب المركز يستخدم لوحة المركز فقط.",
+      }
+    : {
+        title: "My Learning Dashboard",
+        subtitle: "A calm, clear view of progress, XP, and daily practice.",
+        xp: "XP points",
+        completed: "Completed units",
+        today: "Units today",
+        dailyLimit: "Daily limit",
+        limitText: "You can complete two modules per day to keep learning sustainable.",
+        practice: "Extra Nour questions",
+        practiceText: "After today's modules, answer short practice questions for more XP without opening a new module.",
+        courses: "My courses",
+        continue: "Continue learning",
+        locked: "Daily limit reached. Use Nour questions for practice.",
+        noCourses: "No courses yet.",
+        browse: "Browse courses",
+        centerOnly: "Center accounts use the center dashboard only.",
+      };
 
   useEffect(() => {
-    fetch('/api/auth/me')
-      .then(res => res.json())
-      .then(data => {
-        if (data.user) setUserName(data.user.name);
-      })
-      .catch(console.error);
-  }, []);
+    if (authLoading) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    if (user.role === "center_admin") {
+      setLoading(false);
+      return;
+    }
 
-  const labels = language === 'ar' ? {
-    profile: "الملف الشخصي",
-    courses: "الدورات",
-    schedule: "الجدول الزمني",
-    welcome: `مرحبًا، ${userName}`,
-    intro: "مركز التعلم المخصص الخاص بك جاهز. تم تعديل البيئة بناءً على اختبار الاكتشاف الأولي الخاص بك لتجربة سلسة وملائمة.",
-    frontend: "مقدمة في تطوير واجهات الويب",
-    qa: "أساسيات ضمان الجودة",
-    resume: "متابعة الوحدة 2",
-    start: "ابدأ الوحدة 1"
-  } : {
-    profile: "Profile",
-    courses: "Courses",
-    schedule: "Schedule",
-    welcome: `Welcome, ${userName}`,
-    intro: "Your personalized learning hub is ready. The environment has been adjusted based on the initial Discovery Test for a streamlined experience.",
-    frontend: "Introduction to Front-End",
-    qa: "Quality Assurance Basics",
-    resume: "Resume Unit 2",
-    start: "Start Unit 1"
-  };
+    const load = async () => {
+      setLoading(true);
+      const enrollmentRes = await fetch("/api/enrollments");
+      const enrollmentData = await enrollmentRes.json();
+      const list: Enrollment[] = enrollmentData.enrollments || [];
+      setEnrollments(list);
+      const progressLists = await Promise.all(
+        list.map(async (enrollment) => {
+          const res = await fetch(`/api/progress?courseSlug=${enrollment.course.slug}`);
+          if (!res.ok) return [];
+          const data = await res.json();
+          return data.progress || [];
+        })
+      );
+      setProgress(progressLists.flat());
+      setLoading(false);
+    };
+    load().catch(() => setLoading(false));
+  }, [authLoading, user]);
+
+  const todayKey = new Date().toDateString();
+  const completedUnits = progress.filter((item) => item.quizPassed);
+  const todayCompleted = completedUnits.filter((item) => new Date(item.updatedAt).toDateString() === todayKey);
+  const extraPracticeXp = Math.min(todayCompleted.length * 3, 6) * 10;
+  const xp = completedUnits.length * 120 + enrollments.filter((item) => item.completed).length * 300 + extraPracticeXp;
+  const dailyLimitReached = todayCompleted.length >= 2;
+  const recentModules = todayCompleted.slice(-2);
+
+  const practiceCards = useMemo(() => {
+    const source = recentModules.length ? recentModules : completedUnits.slice(-1);
+    return source.flatMap((module) =>
+      practicePrompts[language].map((prompt, index) => ({
+        id: `${module.courseSlug}-${module.unitIndex}-${index}`,
+        title: `${module.courseSlug} · ${isAr ? "وحدة" : "Unit"} ${module.unitIndex + 1}`,
+        prompt,
+      }))
+    );
+  }, [recentModules, completedUnits, language, isAr]);
+
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen bg-[#F8F9FA]">
+        <TopBar />
+        <main className="mx-auto max-w-6xl px-6 py-10 text-[#2E5C8A]">{isAr ? "جاري التحميل..." : "Loading..."}</main>
+      </div>
+    );
+  }
+
+  if (user?.role === "center_admin") {
+    return (
+      <div className="min-h-screen bg-[#F8F9FA]">
+        <TopBar />
+        <main className="mx-auto max-w-3xl px-6 py-10 text-center">
+          <h1 className="text-2xl font-semibold text-[#2E5C8A]">{labels.centerOnly}</h1>
+          <Link href="/dashboard/center" className="mt-5 inline-flex min-h-12 items-center rounded-sm bg-[#2E5C8A] px-5 font-semibold text-white">{labels.centerOnly}</Link>
+        </main>
+      </div>
+    );
+  }
 
   return (
-    <div className={`min-h-screen bg-[#F5F9FF] ${focusMode ? 'focus-mode' : ''} ${profile}`}>
+    <div className="min-h-screen bg-[#F8F9FA]">
       <TopBar />
-      <main className={`max-w-6xl mx-auto py-12 px-6 grid grid-cols-1 md:grid-cols-4 gap-8 ${preferences.dyslexicFont ? 'font-dyslexia' : ''} ${preferences.largeButtons ? 'scale-ui-105' : ''}`}>
-        
-        {/* Sidebar */}
-        {!focusMode && (
-          <aside className="md:col-span-1 hidden md:block">
-            <nav className="space-y-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-full">
-              <a href="#" className="flex gap-4 items-center font-bold text-[#2E5C8A] p-4 bg-[#E9EFF5] rounded-xl"><User /> {labels.profile}</a>
-              <a href="#" className="flex gap-4 items-center text-gray-600 p-4 hover:bg-gray-50 rounded-xl"><BookOpen /> {labels.courses}</a>
-              <a href="#" className="flex gap-4 items-center text-gray-600 p-4 hover:bg-gray-50 rounded-xl"><CalendarDays /> {labels.schedule}</a>
-            </nav>
-          </aside>
-        )}
+      <main className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10 text-[#212529]">
+        <section>
+          <h1 className="text-3xl font-semibold text-[#2E5C8A]">{labels.title}</h1>
+          <p className="mt-2 max-w-2xl text-[#495057]">{labels.subtitle}</p>
+        </section>
 
-        <section className={`bg-white rounded-2xl shadow-sm border border-gray-100 p-8 ${focusMode ? 'md:col-span-4' : 'md:col-span-3'} ${preferences.highContrastText ? 'contrast-125 saturate-150 bg-black text-white border-white' : ''}`}>
-          <h1 className={`text-4xl font-bold mb-6 ${preferences.highContrastText ? 'text-yellow-300' : 'text-[#2E5C8A]'}`}>{labels.welcome}</h1>
-          <p className={`text-xl mb-8 border-b pb-8 ${preferences.highContrastText ? 'text-white border-gray-700' : 'text-gray-600'}`}>
-            {labels.intro}
-            {category && category !== 'NONE' && (
-              <span className="block mt-2 font-bold text-teal-600">
-                {language === 'ar' ? `النمط النشط: ${category}` : `Active Mode: ${category}`}
-              </span>
-            )}
-          </p>
+        <section className="grid gap-4 md:grid-cols-4">
+          <Stat icon={<Trophy size={20} />} label={labels.xp} value={xp} />
+          <Stat icon={<CheckCircle2 size={20} />} label={labels.completed} value={completedUnits.length} />
+          <Stat icon={<Flame size={20} />} label={labels.today} value={`${todayCompleted.length}/2`} />
+          <Stat icon={dailyLimitReached ? <Lock size={20} /> : <Award size={20} />} label={labels.dailyLimit} value={dailyLimitReached ? "2/2" : `${2 - todayCompleted.length} left`} />
+        </section>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className={`border p-6 rounded-xl transition-colors cursor-[pointer] ${preferences.highContrastText ? 'border-gray-700 hover:border-yellow-300' : 'border-gray-200 hover:border-[#2E5C8A]'}`}>
-              <h2 className="text-2xl font-bold mb-4">{labels.frontend}</h2>
-              <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
-                <div className="h-full bg-green-500 w-[45%]" />
-              </div>
-              <p className={`mt-4 text-sm ${preferences.highContrastText ? 'text-gray-300' : 'text-gray-500'}`}>{labels.resume}</p>
-            </div>
-
-            <div className={`border p-6 rounded-xl transition-colors cursor-pointer ${preferences.highContrastText ? 'border-gray-700 hover:border-yellow-300' : 'border-gray-200 hover:border-[#2E5C8A]'}`}>
-              <h2 className="text-2xl font-bold mb-4">{labels.qa}</h2>
-              <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
-                <div className="h-full bg-blue-500 w-[10%]" />
-              </div>
-              <p className={`mt-4 text-sm ${preferences.highContrastText ? 'text-gray-300' : 'text-gray-500'}`}>{labels.start}</p>
+        <section className="rounded-sm border border-[#DEE2E6] bg-white p-5">
+          <div className="flex items-start gap-3">
+            <Brain className="mt-1 text-[#2E5C8A]" size={22} />
+            <div>
+              <h2 className="text-xl font-semibold text-[#2E5C8A]">{labels.dailyLimit}</h2>
+              <p className="mt-1 text-[#495057]">{dailyLimitReached ? labels.locked : labels.limitText}</p>
             </div>
           </div>
         </section>
+
+        <section className="rounded-sm border border-[#DEE2E6] bg-white p-5">
+          <div className="flex items-start gap-3">
+            <Sparkles className="mt-1 text-[#2E5C8A]" size={22} />
+            <div>
+              <h2 className="text-xl font-semibold text-[#2E5C8A]">{labels.practice}</h2>
+              <p className="mt-1 text-[#495057]">{labels.practiceText}</p>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            {(practiceCards.length ? practiceCards : practicePrompts[language].map((prompt, index) => ({ id: `starter-${index}`, title: isAr ? "تدريب تمهيدي" : "Starter practice", prompt }))).map((card) => (
+              <div key={card.id} className="rounded-sm border border-[#D9E6F2] bg-[#F5F9FF] p-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-[#2E5C8A]"><HelpCircle size={16} /> {card.title}</div>
+                <p className="mt-2 text-[#212529]">{card.prompt}</p>
+                <p className="mt-3 text-sm font-semibold text-[#2E7D32]">+10 XP</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="rounded-sm border border-[#DEE2E6] bg-white p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="text-xl font-semibold text-[#2E5C8A]">{labels.courses}</h2>
+            <Link href="/courses" className="text-sm font-semibold text-[#2E5C8A]">{labels.browse}</Link>
+          </div>
+          {enrollments.length === 0 ? <p className="text-[#495057]">{labels.noCourses}</p> : null}
+          <div className="grid gap-4 md:grid-cols-2">
+            {enrollments.map((enrollment) => (
+              <article key={enrollment.id} className="rounded-sm border border-[#E2E8F0] p-4">
+                <div className="flex items-start gap-3">
+                  <BookOpen className="mt-1 text-[#2E5C8A]" size={22} />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-[#2E5C8A]">{isAr ? enrollment.course.titleAr : enrollment.course.titleEn}</h3>
+                    <div className="mt-3 h-3 rounded-full bg-[#DEE2E6]"><div className="h-3 rounded-full bg-[#2E5C8A]" style={{ width: `${enrollment.progress}%` }} /></div>
+                    <p className="mt-2 text-sm text-[#6C757D]">{enrollment.progress}%</p>
+                    <Link href={`/courses/${enrollment.course.slug}/learn`} className={`mt-4 inline-flex min-h-11 items-center rounded-sm px-4 font-semibold ${dailyLimitReached ? "border border-[#DEE2E6] text-[#6C757D]" : "bg-[#2E5C8A] text-white"}`}>
+                      {dailyLimitReached ? labels.locked : labels.continue}
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
       </main>
+    </div>
+  );
+}
+
+function Stat({ icon, label, value }: { icon: ReactNode; label: string; value: string | number }) {
+  return (
+    <div className="rounded-sm border border-[#DEE2E6] bg-white p-4">
+      <div className="flex items-center gap-2 text-[#2E5C8A]">{icon}<span className="text-sm font-semibold">{label}</span></div>
+      <div className="mt-3 text-2xl font-semibold text-[#212529]">{value}</div>
     </div>
   );
 }

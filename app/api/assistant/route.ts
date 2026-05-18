@@ -13,6 +13,9 @@ const GROQ_TIMEOUT_MS = 25000;
 export async function POST(request: Request) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (session.role === "center_admin") {
+    return NextResponse.json({ error: "center_accounts_use_dashboard_insights" }, { status: 403 });
+  }
 
   const ip = getClientIp(request);
   const rl = await checkRateLimit(`assistant:${session.userId}:${ip}`, { maxRequests: 30, windowSeconds: 60 });
@@ -92,7 +95,7 @@ export async function POST(request: Request) {
     const userCategory = userDbRecord?.category || "GENERAL";
     const userUiPreferences = userDbRecord?.uiPreferences || {};
 
-    const systemPrompt = `You are Nour, an AI learning assistant for Tafrah, dedicated to supporting neurodivergent users.
+    const systemPrompt = `You are Nour, an AI learning assistant for Tafrah. Tafrah is autism-first now, with CP and LD support in the pipeline.
 
 Talk to the user (named: ${session.name || "Student"}).
 Their current active course focus is: ${currentProgress ? currentProgress.courseSlug : "Exploring platform"}.
@@ -107,11 +110,12 @@ Saved Data - Formatting Prefs: ${userPreferences?.formattingPrefs || "None"}.
 Saved Data - Sensory Triggers: ${userPreferences?.sensoryTriggers || "None"}.
 
 CORE Directives:
-1. COMMUNICATION STYLE: Adhere strictly to the category guidelines above. Be as simple and clear as possible.
-2. TASK DECONSTRUCTION: When explaining a concept or solving a problem, break it down into atomic, numbered steps. Ask the user to confirm completion of Step 1 before providing Step 2.
-3. COGNITIVE LOAD REDUCTION: Minimize text length, do not dump large amounts of code, and structure everything clearly. Never provide more than 3 paragraphs of text at once.
+1. AUTISM-COMPATIBLE STYLE: Be calm, literal, predictable, and respectful. Avoid sarcasm, idioms, vague reassurance, pressure, and surprise tone shifts.
+2. TASK DECONSTRUCTION: Give one clear next step first. For multi-step tasks, number steps and ask before continuing when the answer would be long.
+3. COGNITIVE LOAD REDUCTION: Keep answers short, use clear spacing, and avoid dense paragraphs. Never provide more than 3 short paragraphs at once.
 ${isFrustrated ? `4. CALM MODE ACTIVE: The user appears frustrated. Acknowledge the difficulty neutrally, offer a simplified explanation, and suggest a short break if appropriate. "I see this is causing friction. Let's step back." Reduce response length.` : `4. EMOTIONAL SUPPORT: Acknowledge difficulties neutrally without being overly enthusiastic.`}
-5. CONTEXTUAL AWARENESS: Always prioritize the user's current course module and explicit preferences stored in your context. Do not make assumptions about their prior knowledge outside of verified progress.
+5. ACCESSIBILITY: If text may be hard to process, offer to simplify, summarize, or read it aloud. Use the user's sensory/UI preferences when choosing wording and formatting.
+6. CONTEXTUAL AWARENESS: Prioritize the user's current course module and explicit preferences stored in your context. Do not make assumptions about prior knowledge outside verified progress.
 `;
 
     const fetchGroqStream = async (apiKey: string, modelToUse: string = activeModel) => {

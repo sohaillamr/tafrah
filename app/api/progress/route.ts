@@ -12,6 +12,9 @@ export async function GET(req: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    if (session.role === "center_admin") {
+      return NextResponse.json({ error: "Center accounts do not have learner progress." }, { status: 403 });
+    }
 
     const url = new URL(req.url);
     const courseSlug = url.searchParams.get("courseSlug");
@@ -39,6 +42,9 @@ export async function POST(req: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    if (session.role === "center_admin") {
+      return NextResponse.json({ error: "Center accounts manage students and cannot complete course modules." }, { status: 403 });
+    }
 
     const { courseSlug, unitIndex, stepIndex, quizPassed, quizScore } = await req.json();
 
@@ -50,6 +56,36 @@ export async function POST(req: NextRequest) {
     const courseExists = await prisma.course.findUnique({ where: { slug: courseSlug }, select: { id: true } });
     if (!courseExists) {
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
+    }
+
+    if (quizPassed === true) {
+      const existingUnit = await prisma.progress.findUnique({
+        where: {
+          userId_courseSlug_unitIndex: {
+            userId: session.userId,
+            courseSlug,
+            unitIndex,
+          },
+        },
+        select: { quizPassed: true },
+      });
+      if (!existingUnit?.quizPassed) {
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const todayPassed = await prisma.progress.count({
+          where: {
+            userId: session.userId,
+            quizPassed: true,
+            updatedAt: { gte: startOfDay },
+          },
+        });
+        if (todayPassed >= 2) {
+          return NextResponse.json(
+            { error: "daily_module_limit", message: "You can complete two modules per day. Use Nour practice questions for extra XP." },
+            { status: 429 }
+          );
+        }
+      }
     }
 
     const progress = await prisma.progress.upsert({

@@ -165,6 +165,26 @@ const financeSyllabusEnglish = [
   { title: 'Module 4: Tech Accounting', lessons: ['Accounting Software', 'ERP Systems', 'Dynamics 365', 'Excel'], quiz: true }
 ];
 
+const financeSyllabusCleanArabic = [
+  { title: "الوحدة ١: لغة المال", lessons: ["ما هي المحاسبة؟", "الأصول", "الخصوم", "معادلة الميزان", "شجرة الحسابات"], quiz: true },
+  { title: "الوحدة ٢: قصة معاملة", lessons: ["قيود اليومية", "المدين والدائن", "دفتر الأستاذ", "ميزان المراجعة"], quiz: true },
+  { title: "الوحدة ٣: الصورة الكبرى", lessons: ["قائمة الدخل", "الأرباح المحتجزة", "الميزانية العمومية", "التدفقات النقدية"], quiz: true },
+  { title: "الوحدة ٤: المحاسبة التقنية", lessons: ["البرامج المحاسبية", "نظام ERP", "Dynamics 365", "Excel"], quiz: true },
+  { title: "الوحدة ٥: قراءة التقارير المالية", lessons: ["ما هو التقرير المالي؟", "قراءة الإيرادات", "قراءة المصروفات", "مؤشرات بسيطة"], quiz: true },
+  { title: "الوحدة ٦: الميزانية", lessons: ["الدخل", "المصروفات الأساسية", "المصروفات المتغيرة", "توقع المتبقي"], quiz: true },
+  { title: "الوحدة ٧: مشروع مالي مصغر", lessons: ["اختيار مشروع صغير", "تسجيل الإيرادات", "تسجيل المصروفات", "عرض النتيجة"], quiz: true },
+];
+
+const financeSyllabusCleanEnglish = [
+  { title: "Module 1: Language of Money", lessons: ["What is accounting?", "Assets", "Liabilities", "The equation", "Chart of accounts"], quiz: true },
+  { title: "Module 2: Story of a Transaction", lessons: ["Journal entries", "Debit and credit", "The ledger", "Trial balance"], quiz: true },
+  { title: "Module 3: The Big Picture", lessons: ["Income statement", "Retained earnings", "Balance sheet", "Cash flows"], quiz: true },
+  { title: "Module 4: Tech Accounting", lessons: ["Accounting software", "ERP systems", "Dynamics 365", "Excel"], quiz: true },
+  { title: "Module 5: Reading Financial Reports", lessons: ["What a report shows", "Reading revenue", "Reading expenses", "Simple indicators"], quiz: true },
+  { title: "Module 6: Budgeting", lessons: ["Income", "Essential expenses", "Variable expenses", "Expected remaining amount"], quiz: true },
+  { title: "Module 7: Mini Finance Project", lessons: ["Choose a small project", "Record revenue", "Record expenses", "Present the result"], quiz: true },
+];
+
 const pythonSyllabusEnglish = [
   {
     title: "Module 1: Introduction to Programming",
@@ -218,6 +238,7 @@ export default function CourseDetailsPage() {
   }, [params]);
 
   const isGuest = !authLoading && !user;
+  const isCenterAccount = user?.role === "center_admin";
 
   useEffect(() => {
     if (!courseSlug) return;
@@ -268,7 +289,7 @@ export default function CourseDetailsPage() {
           trainerBio: course?.category === "programming" ? "خبير في برمجة بايثون معتمد لتدريب ذوي التوحد." : course?.category === "finance" ? "خبير مالي ومحاسب معتمد لتدريب ذوي التوحد." : "خبير في إدخال البيانات معتمد لتدريب ذوي التوحد.",
           comingSoon: "قريباً",
           comingSoonNote: "هذه الدورة ستكون متاحة قريباً.",
-          syllabusData: course?.slug === "programming-1" || course?.category === "programming" ? pythonSyllabusArabic : course?.category === "finance" ? financeSyllabusArabic : syllabusArabic,
+          syllabusData: course?.slug === "programming-1" || course?.category === "programming" ? pythonSyllabusArabic : course?.category === "finance" ? financeSyllabusCleanArabic : syllabusArabic,
         }
       : {
           home: "Home",
@@ -293,7 +314,7 @@ export default function CourseDetailsPage() {
           trainerBio: course?.category === "programming" ? "A certified Python programming expert training autistic learners." : course?.category === "finance" ? "خبير مالي ومحاسب معتمد لتدريب ذوي التوحد." : "A certified data entry expert training autistic learners.",
           comingSoon: "Coming soon",
           comingSoonNote: "This course will be available soon.",
-          syllabusData: course?.slug === "programming-1" || course?.category === "programming" ? pythonSyllabusEnglish : course?.category === "finance" ? financeSyllabusEnglish : syllabusEnglish,
+          syllabusData: course?.slug === "programming-1" || course?.category === "programming" ? pythonSyllabusEnglish : course?.category === "finance" ? financeSyllabusCleanEnglish : syllabusEnglish,
         };
 
   if (loading || authLoading) {
@@ -323,6 +344,10 @@ export default function CourseDetailsPage() {
   const handleEnroll = async () => {
     if (isGuest) {
       router.push("/auth/login");
+      return;
+    }
+    if (isCenterAccount) {
+      router.push("/dashboard/center");
       return;
     }
     if (isEnrolled) {
@@ -381,6 +406,11 @@ export default function CourseDetailsPage() {
               <span>{labels.guestNote}</span>
             </div>
           ) : null}
+          {isCenterAccount ? (
+            <div className="flex items-center gap-3 rounded-xl border border-[#D9E6F2] bg-[#F5F9FF] p-4">
+              <span>{language === "ar" ? "حساب المركز يدير الطلاب فقط ولا يفتح الدورات." : "Center accounts manage students only and cannot open learner courses."}</span>
+            </div>
+          ) : null}
           {!isAvailable ? (
             <div className="flex items-center gap-3 rounded-xl border border-[#DEE2E6] bg-[#F8F9FA] p-4">
               <Lock size={18} className="shrink-0 text-[#6C757D]" />
@@ -416,6 +446,8 @@ export default function CourseDetailsPage() {
               ? labels.comingSoon
               : enrolling
               ? labels.enrolling
+              : isCenterAccount
+              ? (language === "ar" ? "العودة إلى لوحة المركز" : "Back to center dashboard")
               : isEnrolled
               ? labels.goToLesson
               : isGuest

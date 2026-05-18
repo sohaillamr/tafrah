@@ -24,6 +24,13 @@ import { pythonUnit4Content } from "@/data/PythonUnit4Content";
 import { pythonUnit5Content } from "@/data/PythonUnit5Content";
 import { pythonUnit6Content } from "@/data/PythonUnit6Content";
 import { pythonUnit7Content } from "@/data/PythonUnit7Content";
+import { financeUnit1Content } from "@/data/FinanceUnit1Content";
+import { financeUnit2Content } from "@/data/FinanceUnit2Content";
+import { financeUnit3Content } from "@/data/FinanceUnit3Content";
+import { financeUnit4Content } from "@/data/FinanceUnit4Content";
+import { financeUnit5Content } from "@/data/FinanceUnit5Content";
+import { financeUnit6Content } from "@/data/FinanceUnit6Content";
+import { financeUnit7Content } from "@/data/FinanceUnit7Content";
 import { quizzes } from "@/data/quizzes";
 import { pythonQuizzes } from "@/data/pythonQuizzes";
 import { financeQuizzes } from "@/data/financeQuizzes";
@@ -207,6 +214,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   }, [currentStep, validatedSteps, needsSync, user, courseSlug, unitIndex, markSynced]);
   const [activeTab, setActiveTab] = useState(initialTabs[0].id);
   const [selectedPassword, setSelectedPassword] = useState("");
+  const [selectedChoice, setSelectedChoice] = useState("");
   const [showHint, setShowHint] = useState(false);
   const [cells, setCells] = useState<Record<string, CellData>>({});
   const [activeCell, setActiveCell] = useState("A1");
@@ -414,14 +422,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const dataEntryUnits: { chapters: { steps: Record<string, unknown>[]; [key: string]: unknown }[]; [key: string]: unknown }[] = [unit1Content[0], unit2Content[0], unit3Content[0], unit4Content[0], unit5Content[0], unit6Content[0], unit7Content[0]];
   const pythonUnits: { chapters: { steps: Record<string, unknown>[]; [key: string]: unknown }[]; [key: string]: unknown }[] = [pythonUnit1Content[0], pythonUnit2Content[0], pythonUnit3Content[0], pythonUnit4Content[0], pythonUnit5Content[0], pythonUnit6Content[0], pythonUnit7Content[0]];
   const isFinanceCourse = courseSlug === "finance-1" || category === "finance"; 
-  let financeUnits: any[] = []; 
-  try { 
-    let fu1 = require("@/data/FinanceUnit1Content").financeUnit1Content[0]; 
-    let fu2 = require("@/data/FinanceUnit2Content").financeUnit2Content[0]; 
-    let fu3 = require("@/data/FinanceUnit3Content").financeUnit3Content[0]; 
-    let fu4 = require("@/data/FinanceUnit4Content").financeUnit4Content[0]; 
-    financeUnits = [fu1, fu2, fu3, fu4]; 
-  } catch(e) {} 
+  const financeUnits: { chapters: { steps: Record<string, unknown>[]; [key: string]: unknown }[]; [key: string]: unknown }[] = [financeUnit1Content[0], financeUnit2Content[0], financeUnit3Content[0], financeUnit4Content[0], financeUnit5Content[0], financeUnit6Content[0], financeUnit7Content[0]];
   const allUnits = isPythonCourse ? pythonUnits : isFinanceCourse ? financeUnits : dataEntryUnits;
   const currentUnit = allUnits[unitNumber - 1];
   const steps = useMemo(() => buildSteps(currentUnit), [currentUnit]);
@@ -436,14 +437,17 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const pythonUnitTitlesEn = ["Unit 1: Intro to Programming", "Unit 2: Variables & Data Types", "Unit 3: Operations & Comparisons", "Unit 4: Conditions & Decisions", "Unit 5: Loops & Iteration", "Unit 6: Functions", "Unit 7: Final Project"];
   const financeUnitTitlesAr = ["الوحدة ١: لغة المال", "الوحدة ٢: قصة معاملة", "الوحدة ٣: الصورة الكبرى", "الوحدة ٤: المحاسبة في العالم التقني"];
   const financeUnitTitlesEn = ["Unit 1: Language of Money", "Unit 2: Story of a Transaction", "Unit 3: The Big Picture", "Unit 4: Tech World Accounting"];
-  const unitTitles = isPythonCourse ? (language === "ar" ? pythonUnitTitlesAr : pythonUnitTitlesEn) : isFinanceCourse ? (language === "ar" ? financeUnitTitlesAr : financeUnitTitlesEn) : dataEntryUnitTitles;
+  const financeUnitTitlesCleanAr = ["الوحدة ١: لغة المال", "الوحدة ٢: قصة معاملة", "الوحدة ٣: الصورة الكبرى", "الوحدة ٤: المحاسبة التقنية", "الوحدة ٥: قراءة التقارير", "الوحدة ٦: الميزانية", "الوحدة ٧: مشروع مالي"];
+  const financeUnitTitlesCleanEn = ["Unit 1: Language of Money", "Unit 2: Story of a Transaction", "Unit 3: The Big Picture", "Unit 4: Tech Accounting", "Unit 5: Reading Reports", "Unit 6: Budgeting", "Unit 7: Finance Project"];
+  const unitTitles = isPythonCourse ? (language === "ar" ? pythonUnitTitlesAr : pythonUnitTitlesEn) : isFinanceCourse ? (language === "ar" ? financeUnitTitlesCleanAr : financeUnitTitlesCleanEn) : dataEntryUnitTitles;
   const unitTitle = unitTitles[unitNumber - 1];
   const shouldShowCodeEditor = isPythonCourse;
   const shouldShowTabs =
     !isPythonCourse && (step?.action?.kind === "closeTabs" || step?.action?.kind === "selectTab");
   const shouldShowFiles =
     !isPythonCourse && (step?.action?.kind === "clickIcon" || step?.action?.kind === "inputText");
-  const shouldShowPassword = !isPythonCourse && step?.action?.kind === "selectOption";
+  const shouldShowPassword = !isPythonCourse && !isFinanceCourse && step?.action?.kind === "selectOption";
+  const shouldShowChoiceOptions = !isPythonCourse && isFinanceCourse && step?.action?.kind === "selectOption";
   const shouldShowPythonOptions = isPythonCourse && step?.action?.kind === "selectOption";
   const shouldShowGridControls = !isPythonCourse && unitNumber >= 2 && step?.type === "task" && !challengeActive;
   const shouldShowGrid = !isPythonCourse && unitNumber >= 2;
@@ -458,6 +462,13 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   );
   const completedUnits = Object.values(quizzesPassed).filter(Boolean).length;
   const courseProgressValue = Math.round((completedUnits / 7) * 100);
+  const financeChoiceOptions = useMemo(() => {
+    const correct = step?.action?.label ?? "";
+    const decoys = language === "ar"
+      ? ["الأصول", "الخصوم", "الإيرادات", "المصروفات", "قائمة الدخل", "الميزانية", "نظام ERP"]
+      : ["Assets", "Liabilities", "Revenue", "Expenses", "Income statement", "Budget", "ERP system"];
+    return [correct, ...decoys.filter((option) => option && option !== correct)].slice(0, 4);
+  }, [step?.action?.label, language]);
 
   const columns = useMemo(() => ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"], []);
   const rows = useMemo(() => Array.from({ length: 10 }, (_, index) => index + 1), []);
@@ -525,6 +536,8 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     setCodeValue("");
     setCodeOutput("");
     setPythonSelectOption("");
+    setSelectedChoice("");
+    setSelectedPassword("");
     const timer = setTimeout(() => {
       setShowNour(true);
     }, 60000);
@@ -758,6 +771,8 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     if (step.action?.kind === "selectOption") {
       if (isPythonCourse) {
         isValid = pythonSelectOption === step.action.label;
+      } else if (isFinanceCourse) {
+        isValid = selectedChoice === step.action.label;
       } else {
         isValid = selectedPassword === "Tafrah#2026!Success";
       }
@@ -1526,6 +1541,27 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                       </div>
                     </div>
                   ) : null}
+                  {shouldShowChoiceOptions ? (
+                    <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+                      <h3 className="font-semibold">{language === "ar" ? "اختر الإجابة الصحيحة" : "Choose the correct answer"}</h3>
+                      <div className="mt-3 flex flex-col gap-2">
+                        {financeChoiceOptions.map((option) => (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => setSelectedChoice(option)}
+                            className={`min-h-11 rounded-xl px-4 text-start text-sm transition-all ${
+                              selectedChoice === option
+                                ? "border-2 border-[#2E5C8A] bg-[#E3EEF9] text-[#2E5C8A] font-semibold shadow-sm"
+                                : "border border-[#E2E8F0] bg-white text-[#495057] hover:bg-[#F8F9FA]"
+                            }`}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -1761,6 +1797,3 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     </div>
   );
 }
-
-
-
