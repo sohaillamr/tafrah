@@ -179,3 +179,15 @@ body {
 .focus-mode footer {
   display: none !important;
 }
+.font-dyslexia {
+  font-family: 'OpenDyslexic', 'Comic Sans MS', sans-serif !important;
+  letter-spacing: 0.1em !important;
+  line-height: 1.8 !important;
+}
+.scale-ui-105 {
+  font-size: 110% !important;
+}
+.scale-ui-105 button, .scale-ui-105 a {
+  padding: 1rem 1.5rem !important;
+  font-size: 1.1rem !important;
+}
