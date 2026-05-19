@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import TopBar from "../components/TopBar";
 import { useLanguage } from "../components/LanguageProvider";
+import { usePreferencesStore } from "@/lib/store/usePreferencesStore";
 
 type Prefs = {
   mutedColors: boolean;
@@ -30,6 +31,7 @@ const DEFAULT_PREFS: Prefs = {
 export default function OnboardingWizard() {
   const router = useRouter();
   const { language } = useLanguage();
+  const { setPreferences } = usePreferencesStore();
   const isAr = language === "ar";
   const [prefs, setPrefs] = useState(DEFAULT_PREFS);
   const [saving, setSaving] = useState(false);
@@ -71,23 +73,24 @@ export default function OnboardingWizard() {
   async function save() {
     setSaving(true);
     setError("");
+    const uiPreferences = {
+      ...prefs,
+      highContrast: prefs.highContrastText,
+      scale: prefs.largeText ? "large" : "normal",
+      density: prefs.simplifiedText ? "spaced" : "normal",
+      computedAttrs: {
+        "data-profile": "autism",
+        "data-theme": prefs.highContrastText ? "high-contrast" : prefs.mutedColors ? "muted" : "pastel",
+        "data-density": prefs.simplifiedText ? "spaced" : "normal",
+        "data-scale": prefs.largeText ? "large" : "normal",
+      },
+    };
     const res = await fetch("/api/user/onboarding", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         category: "AUTISM",
-        uiPreferences: {
-          ...prefs,
-          highContrast: prefs.highContrastText,
-          scale: prefs.largeText ? "large" : "normal",
-          density: prefs.simplifiedText ? "spaced" : "normal",
-          computedAttrs: {
-            "data-profile": "autism",
-            "data-theme": prefs.highContrastText ? "high-contrast" : prefs.mutedColors ? "muted" : "pastel",
-            "data-density": prefs.simplifiedText ? "spaced" : "normal",
-            "data-scale": prefs.largeText ? "large" : "normal",
-          },
-        },
+        uiPreferences,
       }),
     });
     setSaving(false);
@@ -95,6 +98,8 @@ export default function OnboardingWizard() {
       setError(labels.failed);
       return;
     }
+    localStorage.setItem("uiPreferences", JSON.stringify(uiPreferences));
+    setPreferences(uiPreferences);
     document.cookie = "tafrah_onboarded=true; path=/; max-age=31536000; samesite=lax";
     router.replace("/dashboard");
     router.refresh();

@@ -24,6 +24,7 @@ interface UserPreferencesState {
   isLoaded: boolean;
   isFocusMode: boolean;
   setFocusMode: (val: boolean) => void;
+  setPreferences: (prefs: UiPreferences) => void;
   loadPreferences: () => Promise<void>;
 }
 
@@ -33,6 +34,7 @@ export const usePreferencesStore = create<UserPreferencesState>((set) => ({
   isLoaded: false,
   isFocusMode: false,
   setFocusMode: (val) => set({ isFocusMode: val }),
+  setPreferences: (prefs) => set({ preferences: prefs, isLoaded: true }),
   loadPreferences: async () => {
     try {
       const res = await fetch('/api/auth/me');

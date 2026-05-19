@@ -57,6 +57,7 @@ type UnitStep = {
   action?: {
     kind: StepActionKind;
     label?: string;
+    options?: string[];
     target?: string;
     expected?: string;
     value?: string;
@@ -73,14 +74,26 @@ type CellData = { value: string; format: "text" | "number" | "date" };
 
 const buildSteps = (unit: { chapters: { steps: Record<string, unknown>[]; [key: string]: unknown }[]; [key: string]: unknown }): UnitStep[] => {
   return unit.chapters.flatMap((chapter, chapterIndex) =>
-    chapter.steps.map((step, index) => ({
-      id: `${(unit as { unit_id?: string; id?: string }).unit_id ?? (unit as { id?: string }).id}-${chapterIndex}-${index}`,
-      type: ((step.type as string) ?? (step.action ? "task" : "info")) as "info" | "task",
-      instruction: (step as { text?: string; instruction?: string }).text ?? (step as { instruction?: string }).instruction ?? "",
-      action: step.action as UnitStep["action"],
-      extraAction: step.extraAction as UnitStep["extraAction"],
-      chapterTitle: (chapter as { title?: string; chapter_title?: string }).title ?? (chapter as { chapter_title?: string }).chapter_title ?? "",
-    }))
+    chapter.steps.map((step, index) => {
+      const interactiveOptions = Array.isArray(step.options) ? (step.options as string[]) : undefined;
+      const interactiveCorrect =
+        typeof step.correctIndex === "number" && interactiveOptions?.[step.correctIndex]
+          ? interactiveOptions[step.correctIndex]
+          : undefined;
+      const action = (step.action as UnitStep["action"]) || (
+        interactiveCorrect
+          ? { kind: "selectOption" as StepActionKind, label: interactiveCorrect, options: interactiveOptions }
+          : undefined
+      );
+      return {
+        id: `${(unit as { unit_id?: string; id?: string }).unit_id ?? (unit as { id?: string }).id}-${chapterIndex}-${index}`,
+        type: action ? "task" : "info",
+        instruction: (step as { text?: string; instruction?: string }).text ?? (step as { instruction?: string }).instruction ?? "",
+        action,
+        extraAction: step.extraAction as UnitStep["extraAction"],
+        chapterTitle: (chapter as { title?: string; chapter_title?: string }).title ?? (chapter as { chapter_title?: string }).chapter_title ?? "",
+      };
+    })
   );
 };
 
@@ -95,25 +108,46 @@ const cleanArabicText = (value: string, language: string) => {
 
 const coursePracticeMap: Record<string, string[]> = {
   "finance-1": [
-    "اربط المصطلح بمثال واقعي واحد: أصل، خصم، حقوق ملكية، إيراد، أو مصروف.",
-    "اكتب قاعدة التحقق في سطر واحد: ما الذي يجب أن يتوازن؟",
-    "راجع المصدر: Principles of Financial Accounting أو CFI، ثم قارن التعريف بتعريف طفرة المبسط.",
-    "تدريب عملي هادئ: اختر رقما صغيرا، وسجله مرة كحركة مالية ومرة كتقرير مختصر.",
-    "سؤال تفكير: ما الخطأ الأكثر احتمالاً في هذا النوع من العمل؟ وكيف تمنعه؟",
+    "من OpenStax: المحاسبة تسجل وتلخص وتوصل المعلومات المالية. في طفرة نقرأها كقواعد واضحة لا كحفظ مصطلحات.",
+    "من CFI: القوائم المالية ترتبط ببعضها. الدخل يؤثر على حقوق الملكية، والميزانية تعرض الوضع في لحظة محددة.",
+    "خطوة بطيئة: اختر مصطلحا واحدا فقط من هذه الوحدة واكتب له مثالين: مثال صحيح ومثال غير صحيح.",
+    "قاعدة تحقق: أي رقم مالي يجب أن يكون له مصدر. اسأل: هل جاء من أصل، خصم، حقوق ملكية، إيراد، أو مصروف؟",
+    "تدريب جدول: اكتب ثلاثة أعمدة: البند، التصنيف، سبب التصنيف. املأ صفا واحدا فقط الآن.",
+    "راجع المعادلة بصوت هادئ: الأصول = الخصوم + حقوق الملكية. لا تنتقل قبل أن تعرف الطرفين.",
+    "إذا وجدت خطأ، لا تبدأ من جديد. ارجع خطوة واحدة وحدد أين اختل التوازن.",
+    "من Dynamics 365 Finance: الأنظمة الحديثة تستخدم شجرة حسابات وأبعاد مالية لتوحيد التسجيل عبر الأقسام.",
+    "تدريب ERP مبسط: تخيل فاتورة بيع. ما القسم الذي يتأثر؟ المبيعات، المخزون، المالية، أم الثلاثة؟",
+    "اكتب جملة تلخيص: الهدف من هذه الوحدة هو ____.",
+    "سؤال مراجعة: ما الكلمة التي تحتاج مثالا إضافيا؟ أصل، خصم، مدين، دائن، دفتر، أو تقرير.",
+    "استراحة معرفية: توقف 30 ثانية، ثم راجع بطاقة واحدة فقط من بطاقات الدرس.",
   ],
   "programming-1": [
-    "اقرأ المثال مرة بدون كتابة، ثم اكتبه ببطء في المحرر.",
-    "غيّر اسما واحدا أو رقما واحدا في الكود، ثم توقع النتيجة قبل التشغيل.",
-    "راجع المصدر: Python Tutorial أو Microsoft Learn، ثم اكتب التعريف بكلماتك.",
-    "تدريب عملي هادئ: اكتب سطر كود صغيرا، ثم أضف تعليق يشرح هدفه.",
-    "سؤال تفكير: ما الخطأ الأكثر احتمالاً في هذا الكود؟ وكيف تلاحظه؟",
+    "من Python Tutorial: البرنامج ينفذ التعليمات بالترتيب. اقرأ السطر الأول، ثم الثاني، ثم توقع الناتج.",
+    "من Microsoft Learn: جرب تغييرا صغيرا واحدا في كل مرة. لا تغير الاسم والرقم والمنطق معا.",
+    "اكتب الكود كما هو مرة واحدة. الهدف هنا بناء الذاكرة العضلية وليس السرعة.",
+    "أضف تعليق يبدأ بعلامة # يشرح لماذا كتبت هذا السطر.",
+    "افصل بين الاسم والقيمة: المتغير هو اسم يشير إلى قيمة محفوظة.",
+    "إذا ظهر خطأ، اقرأ آخر سطر في رسالة الخطأ أولا. غالبا يخبرك بمكان البداية.",
+    "لا نركز على اختلافات عربية داخل النص المطبوع مثل ة/ه. المهم هنا بنية الكود الصحيحة.",
+    "تدريب توقع: قبل التشغيل، اكتب في ذهنك أو على ورقة: ماذا سيطبع البرنامج؟",
+    "تدريب تعديل: غيّر قيمة واحدة فقط ثم شغل الكود.",
+    "تدريب مراجعة: هل الأقواس مغلقة؟ هل علامات الاقتباس زوجية؟ هل اسم المتغير متطابق؟",
+    "اكتب جملة تلخيص: هذا الكود يفعل ____.",
+    "استراحة معرفية: توقف 30 ثانية ثم ارجع لسطر واحد فقط.",
   ],
   "data-entry-1": [
+    "من Microsoft Excel: المصنف يحتوي أوراق عمل، والخلية لها عنوان من حرف عمود ورقم صف مثل B2.",
+    "من Google Applied Digital Skills: الهدف العملي هو تنظيم البيانات حتى يسهل قراءتها ومراجعتها.",
     "راجع الصف أو الخلية قبل الانتقال. الدقة أهم من السرعة.",
     "اكتب قاعدة واحدة تمنع الخطأ: تنسيق رقم، تاريخ، اسم، أو عنوان خلية.",
-    "راجع المصدر: Microsoft Excel basic tasks أو Google Applied Digital Skills، ثم طبق خطوة واحدة فقط.",
-    "تدريب عملي هادئ: افحص ثلاث خلايا وتأكد أن النوع مناسب: نص، رقم، أو تاريخ.",
-    "سؤال تفكير: ما العلامة التي تخبرك أن البيانات تحتاج مراجعة؟",
+    "افحص ثلاث خلايا فقط: هل كل خلية نص أم رقم أم تاريخ؟",
+    "إذا كان الاسم فارغا، لا تخمن. ضع علامة مراجعة أو ارجع للمصدر.",
+    "إذا كان الرقم يحتوي حروفا، افصله قبل إدخاله في عمود الأرقام.",
+    "إذا كان التاريخ غير منطقي، مثل يوم 40، توقف وصحح قبل الفرز أو الفلترة.",
+    "تدريب فلترة: اسأل سؤالا واحدا فقط للبيانات، مثل: من يبدأ اسمه بحرف م؟",
+    "تدريب فرز: قبل الفرز، تأكد أن العمود كله أرقام وليس نصا مختلطا.",
+    "اكتب جملة تلخيص: جودة البيانات تعني ____.",
+    "استراحة معرفية: توقف 30 ثانية ثم راجع خلية واحدة فقط.",
   ],
 };
 
@@ -490,8 +524,8 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     !isPythonCourse && (step?.action?.kind === "closeTabs" || step?.action?.kind === "selectTab");
   const shouldShowFiles =
     !isPythonCourse && (step?.action?.kind === "clickIcon" || step?.action?.kind === "inputText");
-  const shouldShowPassword = !isPythonCourse && !isFinanceCourse && step?.action?.kind === "selectOption";
-  const shouldShowChoiceOptions = !isPythonCourse && isFinanceCourse && step?.action?.kind === "selectOption";
+  const shouldShowPassword = !isPythonCourse && !isFinanceCourse && step?.action?.kind === "selectOption" && !step?.action?.options;
+  const shouldShowChoiceOptions = !isPythonCourse && step?.action?.kind === "selectOption";
   const shouldShowPythonOptions = isPythonCourse && step?.action?.kind === "selectOption";
   const shouldShowGridControls = !isPythonCourse && unitNumber >= 2 && step?.type === "task" && !challengeActive;
   const shouldShowGrid = !isPythonCourse && unitNumber >= 2;
@@ -511,6 +545,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     const decoys = language === "ar"
       ? ["الأصول", "الخصوم", "الإيرادات", "المصروفات", "قائمة الدخل", "الميزانية", "نظام ERP"]
       : ["Assets", "Liabilities", "Revenue", "Expenses", "Income statement", "Budget", "ERP system"];
+    const explicitOptions = step?.action?.options?.map((option) => cleanArabicText(option, language));
     const instruction = cleanArabicText(step?.instruction ?? "", language);
     const targetedDecoys =
       /المحاسبة|accounting/i.test(instruction)
@@ -534,8 +569,9 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
       : /ERP|Dynamics/i.test(instruction)
         ? language === "ar" ? ["بعد نهاية الشهر فقط", "بعد إدخالها يدويا مرة أخرى", "لن تظهر"] : ["At month end only", "After manual re-entry", "It will not appear"]
       : decoys;
+    if (explicitOptions?.length) return explicitOptions;
     return [correct, ...targetedDecoys.filter((option) => option && option !== correct)].slice(0, 4);
-  }, [step?.action?.label, step?.instruction, language]);
+  }, [step?.action?.label, step?.action?.options, step?.instruction, language]);
 
   const columns = useMemo(() => ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"], []);
   const rows = useMemo(() => Array.from({ length: 10 }, (_, index) => index + 1), []);
@@ -838,7 +874,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     if (step.action?.kind === "selectOption") {
       if (isPythonCourse) {
         isValid = pythonSelectOption === step.action.label;
-      } else if (isFinanceCourse) {
+      } else if (isFinanceCourse || step.action.options) {
         isValid = selectedChoice === cleanArabicText(step.action.label ?? "", language);
       } else {
         isValid = selectedPassword === "Tafrah#2026!Success";
@@ -847,8 +883,15 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     if (step.action?.kind === "writeCode") {
       const userCode = codeValue.trim().replace(/\r\n/g, "\n");
       const expectedCode = cleanArabicText(step.action.expected ?? "", language).trim().replace(/\r\n/g, "\n");
-      const normalizeQuotes = (s: string) => s.replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"');
-      isValid = normalizeQuotes(userCode) === normalizeQuotes(expectedCode);
+      const normalizeCodeForValidation = (s: string) =>
+        normalizeDigits(s)
+          .replace(/[\u2018\u2019]/g, "'")
+          .replace(/[\u201C\u201D]/g, '"')
+          .replace(/[ةه]/g, "ه")
+          .replace(/[أإآ]/g, "ا")
+          .replace(/\s+$/gm, "")
+          .trim();
+      isValid = normalizeCodeForValidation(userCode) === normalizeCodeForValidation(expectedCode);
       if (isValid) {
         setCodeOutput(language === "ar" ? "\u2714 \u062a\u0645 \u062a\u0646\u0641\u064a\u0630 \u0627\u0644\u0643\u0648\u062f \u0628\u0646\u062c\u0627\u062d" : "\u2714 Code executed successfully");
       }

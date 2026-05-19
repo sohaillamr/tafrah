@@ -66,7 +66,29 @@ html.assistant-active footer {
   font-size: 1.25rem;
 }
 [data-scale="large"] {
-  font-size: 1.12rem;
+  font-size: 1.16rem;
+}
+[data-scale="large"] body,
+[data-scale="large"] .theme-wrapper {
+  font-size: 1.16rem !important;
+}
+[data-scale="large"] p,
+[data-scale="large"] span,
+[data-scale="large"] li,
+[data-scale="large"] label,
+[data-scale="large"] input,
+[data-scale="large"] textarea,
+[data-scale="large"] select,
+[data-scale="large"] button,
+[data-scale="large"] a {
+  font-size: 1.08em !important;
+}
+[data-scale="large"] button,
+[data-scale="large"] a,
+[data-scale="large"] input,
+[data-scale="large"] select,
+[data-scale="large"] textarea {
+  min-height: 3.25rem !important;
 }
 [data-reduce-motion="true"] *,
 [data-profile="autism"] * {
@@ -163,6 +185,71 @@ body {
   --text-color: #334155;
   --panel-bg: #F1F5F9;
   --container-pad: 20%;
+}
+
+.theme-wrapper {
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+}
+
+[data-theme="muted"] .theme-wrapper,
+[data-theme="muted"] main,
+[data-theme="muted"] section {
+  background-color: var(--bg-color) !important;
+  color: var(--text-color) !important;
+}
+
+[data-theme="muted"] .bg-white,
+[data-theme="muted"] [class*="bg-[#F5F9FF]"],
+[data-theme="muted"] [class*="bg-[#FAFBFC]"] {
+  background-color: var(--panel-bg) !important;
+}
+
+[data-theme="high-contrast"] .theme-wrapper,
+[data-theme="high-contrast"] main,
+[data-theme="high-contrast"] section,
+[data-theme="high-contrast"] div {
+  background-color: #000 !important;
+  color: #fff !important;
+  border-color: #fff !important;
+}
+
+[data-theme="high-contrast"] h1,
+[data-theme="high-contrast"] h2,
+[data-theme="high-contrast"] h3,
+[data-theme="high-contrast"] a,
+[data-theme="high-contrast"] button {
+  color: #ffff00 !important;
+}
+
+[data-theme="high-contrast"] button,
+[data-theme="high-contrast"] a[class*="bg-"],
+[data-theme="high-contrast"] .bg-[#2E5C8A] {
+  background-color: #111 !important;
+  border: 2px solid #ffff00 !important;
+}
+
+[data-density="spaced"] p,
+[data-density="spaced"] li,
+[data-density="spaced"] label,
+[data-density="spaced"] .theme-wrapper {
+  line-height: 1.9 !important;
+}
+
+[data-density="spaced"] section,
+[data-density="spaced"] article,
+[data-density="spaced"] form,
+[data-density="spaced"] fieldset {
+  gap: 1.25rem !important;
+}
+
+[data-focus-mode="true"] .theme-wrapper main {
+  max-width: 920px;
+}
+
+[data-focus-mode="true"] footer {
+  display: none !important;
 }
 
 /* CP / MOTOR ADAPTIVE MODE */

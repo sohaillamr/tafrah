@@ -18,6 +18,8 @@ export default function ThemeRegistry({ children }: { children: React.ReactNode 
     document.documentElement.setAttribute("data-theme", preferences?.highContrastText ? "high-contrast" : preferences?.mutedColors ? "muted" : "pastel");
     document.documentElement.setAttribute("data-density", preferences?.simplifiedText ? "spaced" : "normal");
     document.documentElement.setAttribute("data-scale", preferences?.largeText ? "large" : "normal");
+    document.documentElement.setAttribute("data-focus-mode", preferences?.focusMode ? "true" : "false");
+    document.documentElement.setAttribute("data-reduce-sound", preferences?.reduceSound ? "true" : "false");
     if (preferences?.reduceMotion) document.documentElement.setAttribute("data-reduce-motion", "true");
     else document.documentElement.removeAttribute("data-reduce-motion");
   }, [category, preferences, isLoaded]);
