@@ -947,7 +947,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
         courseProgressValue={courseProgressValue}
         unitProgressValue={unitProgressValue}
       />
-      <main className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-5 text-[#212529] sm:px-6 lg:py-6">
+      <main className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 px-4 py-5 text-[#212529] sm:px-6 lg:px-8 lg:py-6">
         {focusMode ? null : (
           <Breadcrumbs
             items={[
@@ -1104,7 +1104,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
         ) : (
         <section
           className={`grid gap-5 ${
-            focusMode ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)_minmax(0,1fr)]"
+            focusMode ? "grid-cols-1" : "grid-cols-1 xl:grid-cols-[280px_minmax(0,1.15fr)_minmax(0,1fr)]"
           }`}
         >
           {focusMode ? null : (
@@ -1367,7 +1367,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                       ? "هذه مساحة مالية مبسطة: اقرأ المستند، اختر التصنيف أو القرار، ثم تحقق من خطوة واحدة فقط."
                       : "This is a focused finance workspace: read the document, choose the classification or decision, then check one step only."}
                   </p>
-                  <div className="grid gap-3 md:grid-cols-2">
+                  <div className="grid gap-3 2xl:grid-cols-2">
                     <div className="rounded-xl border border-[#D9E6F2] bg-white p-4">
                       <p className="text-xs font-semibold uppercase tracking-wide text-[#6C757D]">
                         {language === "ar" ? "مستند المصدر" : "Source document"}
