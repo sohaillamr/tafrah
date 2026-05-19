@@ -152,6 +152,24 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
           retry: "حاول مرة أخرى، راجع الحروف بدقة.",
           askNour: "اسأل نور",
           nourHelp: "الشرح المبسط: اقرأ المطلوب ونفذه خطوة خطوة.",
+          dontUnderstand: "لا أفهم",
+          explanationModesTitle: "اختر طريقة شرح نور",
+          explainSlower: "أبطأ",
+          explainExample: "مثال",
+          explainVisual: "جدول بصري",
+          explainRealLife: "مثال من الواقع",
+          explainQuiz: "اختبرني",
+          explainReadAloud: "اقرأ بصوت",
+          masteryTitle: "خريطة الإتقان",
+          masteryAccuracy: "الدقة",
+          masteryConsistency: "الاستمرارية",
+          masteryIndependence: "الاستقلالية",
+          masteryReview: "تحتاج مراجعة",
+          masteryReady: "جاهز للوحدة التالية",
+          masteryStrong: "قوي",
+          masteryGrowing: "يتحسن",
+          masteryNeedsReview: "مراجعة",
+          masteryReadyStatus: "جاهز",
           nourNumberOnly: "هذه الخلية تقبل الأرقام فقط. يرجى مسح النص وكتابة رقم.",
           nourDateOnly: "هذه الخلية مخصصة للتاريخ. يرجى كتابة تاريخ صحيح.",
           nourPrefix: "هل تحتاج مساعدة؟ تذكر أن تضغط على",
@@ -240,6 +258,24 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
           retry: "Try again. Check the letters carefully.",
           askNour: "Ask Nour",
           nourHelp: "Simple explanation: read the task and follow each step.",
+          dontUnderstand: "I don't understand",
+          explanationModesTitle: "Choose Nour explanation mode",
+          explainSlower: "Slower",
+          explainExample: "Example",
+          explainVisual: "Visual table",
+          explainRealLife: "Real-life example",
+          explainQuiz: "Quiz me",
+          explainReadAloud: "Read aloud",
+          masteryTitle: "Course mastery map",
+          masteryAccuracy: "Accuracy",
+          masteryConsistency: "Consistency",
+          masteryIndependence: "Independence",
+          masteryReview: "Review needed",
+          masteryReady: "Ready for next unit",
+          masteryStrong: "Strong",
+          masteryGrowing: "Growing",
+          masteryNeedsReview: "Review",
+          masteryReadyStatus: "Ready",
           nourNumberOnly: "This cell accepts numbers only. Please clear the text and enter a number.",
           nourDateOnly: "This cell is for dates. Please enter a valid date.",
           nourPrefix: "Need help? Remember to press",
@@ -798,7 +834,22 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     setQuizScore(0);
   };
 
-  const requestCourseExplanation = async (tone: "detailed" | "simple" = "detailed") => {
+  const readTextAloud = (text: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      setNourHelp(language === "ar" ? "القراءة الصوتية غير متاحة في هذا المتصفح." : "Read aloud is not available in this browser.");
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = language === "ar" ? "ar-EG" : "en-US";
+    utterance.rate = 0.82;
+    utterance.pitch = 1;
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const requestCourseExplanation = async (
+    tone: "detailed" | "simple" | "slower" | "example" | "visual" | "real-life" | "quiz" = "detailed"
+  ) => {
     if (!step) return;
     setIsExplaining(true);
     setNourHelp("");
@@ -827,6 +878,41 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
       setIsExplaining(false);
     }
   };
+
+  const handleNourMode = (mode: "slower" | "example" | "visual" | "real-life" | "quiz" | "read-aloud") => {
+    const visibleText = cleanArabicText(step?.instruction || "", language);
+    if (mode === "read-aloud") {
+      readTextAloud(visibleText);
+      setNourHelp(language === "ar" ? "سأقرأ الخطوة الحالية بصوت هادئ." : "I will read the current step aloud calmly.");
+      return;
+    }
+    requestCourseExplanation(mode);
+  };
+
+  const nourModeOptions: { id: "slower" | "example" | "visual" | "real-life" | "quiz" | "read-aloud"; label: string; icon: typeof Bot }[] = [
+    { id: "slower", label: labels.explainSlower, icon: RefreshCw },
+    { id: "example", label: labels.explainExample, icon: Lightbulb },
+    { id: "visual", label: labels.explainVisual, icon: FileText },
+    { id: "real-life", label: labels.explainRealLife, icon: Target },
+    { id: "quiz", label: labels.explainQuiz, icon: CheckCircle },
+    { id: "read-aloud", label: labels.explainReadAloud, icon: Volume2 },
+  ];
+
+  const currentQuizPassed = Boolean(quizzesPassed[unitNumber]);
+  const unitDone = Boolean(unitsDone[unitNumber] || isCompleted);
+  const completedStepCount = Object.values(validatedSteps).filter(Boolean).length;
+  const accuracyReady = currentQuizPassed || quizScore >= (currentQuiz?.passingScore ?? 999);
+  const consistencyReady = completedUnits >= Math.max(1, unitNumber - 1) || unitDone;
+  const independenceReady = completedStepCount >= Math.ceil(steps.length * 0.6) && !nourHelp;
+  const reviewNeeded = quizSubmitted ? quizScore < (currentQuiz?.passingScore ?? 0) : currentStep > 0 && !canGoNext;
+  const readyForNext = currentQuizPassed || (unitDone && !reviewNeeded);
+  const masteryBadges = [
+    { label: labels.masteryAccuracy, ready: accuracyReady, status: accuracyReady ? labels.masteryStrong : labels.masteryGrowing },
+    { label: labels.masteryConsistency, ready: consistencyReady, status: consistencyReady ? labels.masteryStrong : labels.masteryGrowing },
+    { label: labels.masteryIndependence, ready: independenceReady, status: independenceReady ? labels.masteryStrong : labels.masteryGrowing },
+    { label: labels.masteryReview, ready: !reviewNeeded, status: reviewNeeded ? labels.masteryNeedsReview : labels.masteryStrong },
+    { label: labels.masteryReady, ready: readyForNext, status: readyForNext ? labels.masteryReadyStatus : labels.masteryGrowing },
+  ];
 
   const handleStartChallenge = () => {
     setChallengeActive(true);
@@ -1582,19 +1668,28 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
               </div>
             </div>
             <div className="flex flex-col gap-3">
-              {!focusMode ? (
-              <button
-                type="button"
-                disabled={isExplaining}
-                onClick={() => requestCourseExplanation("detailed")}
-                className="min-h-11 rounded-sm border border-[#2E5C8A]/30 bg-white px-4 font-semibold text-[#2E5C8A]"
-              >
-                <span className="flex items-center justify-center gap-2">
-                  {isExplaining ? <Loader2 size={18} className="animate-spin text-[#2E5C8A]" /> : <Bot size={18} className="text-[#2E5C8A]" />}
-                  {language === "ar" ? "لا أفهم، اشرحها لي بالتفصيل" : "I don't understand. Explain this in detail"}
-                </span>
-              </button>
-              ) : null}
+              <div className="rounded-sm border border-[#DEE2E6] bg-[#F8F9FA] p-3">
+                <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-[#2E5C8A]">
+                  <Bot size={16} />
+                  {labels.explanationModesTitle}
+                </div>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {nourModeOptions.map(({ id, label, icon: Icon }) => (
+                    <button
+                      key={id}
+                      type="button"
+                      disabled={isExplaining}
+                      onClick={() => handleNourMode(id)}
+                      className="min-h-11 rounded-sm border border-[#2E5C8A]/25 bg-white px-3 text-sm font-medium text-[#2E5C8A] transition-colors hover:bg-[#E3EEF9] disabled:opacity-60"
+                    >
+                      <span className="flex items-center justify-center gap-2">
+                        {isExplaining && id !== "read-aloud" ? <Loader2 size={16} className="animate-spin" /> : <Icon size={16} />}
+                        {label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
               {!focusMode && (userCategory === 'LEARNING_HARDENING' || preferences?.simplifiedText) && (
                 <button
                   type="button"
@@ -1643,6 +1738,30 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                   {labels.nourPrefix} {nourTarget} {labels.nourSuffix}
                 </div>
               ) : null}
+              <div className="rounded-sm border border-[#DEE2E6] bg-white p-3">
+                <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-[#2E5C8A]">
+                  <Trophy size={16} />
+                  {labels.masteryTitle}
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {masteryBadges.map((badge) => (
+                    <div
+                      key={badge.label}
+                      className={`flex min-h-12 items-center justify-between gap-3 rounded-sm border px-3 py-2 ${
+                        badge.ready
+                          ? "border-[#2E7D32]/25 bg-[#E8F5E9] text-[#1B5E20]"
+                          : "border-[#FF9800]/25 bg-[#FFF8E1] text-[#6B4E00]"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2 text-sm font-semibold">
+                        {badge.ready ? <CheckCircle size={16} /> : <RefreshCw size={16} />}
+                        {badge.label}
+                      </span>
+                      <span className="rounded-full bg-white/80 px-2 py-1 text-xs font-semibold">{badge.status}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <button

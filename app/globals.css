@@ -256,10 +256,6 @@ body {
   max-width: 920px;
 }
 
-[data-focus-mode="true"] footer {
-  display: none !important;
-}
-
 /* CP / MOTOR ADAPTIVE MODE */
 [data-profile="cp"] button, 
 [data-profile="cp"] a, 

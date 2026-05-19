@@ -180,6 +180,16 @@ Give practical explanation, examples, non-examples, and a tiny check for underst
 
   if (mode === "explain") {
     if (!instruction) return NextResponse.json({ error: "missing_instruction" }, { status: 400 });
+    const tone = compact(body.tone, 40);
+    const modeInstructions: Record<string, string> = {
+      simple: "Use very short sentences and one step at a time.",
+      slower: "Explain more slowly than usual. Break every idea into tiny numbered steps.",
+      example: "Focus on one clear worked example, then one non-example.",
+      visual: "Use a compact text table with columns: part, meaning, learner action.",
+      "real-life": "Use a practical real-life example from school, work, family, or daily tasks.",
+      quiz: "Turn the explanation into a tiny 3-question check with answers and gentle feedback.",
+      detailed: "Explain the exact visible content in detail while keeping paragraphs short.",
+    };
     const content = await callGroq([
       { role: "system", content: system },
       {
@@ -192,6 +202,8 @@ Exact visible lesson text: ${instruction}
 User category/preferences: ${JSON.stringify(userPreferences)}
 
 The learner pressed "I don't understand".
+Requested explanation mode: ${tone || "detailed"}.
+Mode instruction: ${modeInstructions[tone] || modeInstructions.detailed}
 Explain the exact visible content in detail, not as a summary.
 Structure:
 1. What this means

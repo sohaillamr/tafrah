@@ -20,12 +20,23 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://tafrah-project.vercel.app"),
   title: {
     default: "طفرة | Tafrah",
     template: "%s | طفرة",
   },
   description:
     "منصة طفرة: بيئة تعلم وتدريب تكيفية للأشخاص على طيف التوحد. Tafrah: an adaptive learning platform for autistic learners.",
+  icons: {
+    icon: [{ url: "/logo.png", type: "image/png" }],
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
+  openGraph: {
+    title: "طفرة | Tafrah",
+    description: "Calm adaptive learning and practical training for neurodivergent learners.",
+    images: [{ url: "/logo.png", width: 512, height: 512, alt: "Tafrah" }],
+  },
 };
 
 export default async function RootLayout({
