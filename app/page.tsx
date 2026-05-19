@@ -48,6 +48,10 @@ export default function HomePage() {
         ershadDesc:
           "منصة تعليمية متخصصة في التربية الخاصة، الإرشاد الأسري، والصحة النفسية، وتدعم تقديم المعرفة بأسلوب عملي وواضح.",
         ershadCta: "زيارة أكاديمية إرشاد",
+        pioneersName: "مؤسسة ولاء جمال للتنمية والرعاية - أكاديمية بيونيرز",
+        pioneersDesc:
+          "تقدم رعاية متميزة وتعليما شاملا، وتنمي مهارات وقدرات الأطفال من خلال برامج متخصصة تناسب احتياجات كل طفل، مع تعزيز ثقتهم بأنفسهم وتحقيق إمكانياتهم الكاملة.",
+        pioneersCta: "شريك تعليمي ورعائي",
         logoAlt: "شعار طفرة",
         sourceWho: "مصدر عالمي: WHO",
         sourceEgypt: "دراسة مصرية حديثة",
@@ -91,6 +95,10 @@ export default function HomePage() {
         ershadDesc:
           "An education platform focused on special education, family counseling, and mental health, with clear and practical learning methods.",
         ershadCta: "Visit Ershad Academy",
+        pioneersName: "Pioneers Academy",
+        pioneersDesc:
+          "A child development and care partner focused on comprehensive education, specialized programs matched to each child's needs, and building children's confidence and full potential.",
+        pioneersCta: "Education and care partner",
         logoAlt: "Tafrah logo",
         sourceWho: "Global source: WHO",
         sourceEgypt: "Recent Egyptian study",
@@ -193,16 +201,29 @@ export default function HomePage() {
             <h2 className="text-xl font-semibold text-[#2E5C8A]">{labels.partnersTitle}</h2>
             <p className="text-sm text-[#495057]">{labels.partnersSubtitle}</p>
           </div>
-          <a href="https://www.ershadacademy.com" target="_blank" rel="noopener noreferrer" className="group flex flex-col gap-5 rounded-sm border border-[#D9E6F2] bg-white p-6 hover:border-[#2E5C8A] md:flex-row md:items-center">
-            <div className="w-fit rounded-sm border border-[#D9E6F2] bg-white p-3">
-              <Image src="/ershad-logo.png" alt={labels.ershadName} width={120} height={120} className="object-contain" />
-            </div>
-            <div className="flex flex-col gap-2">
-              <h3 className="text-lg font-semibold text-[#2E5C8A]">{labels.ershadName}</h3>
-              <p className="leading-relaxed text-[#495057]">{labels.ershadDesc}</p>
-              <span className="font-semibold text-[#2E5C8A] group-hover:underline">{labels.ershadCta}</span>
-            </div>
-          </a>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <a href="https://www.ershadacademy.com" target="_blank" rel="noopener noreferrer" className="group flex flex-col gap-5 rounded-sm border border-[#D9E6F2] bg-white p-6 hover:border-[#2E5C8A] md:flex-row md:items-center">
+              <div className="w-fit rounded-sm border border-[#D9E6F2] bg-white p-3">
+                <Image src="/ershad-logo.png" alt={labels.ershadName} width={120} height={120} className="object-contain" />
+              </div>
+              <div className="flex flex-col gap-2">
+                <h3 className="text-lg font-semibold text-[#2E5C8A]">{labels.ershadName}</h3>
+                <p className="leading-relaxed text-[#495057]">{labels.ershadDesc}</p>
+                <span className="font-semibold text-[#2E5C8A] group-hover:underline">{labels.ershadCta}</span>
+              </div>
+            </a>
+
+            <article className="flex flex-col gap-5 rounded-sm border border-[#D9E6F2] bg-white p-6 md:flex-row md:items-center">
+              <div className="w-fit rounded-sm border border-[#D9E6F2] bg-white p-3">
+                <Image src="/pioneers-academy-logo.png" alt={labels.pioneersName} width={120} height={120} className="object-contain" />
+              </div>
+              <div className="flex flex-col gap-2">
+                <h3 className="text-lg font-semibold text-[#2E5C8A]">{labels.pioneersName}</h3>
+                <p className="leading-relaxed text-[#495057]">{labels.pioneersDesc}</p>
+                <span className="font-semibold text-[#2E5C8A]">{labels.pioneersCta}</span>
+              </div>
+            </article>
+          </div>
         </section>
       </main>
     </div>
