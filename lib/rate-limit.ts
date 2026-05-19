@@ -59,9 +59,9 @@ export async function checkRateLimit(
       resetAt: existing.resetAt.getTime(),
     };
   } catch (error) {
-    // If DB fails, allow the request (fail-open) but log
+    // Fail closed so auth, AI, and support endpoints are not unlimited during DB incidents.
     console.error("[TAFRAH] Rate limit DB error:", error);
-    return { allowed: true, remaining: config.maxRequests, resetAt: resetAt.getTime() };
+    return { allowed: false, remaining: 0, resetAt: resetAt.getTime() };
   }
 }
 

@@ -195,9 +195,7 @@ async function main() {
   });
 
   console.log("Seed complete.");
-  console.log("Admin: admin@tafrah.com / 123456");
-  console.log("Center: center@tafrah.com / 123456");
-  console.log("Student: student@tafrah.com / 123456");
+  console.log("Demo accounts were created. See prisma/seed.js for local-only credentials.");
 }
 
 main()

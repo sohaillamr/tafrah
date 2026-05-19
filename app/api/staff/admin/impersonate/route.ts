@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAdminSession, logAdminAction } from "@/lib/admin-auth";
-import { SignJWT } from "jose";
-import { createAuthCookie } from "@/lib/auth";
+import { createAuthCookie, signToken } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
@@ -23,18 +22,22 @@ export async function POST(req: Request) {
     if (!targetUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
+    if (targetUser.status === "banned") {
+      await logAdminAction("IMPERSONATION_BLOCKED", `Attempted banned user impersonation ${userId}`);
+      return NextResponse.json({ error: "Cannot impersonate a banned user" }, { status: 403 });
+    }
 
     await logAdminAction("IMPERSONATION", `Impersonated user ${userId} (${targetUser.email})`);
 
-    // Create standard user token to let them login as the user
-    const token = await new SignJWT({ userId: targetUser.id, role: targetUser.role })
-      .setProtectedHeader({ alg: "HS256" })
-      .setIssuedAt()
-      .setExpirationTime("1h")
-      .sign(new TextEncoder().encode(process.env.JWT_SECRET!));
+    const token = await signToken({
+      userId: targetUser.id,
+      email: targetUser.email,
+      role: targetUser.role,
+      name: targetUser.name,
+    });
 
     const response = NextResponse.json({ success: true, redirectUrl: "/dashboard" });
-    response.headers.set("Set-Cookie", createAuthCookie(token));
+    response.headers.set("Set-Cookie", createAuthCookie(token, 60 * 60));
     return response;
   } catch (error: any) {
     console.error("Impersonation error:", error);

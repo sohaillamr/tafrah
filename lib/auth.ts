@@ -78,17 +78,15 @@ export async function getSession(): Promise<JWTPayload | null> {
       name: user.name,
     };
   } catch (error) {
-    console.error("[CRITICAL] getSession DB check failed (likely a cold start connection timeout). Falling back to JWT.", error);
-    // DO NOT fail closed by returning null here just for a DB ping error (which kicks the user out entirely).
-    // Instead, trust the securely signed JWT as a fallback until the DB catches up!
-    return decoded;
+    console.error("[CRITICAL] getSession DB validation failed. Refusing session until the database is reachable.", error);
+    return null;
   }
 }
 
-export function createAuthCookie(token: string): string {
+export function createAuthCookie(token: string, maxAgeSeconds = 7 * 24 * 60 * 60): string {
   const secure = IS_PRODUCTION ? "; Secure" : "";
   const sameSite = IS_PRODUCTION ? "Strict" : "Lax";
-  return `tafrah_token=${token}; Path=/; HttpOnly; SameSite=${sameSite}${secure}; Max-Age=${7 * 24 * 60 * 60}`;
+  return `tafrah_token=${token}; Path=/; HttpOnly; SameSite=${sameSite}${secure}; Max-Age=${maxAgeSeconds}`;
 }
 
 export function clearAuthCookie(): string {

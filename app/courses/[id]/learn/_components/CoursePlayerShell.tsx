@@ -2,14 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
 import TopBar from "@/app/components/TopBar";
 import Breadcrumbs from "@/app/components/Breadcrumbs";
 import { useLanguage } from "@/app/components/LanguageProvider";
 import { useAuth } from "@/app/components/AuthProvider";
 import { usePreferencesStore } from "@/lib/store/usePreferencesStore";
-import { Lock, Target, MapPin, FileText, Trophy, Star, ArrowRight, RefreshCw, Monitor, FolderOpen, Lightbulb, Pencil, Bot, AlertTriangle, CheckCircle, Volume2, Sparkles, Loader2 } from "lucide-react";
+import { Target, FileText, Trophy, Star, ArrowRight, RefreshCw, Monitor, FolderOpen, Lightbulb, Pencil, Bot, AlertTriangle, CheckCircle, Volume2, Sparkles, Loader2 } from "lucide-react";
+import { CalmCourseHeader, ProgressSummary, StepProgressDots, UnitNavigation } from "./CoursePlayerChrome";
+import { useCourseStore } from "./coursePlayerStore";
 import { unit1Content } from "@/data/Unit1Content";
 import { unit2Content } from "@/data/Unit2Content";
 import { unit3Content } from "@/data/Unit3Content";
@@ -446,66 +446,6 @@ const buildExpandedQuiz = (courseSlug: string, unitNumber: number, language: str
   };
 };
 
-type CourseState = {
-  courseKey: string;
-  currentStep: number;
-  validatedSteps: Record<number, boolean>;
-  needsSync: boolean;
-  initCourse: (key: string) => void;
-  markStepValid: (step: number) => void;
-  nextStep: (totalSteps: number) => void;
-  prevStep: () => void;
-  reset: () => void;
-  markSynced: () => void;
-};
-
-const useCourseStore = create<CourseState>()(
-  persist(
-    (set, get) => ({
-      courseKey: "",
-      currentStep: 0,
-      validatedSteps: {},
-      needsSync: false,
-      initCourse: (key) =>
-        set((state) => {
-          if (state.courseKey !== key) {
-            return { courseKey: key, currentStep: 0, validatedSteps: {}, needsSync: true };
-          }
-          return state;
-        }),
-      markStepValid: (step) =>
-        set((state) => ({
-          validatedSteps: { ...state.validatedSteps, [step]: true },
-          needsSync: true,
-        })),
-      nextStep: (totalSteps) =>
-        set((state) => ({
-          currentStep: Math.min(state.currentStep + 1, totalSteps - 1),
-          needsSync: true,
-        })),
-      prevStep: () =>
-        set((state) => ({
-          currentStep: Math.max(state.currentStep - 1, 0),
-          needsSync: true,
-        })),
-      reset: () =>
-        set({
-          currentStep: 0,
-          validatedSteps: {},
-          needsSync: true,
-        }),
-      markSynced: () =>
-        set({
-          needsSync: false,
-        }),
-    }),
-    {
-      name: "tafrah-course-storage",
-      storage: createJSONStorage(() => localStorage),
-    }
-  )
-);
-
 const initialTabs = [
   { id: "instructions", label: "التعليمات" },
   { id: "sheet", label: "جدول البيانات" },
@@ -519,7 +459,7 @@ const passwordOptions = ["123456", "Tafrah#2026!Success", "password", "tafrah202
 export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, category }: any) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [focusMode, setFocusMode] = useState(false);
+  const [focusMode, setFocusMode] = useState(true);
   const [validationMessage, setValidationMessage] = useState("");
   const [validationStatus, setValidationStatus] = useState<"success" | "error" | "">("");
   const [nourHelp, setNourHelp] = useState("");
@@ -1378,9 +1318,20 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[#F8F9FA]">
       {focusMode ? null : <TopBar />}
-      <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 text-[#212529] sm:px-6 lg:gap-8 lg:py-12">
+      <CalmCourseHeader
+        labels={labels}
+        unitTitle={cleanArabicText(unitTitle, language)}
+        focusMode={focusMode}
+        onToggleFocus={() => setFocusMode((prev) => !prev)}
+        currentStep={currentStep}
+        stepsLength={steps.length}
+        completedUnits={completedUnits}
+        courseProgressValue={courseProgressValue}
+        unitProgressValue={unitProgressValue}
+      />
+      <main className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-5 text-[#212529] sm:px-6 lg:py-6">
         {focusMode ? null : (
           <Breadcrumbs
             items={[
@@ -1392,85 +1343,25 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
           />
         )}
 
-        <section className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="font-semibold">{cleanArabicText(unitTitle, language)}</h1>
-          <button
-            type="button"
-            onClick={() => setFocusMode((prev) => !prev)}
-            className={`min-h-10 rounded-full px-5 text-sm font-medium transition-all ${
-              focusMode
-                ? "bg-[#2E5C8A] text-white shadow-sm"
-                : "border border-[#E2E8F0] bg-white text-[#495057] hover:bg-[#F5F9FF]"
-            }`}
-          >
-            {focusMode ? labels.focusOff : labels.focusOn}
-          </button>
-        </section>
-        <section className="flex flex-col gap-5 rounded-2xl border border-[#E2E8F0] bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-semibold">{labels.unitNav}</h2>
-            <span className="rounded-full bg-[#F5F9FF] px-3 py-1 text-sm text-[#2E5C8A]">
-              {labels.currentUnit}: {cleanArabicText(unitTitle, language)}
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {[1, 2, 3, 4, 5, 6, 7].map((num) => {
-              const isActive = unitNumber === num;
-              const isLocked = num > 1 && !quizzesPassed[num - 1];
-              const buttonLabels = [labels.unit1Button, labels.unit2Button, labels.unit3Button, labels.unit4Button, labels.unit5Button, labels.unit6Button, labels.unit7Button];
-              return (
-                <button
-                  key={num}
-                  type="button"
-                  onClick={() => handleUnitChange(num)}
-                  disabled={isLocked}
-                  title={isLocked ? labels.quizLocked : buttonLabels[num - 1]}
-                  className={`min-h-10 rounded-full px-5 text-sm font-medium transition-all ${
-                    isActive
-                      ? "bg-[#2E5C8A] text-white shadow-sm"
-                      : isLocked
-                        ? "cursor-not-allowed border border-[#E2E8F0] bg-[#F8F9FA] text-[#ADB5BD]"
-                        : "border border-[#E2E8F0] bg-white text-[#495057] hover:bg-[#F5F9FF]"
-                  }`}
-                >
-                  {isLocked ? <><Lock size={12} className="inline me-1" /> </> : null}{buttonLabels[num - 1]}
-                </button>
-              );
-            })}
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-xl border border-[#E2E8F0] bg-gradient-to-br from-[#F5F9FF] to-white p-4">
-              <div className="flex items-center gap-2">
-                <Target size={18} className="text-[#2E5C8A]" />
-                <p className="font-semibold">{labels.courseProgress}</p>
-              </div>
-              <p className="mt-1 text-sm text-[#6C757D]">
-                {completedUnits} / 7 {labels.unitsCompleted}
-              </p>
-              <div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-[#E2E8F0]">
-                <div
-                  className="h-2.5 rounded-full bg-gradient-to-r from-[#2E5C8A] to-[#4A90C4] progress-animate transition-all duration-500"
-                  style={{ width: `${courseProgressValue}%` }}
-                />
-              </div>
-            </div>
-            <div className="rounded-xl border border-[#E2E8F0] bg-gradient-to-br from-[#F5F9FF] to-white p-4">
-              <div className="flex items-center gap-2">
-                <MapPin size={18} className="text-[#2E5C8A]" />
-                <p className="font-semibold">{labels.unitProgress}</p>
-              </div>
-              <p className="mt-1 text-sm text-[#6C757D]">
-                {labels.stepLabel} {currentStep + 1} {labels.of} {steps.length}
-              </p>
-              <div className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-[#E2E8F0]">
-                <div
-                  className="h-2.5 rounded-full bg-gradient-to-r from-[#2E5C8A] to-[#4A90C4] progress-animate transition-all duration-500"
-                  style={{ width: `${unitProgressValue}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        </section>
+        {focusMode ? null : (
+          <>
+            <UnitNavigation
+              labels={labels}
+              unitNumber={unitNumber}
+              unitTitle={cleanArabicText(unitTitle, language)}
+              quizzesPassed={quizzesPassed}
+              handleUnitChange={handleUnitChange}
+            />
+            <ProgressSummary
+              labels={labels}
+              currentStep={currentStep}
+              stepsLength={steps.length}
+              completedUnits={completedUnits}
+              courseProgressValue={courseProgressValue}
+              unitProgressValue={unitProgressValue}
+            />
+          </>
+        )}
 
         {quizMode && currentQuiz ? (
           <section className="mx-auto w-full max-w-3xl">
@@ -1597,11 +1488,11 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
         ) : (
         <section
           className={`grid gap-5 ${
-            focusMode ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)_minmax(0,1fr)]"
+            focusMode ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)_minmax(0,1fr)]"
           }`}
         >
           {focusMode ? null : (
-            <aside className="flex max-h-[70vh] flex-col gap-1 overflow-y-auto self-start rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-sm sim-scroll">
+            <aside className="flex max-h-[70vh] flex-col gap-1 overflow-y-auto self-start rounded-sm border border-[#DEE2E6] bg-white p-4">
               <h2 className="mb-2 font-semibold">{labels.stepsTitle}</h2>
               {currentUnit.chapters.map((chapter, chapterIndex) => {
                 const rawChTitle = (chapter as { title?: string; chapter_title?: string }).title ??
@@ -1631,7 +1522,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
             </aside>
           )}
 
-          <div className="flex flex-col gap-4 rounded-2xl border border-[#E2E8F0] bg-white p-5 shadow-sm">
+          <div className={`flex flex-col gap-4 rounded-sm border border-[#DEE2E6] bg-white p-4 ${focusMode ? "order-2" : ""}`}>
             <div className="flex items-center gap-2.5">
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#E3EEF9] text-[#2E5C8A]"><Monitor size={16} /></span>
               <h2 className="font-semibold">
@@ -2091,31 +1982,23 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
             </div>
           </div>
 
-          <div className="flex flex-col gap-5 rounded-2xl border border-[#E2E8F0] bg-white p-5 shadow-sm">
+          <div className={`flex flex-col gap-4 rounded-sm border border-[#DEE2E6] bg-white p-4 ${focusMode ? "order-1" : ""}`}>
             <div className="flex flex-col gap-3">
-              {/* Step progress dots */}
-              <div className="flex items-center gap-1 overflow-x-auto pb-1 sim-scroll">
-                {steps.map((_, i) => (
-                  <div
-                    key={i}
-                    className={`shrink-0 rounded-full transition-all ${
-                      i === currentStep
-                        ? "h-2.5 w-7 bg-[#2E5C8A] step-active"
-                        : i < currentStep && validatedSteps[i]
-                        ? "h-2.5 w-2.5 bg-[#2E5C8A]"
-                        : "h-2 w-2 bg-[#DEE2E6]"
-                    }`}
-                  />
-                ))}
-              </div>
+              {focusMode ? null : (
+                <StepProgressDots
+                  stepsLength={steps.length}
+                  currentStep={currentStep}
+                  validatedSteps={validatedSteps}
+                />
+              )}
               <h2 className="font-semibold">{cleanArabicText(step?.chapterTitle || "", language)}</h2>
               <p className="text-sm text-[#6C757D]">
                 {labels.stepLabel} {currentStep + 1} {labels.of} {steps.length}
               </p>
-              <div className={`rounded-xl p-4 ${
+              <div className={`rounded-sm p-4 ${
                 step?.type === "info"
-                  ? "border border-[#D9E6F2] bg-[#F5F9FF]"
-                  : "border-2 border-[#2E5C8A]/20 bg-[#E3EEF9]"
+                  ? "border border-[#DEE2E6] bg-[#F8F9FA]"
+                  : "border border-[#2E5C8A]/30 bg-[#F5F9FF]"
               }`}>
                 <div className="mb-2 flex items-center gap-2">
                   <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-sm ${
@@ -2133,18 +2016,20 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
               </div>
             </div>
             <div className="flex flex-col gap-3">
+              {!focusMode ? (
               <button
                 type="button"
                 disabled={isExplaining}
                 onClick={() => requestCourseExplanation("detailed")}
-                className="min-h-11 rounded-xl border-2 border-[#2E5C8A]/30 bg-white px-4 font-semibold text-[#2E5C8A] hover:border-[#2E5C8A]/50 hover:bg-[#F5F9FF] transition-all"
+                className="min-h-11 rounded-sm border border-[#2E5C8A]/30 bg-white px-4 font-semibold text-[#2E5C8A]"
               >
                 <span className="flex items-center justify-center gap-2">
                   {isExplaining ? <Loader2 size={18} className="animate-spin text-[#2E5C8A]" /> : <Bot size={18} className="text-[#2E5C8A]" />}
                   {language === "ar" ? "لا أفهم، اشرحها لي بالتفصيل" : "I don't understand. Explain this in detail"}
                 </span>
               </button>
-              {(userCategory === 'LEARNING_HARDENING' || preferences?.simplifiedText) && (
+              ) : null}
+              {!focusMode && (userCategory === 'LEARNING_HARDENING' || preferences?.simplifiedText) && (
                 <button
                   type="button"
                   disabled={isSummarizing || isExplaining}
@@ -2153,7 +2038,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                     await requestCourseExplanation("simple");
                     setIsSummarizing(false);
                   }}
-                  className="min-h-11 rounded-xl border-2 border-dashed border-teal-500/30 bg-teal-50 px-4 font-medium text-teal-700 hover:border-teal-500/50 hover:bg-teal-100 transition-all text-left"
+                  className="min-h-11 rounded-sm border border-teal-500/30 bg-teal-50 px-4 font-medium text-teal-700 text-left"
                 >
                   <span className="flex items-center justify-center gap-2">
                     {isSummarizing ? <Loader2 size={18} className="animate-spin text-teal-700" /> : <Sparkles size={18} className="text-teal-700" />}
@@ -2163,16 +2048,17 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
               )}
               <button
                 type="button"
-                onClick={() => setNourHelp(labels.nourHelp)}
-                className="min-h-11 rounded-xl border-2 border-dashed border-[#2E5C8A]/25 bg-[#F5F9FF] px-4 font-medium text-[#2E5C8A] hover:border-[#2E5C8A]/40 hover:bg-[#E3EEF9] transition-all"
+                disabled={isExplaining}
+                onClick={() => focusMode ? requestCourseExplanation("simple") : setNourHelp(labels.nourHelp)}
+                className="min-h-11 rounded-sm border border-[#2E5C8A]/25 bg-white px-4 font-medium text-[#2E5C8A]"
               >
                 <span className="flex items-center justify-center gap-2">
-                  <Bot size={18} className="text-[#2E5C8A]" />
+                  {isExplaining && focusMode ? <Loader2 size={18} className="animate-spin text-[#2E5C8A]" /> : <Bot size={18} className="text-[#2E5C8A]" />}
                   {labels.askNour}
                 </span>
               </button>
               {nourHelp ? (
-                <div className="rounded-xl border border-[#2E5C8A]/15 bg-[#F5F9FF] p-4">
+                <div className="rounded-sm border border-[#DEE2E6] bg-[#F8F9FA] p-4">
                   <div className="flex items-start gap-3">
                     <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#2E5C8A] text-sm font-bold text-white">ن</span>
                     <p className="leading-relaxed text-[#212529]">{nourHelp}</p>
