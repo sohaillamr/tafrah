@@ -160,16 +160,6 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
           explainRealLife: "مثال من الواقع",
           explainQuiz: "اختبرني",
           explainReadAloud: "اقرأ بصوت",
-          masteryTitle: "خريطة الإتقان",
-          masteryAccuracy: "الدقة",
-          masteryConsistency: "الاستمرارية",
-          masteryIndependence: "الاستقلالية",
-          masteryReview: "تحتاج مراجعة",
-          masteryReady: "جاهز للوحدة التالية",
-          masteryStrong: "قوي",
-          masteryGrowing: "يتحسن",
-          masteryNeedsReview: "مراجعة",
-          masteryReadyStatus: "جاهز",
           nourNumberOnly: "هذه الخلية تقبل الأرقام فقط. يرجى مسح النص وكتابة رقم.",
           nourDateOnly: "هذه الخلية مخصصة للتاريخ. يرجى كتابة تاريخ صحيح.",
           nourPrefix: "هل تحتاج مساعدة؟ تذكر أن تضغط على",
@@ -266,16 +256,6 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
           explainRealLife: "Real-life example",
           explainQuiz: "Quiz me",
           explainReadAloud: "Read aloud",
-          masteryTitle: "Course mastery map",
-          masteryAccuracy: "Accuracy",
-          masteryConsistency: "Consistency",
-          masteryIndependence: "Independence",
-          masteryReview: "Review needed",
-          masteryReady: "Ready for next unit",
-          masteryStrong: "Strong",
-          masteryGrowing: "Growing",
-          masteryNeedsReview: "Review",
-          masteryReadyStatus: "Ready",
           nourNumberOnly: "This cell accepts numbers only. Please clear the text and enter a number.",
           nourDateOnly: "This cell is for dates. Please enter a valid date.",
           nourPrefix: "Need help? Remember to press",
@@ -898,22 +878,6 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     { id: "read-aloud", label: labels.explainReadAloud, icon: Volume2 },
   ];
 
-  const currentQuizPassed = Boolean(quizzesPassed[unitNumber]);
-  const unitDone = Boolean(unitsDone[unitNumber] || isCompleted);
-  const completedStepCount = Object.values(validatedSteps).filter(Boolean).length;
-  const accuracyReady = currentQuizPassed || quizScore >= (currentQuiz?.passingScore ?? 999);
-  const consistencyReady = completedUnits >= Math.max(1, unitNumber - 1) || unitDone;
-  const independenceReady = completedStepCount >= Math.ceil(steps.length * 0.6) && !nourHelp;
-  const reviewNeeded = quizSubmitted ? quizScore < (currentQuiz?.passingScore ?? 0) : currentStep > 0 && !canGoNext;
-  const readyForNext = currentQuizPassed || (unitDone && !reviewNeeded);
-  const masteryBadges = [
-    { label: labels.masteryAccuracy, ready: accuracyReady, status: accuracyReady ? labels.masteryStrong : labels.masteryGrowing },
-    { label: labels.masteryConsistency, ready: consistencyReady, status: consistencyReady ? labels.masteryStrong : labels.masteryGrowing },
-    { label: labels.masteryIndependence, ready: independenceReady, status: independenceReady ? labels.masteryStrong : labels.masteryGrowing },
-    { label: labels.masteryReview, ready: !reviewNeeded, status: reviewNeeded ? labels.masteryNeedsReview : labels.masteryStrong },
-    { label: labels.masteryReady, ready: readyForNext, status: readyForNext ? labels.masteryReadyStatus : labels.masteryGrowing },
-  ];
-
   const handleStartChallenge = () => {
     setChallengeActive(true);
     setChallengeCompleted(false);
@@ -1221,7 +1185,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                         </div>
                       ) : null}
                     </div>
-                  ) : shouldShowPythonOptions ? (
+                  ) : false ? (
                     <div className="flex flex-col gap-2">
                       <h3 className="font-semibold">{language === "ar" ? "اختر الإجابة الصحيحة" : "Select the correct answer"}</h3>
                       {[
@@ -1450,7 +1414,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                       ))}
                     </div>
                   </div>
-                  {shouldShowChoiceOptions ? (
+                  {false ? (
                     <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
                       <h3 className="font-semibold">{language === "ar" ? "اختر الإجابة الصحيحة" : "Choose the correct answer"}</h3>
                       <div className="mt-3 flex flex-col gap-2">
@@ -1608,7 +1572,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                       </div>
                     </div>
                   ) : null}
-                  {shouldShowChoiceOptions ? (
+                  {false ? (
                     <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
                       <h3 className="font-semibold">{language === "ar" ? "اختر الإجابة الصحيحة" : "Choose the correct answer"}</h3>
                       <div className="mt-3 flex flex-col gap-2">
@@ -1665,6 +1629,68 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                   </span>
                 </div>
                 <p className="text-lg leading-relaxed">{cleanArabicText(step?.instruction || "", language)}</p>
+                {shouldShowPythonOptions ? (
+                  <div className="mt-4 flex flex-col gap-2">
+                    <h3 className="text-base font-semibold">{language === "ar" ? "اختر الإجابة الصحيحة" : "Select the correct answer"}</h3>
+                    {[
+                      language === "ar" ? "رسم صورة على الشاشة" : "Drawing an image on screen",
+                      step?.action?.label ?? "",
+                      language === "ar" ? "تشغيل الكاميرا" : "Turning on the camera",
+                      language === "ar" ? "حذف الملفات" : "Deleting files",
+                    ].map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => setPythonSelectOption(option)}
+                        className={`min-h-11 rounded-sm px-4 text-start text-sm transition-all ${
+                          pythonSelectOption === option
+                            ? "border-2 border-[#2E5C8A] bg-white font-semibold text-[#2E5C8A]"
+                            : "border border-[#D9E6F2] bg-white text-[#495057] hover:bg-[#F8F9FA]"
+                        }`}
+                      >
+                        {cleanArabicText(option, language)}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+                {shouldShowPassword ? (
+                  <div className="mt-4 flex flex-col gap-2">
+                    <h3 className="text-base font-semibold">{labels.passwordTitle}</h3>
+                    {passwordOptions.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => setSelectedPassword(option)}
+                        className={`min-h-11 rounded-sm px-4 text-start font-mono text-sm transition-all ${
+                          selectedPassword === option
+                            ? "border-2 border-[#2E5C8A] bg-white font-semibold text-[#2E5C8A]"
+                            : "border border-[#D9E6F2] bg-white text-[#495057] hover:bg-[#F8F9FA]"
+                        }`}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+                {shouldShowChoiceOptions && !shouldShowPassword ? (
+                  <div className="mt-4 flex flex-col gap-2">
+                    <h3 className="text-base font-semibold">{language === "ar" ? "اختر الإجابة الصحيحة" : "Choose the correct answer"}</h3>
+                    {financeChoiceOptions.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        onClick={() => setSelectedChoice(option)}
+                        className={`min-h-11 rounded-sm px-4 text-start text-sm transition-all ${
+                          selectedChoice === option
+                            ? "border-2 border-[#2E5C8A] bg-white font-semibold text-[#2E5C8A]"
+                            : "border border-[#D9E6F2] bg-white text-[#495057] hover:bg-[#F8F9FA]"
+                        }`}
+                      >
+                        {cleanArabicText(option, language)}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             </div>
             <div className="flex flex-col gap-3">
@@ -1738,30 +1764,6 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                   {labels.nourPrefix} {nourTarget} {labels.nourSuffix}
                 </div>
               ) : null}
-              <div className="rounded-sm border border-[#DEE2E6] bg-white p-3">
-                <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-[#2E5C8A]">
-                  <Trophy size={16} />
-                  {labels.masteryTitle}
-                </div>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {masteryBadges.map((badge) => (
-                    <div
-                      key={badge.label}
-                      className={`flex min-h-12 items-center justify-between gap-3 rounded-sm border px-3 py-2 ${
-                        badge.ready
-                          ? "border-[#2E7D32]/25 bg-[#E8F5E9] text-[#1B5E20]"
-                          : "border-[#FF9800]/25 bg-[#FFF8E1] text-[#6B4E00]"
-                      }`}
-                    >
-                      <span className="flex items-center gap-2 text-sm font-semibold">
-                        {badge.ready ? <CheckCircle size={16} /> : <RefreshCw size={16} />}
-                        {badge.label}
-                      </span>
-                      <span className="rounded-full bg-white/80 px-2 py-1 text-xs font-semibold">{badge.status}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <button

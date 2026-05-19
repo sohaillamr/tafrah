@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { BarChart3, CheckCircle2, ClipboardList, Lightbulb, Plus, UsersRound } from "lucide-react";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import TopBar from "../../components/TopBar";
 import { useLanguage } from "../../components/LanguageProvider";
 
@@ -24,6 +25,10 @@ type Student = {
     unitIndex: number;
     courseSlug: string;
     updatedAt: string;
+  }[];
+  activityLogs: {
+    action: string;
+    createdAt: string;
   }[];
 };
 
@@ -129,6 +134,45 @@ export default function CenterDashboard() {
         invalidEmail: "Check the email format.",
       };
 
+  const analyticsLabels = useMemo(
+    () => isAr
+      ? {
+        insights: "تحليلات المركز",
+        progressByCourse: "التقدم حسب الدورة",
+        activityTrend: "نشاط آخر ٧ أيام",
+        accuracyChart: "دقة الأسئلة والاختبارات",
+        riskView: "احتياج الدعم",
+        activeTime: "وقت النشاط المقدر",
+        quizAccuracy: "دقة الاختبارات",
+        unitsDone: "وحدات مكتملة",
+        attempts: "محاولات",
+        minutes: "دقيقة",
+        activeDays: "أيام نشطة",
+        highSupport: "دعم مرتفع",
+        steady: "مستقر",
+        review: "مراجعة",
+        noChartData: "لا توجد بيانات كافية بعد.",
+      }
+      : {
+        insights: "Center insights",
+        progressByCourse: "Progress by course",
+        activityTrend: "Last 7 days activity",
+        accuracyChart: "Question and quiz accuracy",
+        riskView: "Support needs",
+        activeTime: "Estimated active time",
+        quizAccuracy: "Quiz accuracy",
+        unitsDone: "Completed units",
+        attempts: "Attempts",
+        minutes: "min",
+        activeDays: "active days",
+        highSupport: "High support",
+        steady: "Steady",
+        review: "Review",
+        noChartData: "Not enough data yet.",
+      },
+    [isAr]
+  );
+
   async function fetchData() {
     setLoading(true);
     const [studentsRes, chaptersRes] = await Promise.all([fetch("/api/center/students"), fetch("/api/center/chapters")]);
@@ -176,6 +220,8 @@ export default function CenterDashboard() {
             : "No concerning quiz signal right now. Keep instructions in the same place, order, and language.",
         ];
   }, [students, stats.averageProgress, isAr]);
+
+  const analytics = useMemo(() => buildCenterAnalytics(students, analyticsLabels, isAr), [students, analyticsLabels, isAr]);
 
   async function createStudent(event: React.FormEvent) {
     event.preventDefault();
@@ -250,6 +296,64 @@ export default function CenterDashboard() {
           <Stat icon={<BarChart3 size={18} />} label={labels.active} value={stats.active} />
           <Stat icon={<CheckCircle2 size={18} />} label={labels.completed} value={stats.completed} />
           <Stat icon={<ClipboardList size={18} />} label={labels.average} value={`${stats.averageProgress}%`} />
+        </section>
+
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Stat icon={<BarChart3 size={18} />} label={analyticsLabels.activeTime} value={`${analytics.activeMinutes} ${analyticsLabels.minutes}`} />
+          <Stat icon={<CheckCircle2 size={18} />} label={analyticsLabels.quizAccuracy} value={`${analytics.quizAccuracy}%`} />
+          <Stat icon={<ClipboardList size={18} />} label={analyticsLabels.unitsDone} value={analytics.completedUnits} />
+          <Stat icon={<UsersRound size={18} />} label={analyticsLabels.activeDays} value={analytics.activeDays} />
+        </section>
+
+        <section className="grid gap-4 xl:grid-cols-2">
+          <ChartPanel title={analyticsLabels.progressByCourse} empty={!analytics.courseProgress.length} emptyText={analyticsLabels.noChartData}>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={analytics.courseProgress}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
+                <Tooltip />
+                <Bar dataKey="progress" fill="#2E5C8A" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartPanel>
+
+          <ChartPanel title={analyticsLabels.activityTrend} empty={!analytics.activityTrend.some((item) => item.events > 0)} emptyText={analyticsLabels.noChartData}>
+            <ResponsiveContainer width="100%" height={260}>
+              <AreaChart data={analytics.activityTrend}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                <XAxis dataKey="day" tick={{ fontSize: 12 }} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                <Tooltip />
+                <Area type="monotone" dataKey="events" stroke="#2E5C8A" fill="#D9E6F2" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </ChartPanel>
+
+          <ChartPanel title={analyticsLabels.accuracyChart} empty={!analytics.accuracyData.length} emptyText={analyticsLabels.noChartData}>
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={analytics.accuracyData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} />
+                <Tooltip />
+                <Bar dataKey="accuracy" fill="#2E7D32" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartPanel>
+
+          <ChartPanel title={analyticsLabels.riskView} empty={!analytics.supportNeeds.some((item) => item.value > 0)} emptyText={analyticsLabels.noChartData}>
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart>
+                <Pie data={analytics.supportNeeds} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={4}>
+                  {analytics.supportNeeds.map((entry, index) => (
+                    <Cell key={entry.name} fill={["#2E5C8A", "#FF9800", "#2E7D32"][index % 3]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </ChartPanel>
         </section>
 
         <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -345,6 +449,89 @@ function averageStudentProgress(student: Student) {
     return Math.round((student.progress.filter((item) => item.quizPassed).length / student.progress.length) * 100);
   }
   return 0;
+}
+
+function buildCenterAnalytics(students: Student[], labels: Record<string, string>, isAr: boolean) {
+  const allProgress = students.flatMap((student) => student.progress);
+  const allActivity = students.flatMap((student) => student.activityLogs || []);
+  const completedUnits = allProgress.filter((item) => item.quizPassed).length;
+  const attempts = allProgress.length;
+  const quizAccuracy = attempts ? Math.round((completedUnits / attempts) * 100) : 0;
+  const activeDaysSet = new Set<string>();
+  [...allProgress.map((item) => item.updatedAt), ...allActivity.map((item) => item.createdAt)].forEach((date) => {
+    if (date) activeDaysSet.add(new Date(date).toDateString());
+  });
+  const activeMinutes = Math.max(0, allActivity.length * 8 + allProgress.length * 12);
+
+  const courseMap = new Map<string, { name: string; sum: number; count: number }>();
+  students.forEach((student) => {
+    student.enrollments.forEach((enrollment) => {
+      const existing = courseMap.get(enrollment.course.slug) || {
+        name: decodeMojibake(isAr ? enrollment.course.titleAr : enrollment.course.titleEn),
+        sum: 0,
+        count: 0,
+      };
+      existing.sum += Number(enrollment.progress || 0);
+      existing.count += 1;
+      courseMap.set(enrollment.course.slug, existing);
+    });
+  });
+
+  const courseProgress = Array.from(courseMap.values()).map((item) => ({
+    name: item.name,
+    progress: item.count ? Math.round(item.sum / item.count) : 0,
+  }));
+
+  const now = new Date();
+  const activityTrend = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(now);
+    date.setDate(now.getDate() - (6 - index));
+    const key = date.toDateString();
+    const events =
+      allActivity.filter((item) => new Date(item.createdAt).toDateString() === key).length +
+      allProgress.filter((item) => new Date(item.updatedAt).toDateString() === key).length;
+    return { day: date.toLocaleDateString(undefined, { weekday: "short" }), events };
+  });
+
+  const accuracyData = students
+    .map((student) => {
+      const attempts = student.progress.length;
+      const passed = student.progress.filter((item) => item.quizPassed).length;
+      return {
+        name: student.name.split(" ")[0] || student.name,
+        accuracy: attempts ? Math.round((passed / attempts) * 100) : 0,
+      };
+    })
+    .filter((item) => item.accuracy > 0);
+
+  const highSupport = students.filter((student) => averageStudentProgress(student) < 25).length;
+  const review = students.filter((student) => student.progress.some((item) => item.quizScore !== null && item.quizScore < 3)).length;
+  const steady = Math.max(0, students.length - highSupport - review);
+  const supportNeeds = [
+    { name: labels.highSupport, value: highSupport },
+    { name: labels.review, value: review },
+    { name: labels.steady, value: steady },
+  ];
+
+  return {
+    activeMinutes,
+    quizAccuracy,
+    completedUnits,
+    activeDays: activeDaysSet.size,
+    courseProgress,
+    activityTrend,
+    accuracyData,
+    supportNeeds,
+  };
+}
+
+function ChartPanel({ title, empty, emptyText, children }: { title: string; empty: boolean; emptyText: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-sm border border-[#D9E6F2] bg-white p-4">
+      <h2 className="mb-3 text-lg font-semibold text-[#2E5C8A]">{title}</h2>
+      {empty ? <p className="flex h-[260px] items-center justify-center text-center text-[#6C757D]">{emptyText}</p> : children}
+    </section>
+  );
 }
 
 function lastActivity(student: Student, fallback: string) {

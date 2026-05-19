@@ -38,6 +38,14 @@ interface UserPreferencesState {
   loadPreferences: () => Promise<void>;
 }
 
+function applyPreferenceAttrs(preferences: UiPreferences) {
+  if (typeof document === 'undefined') return;
+  const attrs = preferences.computedAttrs || {};
+  Object.entries(attrs).forEach(([key, value]) => {
+    document.documentElement.setAttribute(key, value);
+  });
+}
+
 export const usePreferencesStore = create<UserPreferencesState>((set) => ({
   category: 'NONE',
   preferences: {},
@@ -48,6 +56,7 @@ export const usePreferencesStore = create<UserPreferencesState>((set) => ({
     const normalized = normalizePreferences(prefs, category);
     if (typeof window !== 'undefined') {
       localStorage.setItem('uiPreferences', JSON.stringify(normalized));
+      applyPreferenceAttrs(normalized);
     }
     set({ category, preferences: normalized, isLoaded: true });
   },
@@ -61,6 +70,7 @@ export const usePreferencesStore = create<UserPreferencesState>((set) => ({
           const preferences = normalizePreferences(user.uiPreferences || {}, category);
           if (typeof window !== 'undefined') {
             localStorage.setItem('uiPreferences', JSON.stringify(preferences));
+            applyPreferenceAttrs(preferences);
           }
           set({
             category,
@@ -72,7 +82,9 @@ export const usePreferencesStore = create<UserPreferencesState>((set) => ({
       }
       const stored = typeof window !== 'undefined' ? localStorage.getItem('uiPreferences') : null;
       if (stored) {
-        set({ preferences: normalizePreferences(JSON.parse(stored)), isLoaded: true });
+        const preferences = normalizePreferences(JSON.parse(stored));
+        applyPreferenceAttrs(preferences);
+        set({ preferences, isLoaded: true });
         return;
       }
       set({ isLoaded: true });

@@ -35,6 +35,11 @@ export async function GET() {
           },
         },
         progress: { select: { quizPassed: true, quizScore: true, unitIndex: true, courseSlug: true, updatedAt: true } },
+        activityLogs: {
+          select: { action: true, createdAt: true },
+          orderBy: { createdAt: "desc" },
+          take: 80,
+        },
       },
       orderBy: { createdAt: "desc" },
     });

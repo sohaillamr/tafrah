@@ -229,7 +229,11 @@ export default function DashboardPage() {
   }
 
   async function savePreference(key: string, value: boolean) {
-    const nextPrefs = { ...preferences, [key]: value };
+    const nextPrefs = {
+      ...preferences,
+      [key]: value,
+      ...(key === "largeText" ? { scale: value ? "large" : "normal" } : {}),
+    };
     setPreferences(nextPrefs as any, category);
     setPrefSaving(true);
     setPrefMessage("");
