@@ -22,6 +22,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Course not available" }, { status: 400 });
     }
 
+    const activeEnrollment = await prisma.enrollment.findFirst({
+      where: {
+        userId: session.userId,
+        completed: false,
+        courseId: { not: courseId },
+      },
+      include: { course: { select: { titleAr: true, titleEn: true, slug: true } } },
+    });
+    if (activeEnrollment) {
+      return NextResponse.json(
+        {
+          error: "Finish your active course before enrolling in another course.",
+          activeCourse: activeEnrollment.course,
+        },
+        { status: 409 }
+      );
+    }
+
     const existing = await prisma.enrollment.findUnique({
       where: { userId_courseId: { userId: session.userId, courseId } },
     });

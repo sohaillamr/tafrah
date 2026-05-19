@@ -3,10 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Award, BookOpen, Brain, CheckCircle2, Flame, HelpCircle, Lock, Sparkles, Trophy } from "lucide-react";
+import { Award, BookOpen, Brain, CheckCircle2, Flame, HelpCircle, Lock, Save, Sparkles, Trophy } from "lucide-react";
 import TopBar from "@/app/components/TopBar";
 import { useLanguage } from "@/app/components/LanguageProvider";
 import { useAuth } from "@/app/components/AuthProvider";
+import { usePreferencesStore } from "@/lib/store/usePreferencesStore";
 
 type Enrollment = {
   id: number;
@@ -23,17 +24,12 @@ type ProgressItem = {
   updatedAt: string;
 };
 
-const practicePrompts = {
-  ar: [
-    "اشرح الفكرة بجملة واحدة.",
-    "اختر مثالا بسيطا من حياتك اليومية.",
-    "ما الخطوة الأولى إذا كررت هذا الدرس غدا؟",
-  ],
-  en: [
-    "Explain the idea in one sentence.",
-    "Choose a simple example from daily life.",
-    "What is the first step if you repeat this module tomorrow?",
-  ],
+type AiPracticeQuestion = {
+  id: string;
+  prompt: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
 };
 
 const decodeMojibake = (value: string) => {
@@ -48,88 +44,99 @@ const decodeMojibake = (value: string) => {
 export default function DashboardPage() {
   const { language } = useLanguage();
   const { user, loading: authLoading } = useAuth();
+  const { preferences, category, setPreferences, loadPreferences } = usePreferencesStore();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [progress, setProgress] = useState<ProgressItem[]>([]);
   const [storedXp, setStoredXp] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [practiceQuestions, setPracticeQuestions] = useState<AiPracticeQuestion[]>([]);
+  const [practiceAnswers, setPracticeAnswers] = useState<Record<string, number>>({});
+  const [practiceFeedback, setPracticeFeedback] = useState<Record<string, string>>({});
+  const [practiceLoading, setPracticeLoading] = useState(false);
+  const [practiceCourseSlug, setPracticeCourseSlug] = useState("");
+  const [prefSaving, setPrefSaving] = useState(false);
+  const [prefMessage, setPrefMessage] = useState("");
   const isAr = language === "ar";
+
   const labels = isAr
     ? {
         title: "لوحة تعلمي",
-        subtitle: "تتبع هادئ وواضح للتقدم، النقاط، والتدريب اليومي.",
+        subtitle: "تتبع هادئ وواضح للتقدم، النقاط، التدريب اليومي، وتفضيلاتك.",
         xp: "نقاط XP",
         completed: "وحدات مكتملة",
         today: "وحدات اليوم",
         dailyLimit: "الحد اليومي",
         limitText: "يمكنك إنهاء وحدتين فقط يوميا للحفاظ على التعلم بدون إجهاد.",
         practice: "أسئلة نور الإضافية",
-        practiceText: "بعد وحدات اليوم، أجب على أسئلة قصيرة لزيادة XP بدون فتح وحدة جديدة.",
+        practiceText: "نور يولد أسئلة من الدورة والوحدة التي تعمل عليها الآن. الإجابة الصحيحة تضيف XP.",
+        generatePractice: "توليد أسئلة نور",
+        generatingPractice: "نور يجهز الأسئلة...",
+        correctAnswer: "إجابة صحيحة. حصلت على XP إضافية.",
+        wrongAnswer: "ليست الإجابة الأفضل. اقرأ التفسير وجرب سؤالا آخر.",
         courses: "دوراتي",
         continue: "متابعة التعلم",
         locked: "تم الوصول للحد اليومي. استخدم أسئلة نور للتدريب.",
         noCourses: "لا توجد دورات بعد.",
         browse: "تصفح الدورات",
         centerOnly: "حساب المركز يستخدم لوحة المركز فقط.",
+        starterPractice: "تدريب تمهيدي",
+        unit: "وحدة",
+        loading: "جاري التحميل...",
+        left: "متبقي",
+        preferences: "تفضيلات التعلم",
+        savePreferences: "حفظ التفضيلات",
+        savingPreferences: "جاري الحفظ...",
+        prefsSaved: "تم حفظ التفضيلات.",
+        mutedColors: "ألوان هادئة",
+        reduceMotion: "تقليل الحركة",
+        ttsEnabled: "قراءة النص المحدد بصوت نور",
+        largeText: "نص أكبر",
+        simplifiedText: "شرح مختصر وخطوات واضحة",
+        largeTargets: "أزرار ومساحات ضغط أكبر",
+        highContrastText: "تباين أعلى للنص",
+        dyslexicFont: "خط أسهل للقراءة",
       }
     : {
         title: "My Learning Dashboard",
-        subtitle: "A calm, clear view of progress, XP, and daily practice.",
+        subtitle: "A calm, clear view of progress, XP, daily practice, and preferences.",
         xp: "XP points",
         completed: "Completed units",
         today: "Units today",
         dailyLimit: "Daily limit",
         limitText: "You can complete two modules per day to keep learning sustainable.",
         practice: "Extra Nour questions",
-        practiceText: "After today's modules, answer short practice questions for more XP without opening a new module.",
+        practiceText: "Nour generates questions from the course and unit you are working on now. Correct answers add XP.",
+        generatePractice: "Generate Nour questions",
+        generatingPractice: "Nour is preparing questions...",
+        correctAnswer: "Correct. Extra XP added.",
+        wrongAnswer: "Not the best answer. Read the explanation and try another question.",
         courses: "My courses",
         continue: "Continue learning",
         locked: "Daily limit reached. Use Nour questions for practice.",
         noCourses: "No courses yet.",
         browse: "Browse courses",
         centerOnly: "Center accounts use the center dashboard only.",
+        starterPractice: "Starter practice",
+        unit: "Unit",
+        loading: "Loading...",
+        left: "left",
+        preferences: "Learning preferences",
+        savePreferences: "Save preferences",
+        savingPreferences: "Saving...",
+        prefsSaved: "Preferences saved.",
+        mutedColors: "Calmer colors",
+        reduceMotion: "Reduce motion",
+        ttsEnabled: "Read selected text with Nour",
+        largeText: "Larger text",
+        simplifiedText: "Shorter explanations and clear steps",
+        largeTargets: "Larger buttons and touch targets",
+        highContrastText: "Higher text contrast",
+        dyslexicFont: "Easier reading font",
       };
-
-  if (isAr) {
-    Object.assign(labels, {
-      title: "لوحة تعلمي",
-      subtitle: "تتبع هادئ وواضح للتقدم، النقاط، والتدريب اليومي.",
-      xp: "نقاط XP",
-      completed: "وحدات مكتملة",
-      today: "وحدات اليوم",
-      dailyLimit: "الحد اليومي",
-      limitText: "يمكنك إنهاء وحدتين فقط يوميا للحفاظ على التعلم بدون إجهاد.",
-      practice: "أسئلة نور الإضافية",
-      practiceText: "بعد وحدات اليوم، أجب على أسئلة قصيرة لزيادة XP بدون فتح وحدة جديدة.",
-      courses: "دوراتي",
-      continue: "متابعة التعلم",
-      locked: "تم الوصول للحد اليومي. استخدم أسئلة نور للتدريب.",
-      noCourses: "لا توجد دورات بعد.",
-      browse: "تصفح الدورات",
-      centerOnly: "حساب المركز يستخدم لوحة المركز فقط.",
-      starterPractice: "تدريب تمهيدي",
-      unit: "وحدة",
-      loading: "جاري التحميل...",
-      left: "متبقي",
-    });
-  }
-  Object.keys(labels).forEach((key) => {
-    const value = labels[key as keyof typeof labels];
-    if (typeof value === "string") {
-      (labels as Record<string, string>)[key] = decodeMojibake(value);
-    }
-  });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const activePracticePrompts = isAr
-    ? ["اشرح الفكرة بجملة واحدة.", "اختر مثالا بسيطا من حياتك اليومية.", "ما الخطوة الأولى إذا كررت هذا الدرس غدا؟"]
-    : practicePrompts.en;
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-    if (user.role === "center_admin") {
+    if (!user || user.role === "center_admin") {
       setLoading(false);
       return;
     }
@@ -166,24 +173,81 @@ export default function DashboardPage() {
   const computedXp = completedUnits.length * 120 + enrollments.filter((item) => item.completed).length * 300 + extraPracticeXp;
   const xp = Math.max(storedXp ?? 0, computedXp);
   const dailyLimitReached = todayCompleted.length >= 2;
-  const recentModules = todayCompleted.slice(-2);
+  const activeEnrollment = enrollments.find((item) => !item.completed) || enrollments[0];
+  const latestModule = completedUnits.slice(-1)[0];
 
-  const practiceCards = useMemo(() => {
-    const source = recentModules.length ? recentModules : completedUnits.slice(-1);
-    return source.flatMap((module) =>
-      activePracticePrompts.map((prompt, index) => ({
-        id: `${module.courseSlug}-${module.unitIndex}-${index}`,
-        title: decodeMojibake(`${module.courseSlug} · ${isAr ? "وحدة" : "Unit"} ${module.unitIndex + 1}`),
-        prompt: decodeMojibake(prompt),
-      }))
-    );
-  }, [recentModules, completedUnits, activePracticePrompts, isAr]);
+  const activeCourseTitle = useMemo(() => {
+    if (!activeEnrollment) return "";
+    return decodeMojibake(isAr ? activeEnrollment.course.titleAr : activeEnrollment.course.titleEn);
+  }, [activeEnrollment, isAr]);
+
+  async function generatePractice() {
+    setPracticeLoading(true);
+    setPracticeFeedback({});
+    const courseSlug = activeEnrollment?.course.slug || latestModule?.courseSlug || "";
+    const unitNumber = latestModule ? latestModule.unitIndex + 1 : 1;
+    const res = await fetch("/api/course-ai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mode: "practice",
+        language,
+        courseSlug,
+        courseTitle: activeCourseTitle || courseSlug,
+        unitNumber,
+        unitTitle: `${labels.unit} ${unitNumber}`,
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setPracticeQuestions(Array.isArray(data.questions) ? data.questions : []);
+    setPracticeCourseSlug(data.courseSlug || courseSlug);
+    setPracticeLoading(false);
+  }
+
+  async function answerPractice(question: AiPracticeQuestion, answerIndex: number) {
+    setPracticeAnswers((prev) => ({ ...prev, [question.id]: answerIndex }));
+    const correct = answerIndex === question.correctIndex;
+    setPracticeFeedback((prev) => ({
+      ...prev,
+      [question.id]: correct ? labels.correctAnswer : `${labels.wrongAnswer} ${question.explanation}`,
+    }));
+    if (correct) {
+      const res = await fetch("/api/course-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "awardPracticeXp",
+          questionId: question.id,
+          correct,
+          courseSlug: practiceCourseSlug,
+          unitNumber: latestModule ? latestModule.unitIndex + 1 : 1,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.awarded) setStoredXp((prev) => (prev ?? xp) + Number(data.xp || 0));
+    }
+  }
+
+  async function savePreference(key: string, value: boolean) {
+    const nextPrefs = { ...preferences, [key]: value };
+    setPreferences(nextPrefs as any, category);
+    setPrefSaving(true);
+    setPrefMessage("");
+    const res = await fetch("/api/users/preferences", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ category, uiPreferences: nextPrefs }),
+    });
+    setPrefSaving(false);
+    setPrefMessage(res.ok ? labels.prefsSaved : "");
+    loadPreferences();
+  }
 
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-[#F8F9FA]">
         <TopBar />
-        <main className="mx-auto max-w-6xl px-6 py-10 text-[#2E5C8A]">{isAr ? "جاري التحميل..." : "Loading..."}</main>
+        <main className="mx-auto max-w-6xl px-6 py-10 text-[#2E5C8A]">{labels.loading}</main>
       </div>
     );
   }
@@ -203,7 +267,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
       <TopBar />
-      <main className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10 text-[#212529]">
+      <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 text-[#212529] sm:px-6 lg:py-10">
         <section>
           <h1 className="text-3xl font-semibold text-[#2E5C8A]">{labels.title}</h1>
           <p className="mt-2 max-w-2xl text-[#495057]">{labels.subtitle}</p>
@@ -213,7 +277,7 @@ export default function DashboardPage() {
           <Stat icon={<Trophy size={20} />} label={labels.xp} value={xp} />
           <Stat icon={<CheckCircle2 size={20} />} label={labels.completed} value={completedUnits.length} />
           <Stat icon={<Flame size={20} />} label={labels.today} value={`${todayCompleted.length}/2`} />
-          <Stat icon={dailyLimitReached ? <Lock size={20} /> : <Award size={20} />} label={labels.dailyLimit} value={dailyLimitReached ? "2/2" : `${2 - todayCompleted.length} left`} />
+          <Stat icon={dailyLimitReached ? <Lock size={20} /> : <Award size={20} />} label={labels.dailyLimit} value={dailyLimitReached ? "2/2" : `${2 - todayCompleted.length} ${labels.left}`} />
         </section>
 
         <section className="rounded-sm border border-[#DEE2E6] bg-white p-5">
@@ -227,22 +291,62 @@ export default function DashboardPage() {
         </section>
 
         <section className="rounded-sm border border-[#DEE2E6] bg-white p-5">
-          <div className="flex items-start gap-3">
-            <Sparkles className="mt-1 text-[#2E5C8A]" size={22} />
-            <div>
-              <h2 className="text-xl font-semibold text-[#2E5C8A]">{labels.practice}</h2>
-              <p className="mt-1 text-[#495057]">{labels.practiceText}</p>
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div className="flex items-start gap-3">
+              <Sparkles className="mt-1 text-[#2E5C8A]" size={22} />
+              <div>
+                <h2 className="text-xl font-semibold text-[#2E5C8A]">{labels.practice}</h2>
+                <p className="mt-1 text-[#495057]">{labels.practiceText}</p>
+              </div>
             </div>
+            <button type="button" onClick={generatePractice} disabled={practiceLoading || !activeEnrollment} className="min-h-11 rounded-sm bg-[#2E5C8A] px-5 font-semibold text-white disabled:opacity-60">
+              {practiceLoading ? labels.generatingPractice : labels.generatePractice}
+            </button>
           </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-3">
-            {(practiceCards.length ? practiceCards : practicePrompts[language].map((prompt, index) => ({ id: `starter-${index}`, title: isAr ? "تدريب تمهيدي" : "Starter practice", prompt }))).map((card) => (
-              <div key={card.id} className="rounded-sm border border-[#D9E6F2] bg-[#F5F9FF] p-4">
-                <div className="flex items-center gap-2 text-sm font-semibold text-[#2E5C8A]"><HelpCircle size={16} /> {card.title}</div>
-                <p className="mt-2 text-[#212529]">{card.prompt}</p>
-                <p className="mt-3 text-sm font-semibold text-[#2E7D32]">+10 XP</p>
+          <div className="mt-4 grid gap-3 lg:grid-cols-3">
+            {practiceQuestions.map((question) => (
+              <div key={question.id} className="rounded-sm border border-[#D9E6F2] bg-[#F5F9FF] p-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-[#2E5C8A]"><HelpCircle size={16} /> {activeCourseTitle || labels.starterPractice}</div>
+                <p className="mt-2 font-semibold text-[#212529]">{question.prompt}</p>
+                <div className="mt-3 flex flex-col gap-2">
+                  {question.options.map((option, index) => {
+                    const selected = practiceAnswers[question.id] === index;
+                    return (
+                      <button key={option} type="button" onClick={() => answerPractice(question, index)} className={`min-h-10 rounded-sm border px-3 text-start text-sm ${selected ? "border-[#2E5C8A] bg-white font-semibold text-[#2E5C8A]" : "border-[#D9E6F2] bg-white text-[#212529]"}`}>
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+                {practiceFeedback[question.id] ? <p className="mt-3 rounded-sm bg-white p-2 text-sm">{practiceFeedback[question.id]}</p> : null}
               </div>
             ))}
           </div>
+        </section>
+
+        <section className="rounded-sm border border-[#DEE2E6] bg-white p-5">
+          <div className="mb-4 flex items-center gap-2">
+            <Save className="text-[#2E5C8A]" size={20} />
+            <h2 className="text-xl font-semibold text-[#2E5C8A]">{labels.preferences}</h2>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {[
+              ["mutedColors", labels.mutedColors],
+              ["reduceMotion", labels.reduceMotion],
+              ["ttsEnabled", labels.ttsEnabled],
+              ["largeText", labels.largeText],
+              ["simplifiedText", labels.simplifiedText],
+              ["largeTargets", labels.largeTargets],
+              ["highContrastText", labels.highContrastText],
+              ["dyslexicFont", labels.dyslexicFont],
+            ].map(([key, label]) => (
+              <label key={key} className="flex min-h-12 items-center justify-between gap-3 rounded-sm border border-[#D9E6F2] bg-[#F5F9FF] px-4">
+                <span>{label}</span>
+                <input type="checkbox" checked={Boolean((preferences as Record<string, unknown>)?.[key])} onChange={(event) => savePreference(key, event.target.checked)} />
+              </label>
+            ))}
+          </div>
+          <p className="mt-3 text-sm text-[#6C757D]">{prefSaving ? labels.savingPreferences : prefMessage}</p>
         </section>
 
         <section className="rounded-sm border border-[#DEE2E6] bg-white p-5">

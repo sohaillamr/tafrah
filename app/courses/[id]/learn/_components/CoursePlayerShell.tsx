@@ -603,6 +603,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const [codeValue, setCodeValue] = useState("");
   const [codeOutput, setCodeOutput] = useState("");
   const [pythonSelectOption, setPythonSelectOption] = useState("");
+  const [isExplaining, setIsExplaining] = useState(false);
   const labels =
     language === "ar"
       ? {
@@ -1289,6 +1290,36 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     setQuizAnswers({});
     setQuizSubmitted(false);
     setQuizScore(0);
+  };
+
+  const requestCourseExplanation = async (tone: "detailed" | "simple" = "detailed") => {
+    if (!step) return;
+    setIsExplaining(true);
+    setNourHelp("");
+    try {
+      const res = await fetch("/api/course-ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: "explain",
+          language,
+          courseSlug: courseKey,
+          courseTitle: courseKey,
+          unitNumber,
+          unitTitle: cleanArabicText(unitTitle, language),
+          chapterTitle: cleanArabicText(step.chapterTitle, language),
+          instruction: cleanArabicText(step.instruction, language),
+          tone,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "course_ai_failed");
+      setNourHelp(data.explanation || labels.nourHelp);
+    } catch {
+      setNourHelp(language === "ar" ? "تعذر تشغيل شرح نور الآن. حاول مرة أخرى بعد لحظة." : "Nour could not explain this right now. Please try again in a moment.");
+    } finally {
+      setIsExplaining(false);
+    }
   };
 
   const handleStartChallenge = () => {
@@ -2102,29 +2133,24 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
               </div>
             </div>
             <div className="flex flex-col gap-3">
+              <button
+                type="button"
+                disabled={isExplaining}
+                onClick={() => requestCourseExplanation("detailed")}
+                className="min-h-11 rounded-xl border-2 border-[#2E5C8A]/30 bg-white px-4 font-semibold text-[#2E5C8A] hover:border-[#2E5C8A]/50 hover:bg-[#F5F9FF] transition-all"
+              >
+                <span className="flex items-center justify-center gap-2">
+                  {isExplaining ? <Loader2 size={18} className="animate-spin text-[#2E5C8A]" /> : <Bot size={18} className="text-[#2E5C8A]" />}
+                  {language === "ar" ? "لا أفهم، اشرحها لي بالتفصيل" : "I don't understand. Explain this in detail"}
+                </span>
+              </button>
               {(userCategory === 'LEARNING_HARDENING' || preferences?.simplifiedText) && (
                 <button
                   type="button"
-                  disabled={isSummarizing}
+                  disabled={isSummarizing || isExplaining}
                   onClick={async () => {
                     setIsSummarizing(true);
-                    try {
-                      const res = await fetch("/api/assistant", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          messages: [{ role: "user", content: `Please provide a simple, 1-2 sentence summary of this instruction. Keep it extremely basic for someone with learning difficulties without complicated jargon: "${step?.instruction}"` }]
-                        })
-                      });
-                      if (res.ok) {
-                        const data = await res.json();
-                        setNourHelp(data.reply);
-                      } else {
-                        setNourHelp("I'm sorry, I couldn't summarize that right now.");
-                      }
-                    } catch (e) {
-                      setNourHelp("Connection failed. Try again.");
-                    }
+                    await requestCourseExplanation("simple");
                     setIsSummarizing(false);
                   }}
                   className="min-h-11 rounded-xl border-2 border-dashed border-teal-500/30 bg-teal-50 px-4 font-medium text-teal-700 hover:border-teal-500/50 hover:bg-teal-100 transition-all text-left"

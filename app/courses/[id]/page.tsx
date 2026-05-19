@@ -258,6 +258,7 @@ export default function CourseDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
+  const [enrollError, setEnrollError] = useState("");
   const { language } = useLanguage();
 
   const courseSlug = useMemo(() => {
@@ -418,6 +419,7 @@ export default function CourseDetailsPage() {
       return;
     }
     setEnrolling(true);
+    setEnrollError("");
     try {
       const res = await fetch("/api/enrollments", {
         method: "POST",
@@ -427,9 +429,17 @@ export default function CourseDetailsPage() {
       if (res.ok) {
         setIsEnrolled(true);
         router.push(`/courses/${course.slug}/learn`);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setEnrollError(
+          data.error ||
+            (language === "ar"
+              ? "لا يمكن الاشتراك الآن. أكمل دورتك الحالية أولا."
+              : "You cannot enroll right now. Finish your active course first.")
+        );
       }
     } catch {
-      // silent
+      setEnrollError(language === "ar" ? "حدث خطأ في الاشتراك. حاول مرة أخرى." : "Enrollment failed. Please try again.");
     } finally {
       setEnrolling(false);
     }
@@ -524,6 +534,9 @@ export default function CourseDetailsPage() {
               ? labels.loginToEnroll
               : labels.enroll}
           </button>
+          {enrollError ? (
+            <p className="rounded-xl border border-[#FF9800]/30 bg-[#FFF3E0] p-3 text-sm text-[#212529]">{enrollError}</p>
+          ) : null}
           </div>
         </section>
 
