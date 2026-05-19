@@ -60,7 +60,6 @@ export default function Footer() {
         <div className="flex flex-col gap-3">
           <Link href="/" className="flex w-fit items-center gap-3">
             <Image src="/logo.png" alt={labels.brand} width={44} height={44} className="h-11 w-11 rounded-sm object-contain" />
-            <span className="text-xl font-bold text-[#2E5C8A]">{labels.brand}</span>
           </Link>
           <p className="max-w-md leading-relaxed text-[#495057]">{labels.tagline}</p>
           <p className="text-sm font-semibold text-[#2E5C8A]">{labels.note}</p>
