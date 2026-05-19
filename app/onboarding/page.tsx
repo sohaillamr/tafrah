@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import TopBar from "../components/TopBar";
 import { useLanguage } from "../components/LanguageProvider";
 import { usePreferencesStore } from "@/lib/store/usePreferencesStore";
+import { normalizePreferences } from "@/lib/preferences";
 
 type Prefs = {
   mutedColors: boolean;
@@ -73,18 +74,10 @@ export default function OnboardingWizard() {
   async function save() {
     setSaving(true);
     setError("");
-    const uiPreferences = {
+    const uiPreferences = normalizePreferences({
       ...prefs,
       highContrast: prefs.highContrastText,
-      scale: prefs.largeText ? "large" : "normal",
-      density: prefs.simplifiedText ? "spaced" : "normal",
-      computedAttrs: {
-        "data-profile": "autism",
-        "data-theme": prefs.highContrastText ? "high-contrast" : prefs.mutedColors ? "muted" : "pastel",
-        "data-density": prefs.simplifiedText ? "spaced" : "normal",
-        "data-scale": prefs.largeText ? "large" : "normal",
-      },
-    };
+    }, "AUTISM");
     const res = await fetch("/api/user/onboarding", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -99,7 +92,7 @@ export default function OnboardingWizard() {
       return;
     }
     localStorage.setItem("uiPreferences", JSON.stringify(uiPreferences));
-    setPreferences(uiPreferences);
+    setPreferences(uiPreferences, "AUTISM");
     document.cookie = "tafrah_onboarded=true; path=/; max-age=31536000; samesite=lax";
     router.replace("/dashboard");
     router.refresh();

@@ -40,17 +40,17 @@ export default function CourseList({ courses, language, user }: { courses: Cours
 
             <div className="mt-auto pt-4 flex items-center justify-between border-t border-green-500/20 text-sm">
               <span className="text-green-500/60 uppercase tracking-wider">{course.difficulty}</span>
-              <span className="text-green-500/60">{course.hours} {language === "ar" ? "Ø³Ø§Ø¹Ø©" : "hours"}</span>
+              <span className="text-green-500/60">{course.hours} {language === "ar" ? "ساعة" : "hours"}</span>
             </div>
 
             {user ? (
                <Link href={`/courses/${course.slug}`} className="block w-full bg-green-500/10 hover:bg-green-500/30 border border-green-500/50 text-center py-2 mt-2 rounded transition-colors text-green-300 font-bold uppercase tracking-widest">
-                  {language === "ar" ? "Ø¹Ø±Ø¶ Ø§Ù„Ø¯ÙˆØ±Ø©" : "View Course"}
+                  {language === "ar" ? "عرض الدورة" : "View Course"}
                </Link>
             ) : (
                <div className="flex items-center justify-center gap-2 w-full bg-black border border-green-500/20 text-green-600 py-2 mt-2 rounded uppercase tracking-widest text-sm">
                   <Lock className="w-4 h-4" />
-                  {language === "ar" ? "ÙŠØ¬Ø¨ ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„" : "Login Required"}
+                  {language === "ar" ? "يجب تسجيل الدخول" : "Login Required"}
                </div>
             )}
           </div>

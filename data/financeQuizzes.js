@@ -1,33 +1,373 @@
-﻿export const financeQuizzes = {
+export const financeQuizzes = {
   1: {
-    passingScore: 2,
+    passingScore: 3,
     questions: [
-      { id: "fq_1_1", text: "ما هي الأصول؟", textEn: "What are Assets?", options: [{id: "b", text: "الأشياء التي تملكها الشركة", textEn: "Things the company owns"}, {id: "a", text: "الديون", textEn: "Debts"}], correct: "b"},
-      { id: "fq_1_2", text: "ما معادلة المحاسبة؟", textEn: "Equation?", options: [{id: "a", text: "الأصول = الخصوم + حقوق الملكية", textEn: "Assets = Lia + Eq"}, {id: "b", text: "الأرباح", textEn: "Profit"}], correct: "a"}
-    ]
+      {
+        id: "fq_1_1",
+        text: "ما أفضل تعريف للأصول؟",
+        textEn: "What is the best definition of assets?",
+        options: [
+          { id: "a", text: "أشياء تملكها المنشأة ولها قيمة", textEn: "Things the business owns that have value" },
+          { id: "b", text: "كل مبلغ يجب دفعه للآخرين", textEn: "Every amount owed to others" },
+          { id: "c", text: "رأي شخصي عن المال", textEn: "A personal opinion about money" },
+          { id: "d", text: "لون يستخدم في التقرير", textEn: "A color used in a report" },
+        ],
+        correct: "a",
+      },
+      {
+        id: "fq_1_2",
+        text: "ما شكل معادلة المحاسبة الأساسية؟",
+        textEn: "What is the basic accounting equation?",
+        options: [
+          { id: "a", text: "الأصول = الخصوم + حقوق الملكية", textEn: "Assets = Liabilities + Equity" },
+          { id: "b", text: "الأرباح = الألوان + الوقت", textEn: "Profit = colors + time" },
+          { id: "c", text: "الخصوم = الإيرادات فقط", textEn: "Liabilities = revenue only" },
+          { id: "d", text: "المصروفات = أسماء الموظفين", textEn: "Expenses = employee names" },
+        ],
+        correct: "a",
+      },
+      {
+        id: "fq_1_3",
+        text: "إذا اشترت الشركة جهازا للعمل، فما التصنيف الأقرب؟",
+        textEn: "If a company buys a laptop for work, what is the closest classification?",
+        options: [
+          { id: "a", text: "أصل لأنه مملوك وله قيمة", textEn: "Asset because it is owned and has value" },
+          { id: "b", text: "خصم لأنه جهاز إلكتروني", textEn: "Liability because it is electronic" },
+          { id: "c", text: "إيراد لأنه يساعد على العمل", textEn: "Revenue because it helps work" },
+          { id: "d", text: "لا يسجل أبدا", textEn: "It is never recorded" },
+        ],
+        correct: "a",
+      },
+      {
+        id: "fq_1_4",
+        text: "لماذا نستخدم شجرة الحسابات؟",
+        textEn: "Why do we use a chart of accounts?",
+        options: [
+          { id: "a", text: "لتصنيف الحسابات بطريقة ثابتة", textEn: "To classify accounts in a consistent way" },
+          { id: "b", text: "لتغيير معنى الأرقام كل يوم", textEn: "To change number meanings every day" },
+          { id: "c", text: "لتجنب المراجعة", textEn: "To avoid review" },
+          { id: "d", text: "لاختيار شكل الخط فقط", textEn: "Only to choose a font style" },
+        ],
+        correct: "a",
+      },
+    ],
   },
-  2: { passingScore: 1, questions: [{ id: "fq_2_1", text: "الغرض من قيود اليومية؟", textEn: "Purpose of Journal Entries?", options: [{id: "a", text: "تسجيل خطوة بخطوة مباشر", textEn: "Record step by step"}, {id: "b", text: "الأرباح", textEn: "Profit"}], correct: "a"}] },
-  3: { passingScore: 1, questions: [{ id: "fq_3_1", text: "ما هي قائمة الدخل؟", textEn: "Income Statement?", options: [{id: "c", text: "توضح الأرباح", textEn: "Shows profit"}, {id: "a", text: "الديون", textEn: "Debts"}], correct: "c"}] },
-  4: { passingScore: 1, questions: [{ id: "fq_4_1", text: "Dynamics 365?", textEn: "Why ERP?", options: [{id: "a", text: "أتمتة العمليات", textEn: "Automate"}, {id: "b", text: "النوم", textEn: "Sleep"}], correct: "a"}] },
-  5: {
-    passingScore: 2,
+  2: {
+    passingScore: 3,
     questions: [
-      { id: "fq_5_1", text: "ما أفضل طريقة لقراءة التقرير المالي؟", textEn: "What is the best way to read a financial report?", options: [{id: "a", text: "خطوة واحدة في كل مرة", textEn: "One step at a time"}, {id: "b", text: "كل الأرقام مرة واحدة", textEn: "All numbers at once"}], correct: "a" },
-      { id: "fq_5_2", text: "ما وظيفة المؤشر المالي؟", textEn: "What does a financial indicator help with?", options: [{id: "a", text: "ملاحظة نمط في الأرقام", textEn: "Notice a pattern in numbers"}, {id: "b", text: "إخفاء الأخطاء", textEn: "Hide mistakes"}], correct: "a" }
-    ]
+      {
+        id: "fq_2_1",
+        text: "ما الغرض من قيد اليومية؟",
+        textEn: "What is the purpose of a journal entry?",
+        options: [
+          { id: "a", text: "تسجيل المعاملة بالترتيب الزمني", textEn: "Record a transaction in time order" },
+          { id: "b", text: "إخفاء تفاصيل المعاملة", textEn: "Hide transaction details" },
+          { id: "c", text: "تلوين الجدول فقط", textEn: "Only color the table" },
+          { id: "d", text: "حساب الرواتب فقط", textEn: "Only calculate salaries" },
+        ],
+        correct: "a",
+      },
+      {
+        id: "fq_2_2",
+        text: "إذا زادت الأصول، أين تسجل غالبا؟",
+        textEn: "When assets increase, where are they usually recorded?",
+        options: [
+          { id: "a", text: "في الجانب المدين", textEn: "On the debit side" },
+          { id: "b", text: "في الجانب الدائن دائما", textEn: "Always on the credit side" },
+          { id: "c", text: "في عنوان الملف", textEn: "In the file title" },
+          { id: "d", text: "لا تسجل", textEn: "They are not recorded" },
+        ],
+        correct: "a",
+      },
+      {
+        id: "fq_2_3",
+        text: "ما وظيفة دفتر الأستاذ؟",
+        textEn: "What does the ledger do?",
+        options: [
+          { id: "a", text: "يجمع حركة كل حساب في مكان واحد", textEn: "Groups activity for each account in one place" },
+          { id: "b", text: "يعرض الصور فقط", textEn: "Only shows images" },
+          { id: "c", text: "يستبدل كل المستندات القانونية", textEn: "Replaces all legal documents" },
+          { id: "d", text: "يحذف القيود القديمة", textEn: "Deletes old entries" },
+        ],
+        correct: "a",
+      },
+      {
+        id: "fq_2_4",
+        text: "إذا لم يتساو ميزان المراجعة، ما التصرف الصحيح؟",
+        textEn: "If the trial balance does not balance, what should happen?",
+        options: [
+          { id: "a", text: "نراجع القيود ونبحث عن الخطأ", textEn: "Review entries and look for the error" },
+          { id: "b", text: "نعتبره صحيحا", textEn: "Treat it as correct" },
+          { id: "c", text: "نحذف كل الحسابات", textEn: "Delete all accounts" },
+          { id: "d", text: "نغير اسم الشركة", textEn: "Change the company name" },
+        ],
+        correct: "a",
+      },
+    ],
+  },
+  3: {
+    passingScore: 3,
+    questions: [
+      {
+        id: "fq_3_1",
+        text: "ماذا توضح قائمة الدخل؟",
+        textEn: "What does an income statement show?",
+        options: [
+          { id: "a", text: "الإيرادات والمصروفات والربح أو الخسارة", textEn: "Revenue, expenses, and profit or loss" },
+          { id: "b", text: "كلمات المرور", textEn: "Passwords" },
+          { id: "c", text: "ألوان الشعار", textEn: "Logo colors" },
+          { id: "d", text: "أسماء الملفات فقط", textEn: "Only file names" },
+        ],
+        correct: "a",
+      },
+      {
+        id: "fq_3_2",
+        text: "ما الفرق الأساسي بين قائمة الدخل والميزانية العمومية؟",
+        textEn: "What is the core difference between income statement and balance sheet?",
+        options: [
+          { id: "a", text: "قائمة الدخل لفترة، والميزانية ليوم محدد", textEn: "Income statement covers a period; balance sheet is a point in time" },
+          { id: "b", text: "لا يوجد أي فرق", textEn: "There is no difference" },
+          { id: "c", text: "الميزانية تعرض الألوان فقط", textEn: "Balance sheet only shows colors" },
+          { id: "d", text: "قائمة الدخل تستخدم للأسماء فقط", textEn: "Income statement is only for names" },
+        ],
+        correct: "a",
+      },
+      {
+        id: "fq_3_3",
+        text: "متى يظهر النقد في قائمة التدفقات النقدية؟",
+        textEn: "When does cash appear in a cash flow statement?",
+        options: [
+          { id: "a", text: "عند دخول أو خروج نقد فعلي", textEn: "When actual cash comes in or goes out" },
+          { id: "b", text: "عند كتابة وعد فقط", textEn: "When only a promise is written" },
+          { id: "c", text: "عند تغيير لون الجدول", textEn: "When table color changes" },
+          { id: "d", text: "دائما بدون سبب", textEn: "Always without a reason" },
+        ],
+        correct: "a",
+      },
+      {
+        id: "fq_3_4",
+        text: "الأرباح المحتجزة تساعد الشركة على ماذا؟",
+        textEn: "Retained earnings help a company do what?",
+        options: [
+          { id: "a", text: "تمويل النمو أو الاستثمار", textEn: "Fund growth or reinvestment" },
+          { id: "b", text: "إلغاء الحسابات", textEn: "Cancel accounts" },
+          { id: "c", text: "تجنب التقارير", textEn: "Avoid reports" },
+          { id: "d", text: "تغيير كلمة المرور", textEn: "Change a password" },
+        ],
+        correct: "a",
+      },
+    ],
+  },
+  4: {
+    passingScore: 3,
+    questions: [
+      {
+        id: "fq_4_1",
+        text: "ما الفائدة الأساسية من ERP؟",
+        textEn: "What is the main benefit of ERP?",
+        options: [
+          { id: "a", text: "ربط الأقسام في مصدر بيانات واحد", textEn: "Connect departments to one data source" },
+          { id: "b", text: "جعل البيانات أقل وضوحا", textEn: "Make data less clear" },
+          { id: "c", text: "منع المراجعة", textEn: "Prevent review" },
+          { id: "d", text: "استبدال كل التعلم", textEn: "Replace all learning" },
+        ],
+        correct: "a",
+      },
+      {
+        id: "fq_4_2",
+        text: "ما هو Dynamics 365 Finance؟",
+        textEn: "What is Dynamics 365 Finance?",
+        options: [
+          { id: "a", text: "نظام من مايكروسوفت لإدارة العمليات المالية", textEn: "A Microsoft system for managing finance operations" },
+          { id: "b", text: "لعبة تعليمية فقط", textEn: "Only an educational game" },
+          { id: "c", text: "نوع من الخطوط", textEn: "A font type" },
+          { id: "d", text: "ملف PDF ثابت", textEn: "A static PDF file" },
+        ],
+        correct: "a",
+      },
+      {
+        id: "fq_4_3",
+        text: "هل يلغي ERP الحاجة إلى Excel تماما؟",
+        textEn: "Does ERP remove the need for Excel completely?",
+        options: [
+          { id: "a", text: "لا، قد يستخدم Excel للتحليل والمراجعة", textEn: "No, Excel can still support analysis and review" },
+          { id: "b", text: "نعم، لا نراجع أي شيء", textEn: "Yes, we never review anything" },
+          { id: "c", text: "نعم، لأنه يكتب البريد", textEn: "Yes, because it writes email" },
+          { id: "d", text: "لا علاقة له بالمال", textEn: "It has no relation to finance" },
+        ],
+        correct: "a",
+      },
+      {
+        id: "fq_4_4",
+        text: "ما معنى مصدر واحد للحقيقة في الأنظمة؟",
+        textEn: "What does single source of truth mean in systems?",
+        options: [
+          { id: "a", text: "كل الأقسام تعتمد على نفس البيانات الموثوقة", textEn: "Departments rely on the same trusted data" },
+          { id: "b", text: "كل شخص يخمن رقما", textEn: "Each person guesses a number" },
+          { id: "c", text: "البيانات تحفظ بلا ترتيب", textEn: "Data is stored without order" },
+          { id: "d", text: "الملفات لا تفتح", textEn: "Files do not open" },
+        ],
+        correct: "a",
+      },
+    ],
+  },
+  5: {
+    passingScore: 3,
+    questions: [
+      {
+        id: "fq_5_1",
+        text: "ما أفضل طريقة لقراءة تقرير مالي؟",
+        textEn: "What is the best way to read a financial report?",
+        options: [
+          { id: "a", text: "خطوة واحدة في كل مرة", textEn: "One step at a time" },
+          { id: "b", text: "كل الأرقام دفعة واحدة", textEn: "All numbers at once" },
+          { id: "c", text: "قراءة العنوان فقط", textEn: "Read the title only" },
+          { id: "d", text: "تجاهل المصدر", textEn: "Ignore the source" },
+        ],
+        correct: "a",
+      },
+      {
+        id: "fq_5_2",
+        text: "ما وظيفة المؤشر المالي البسيط؟",
+        textEn: "What does a simple financial indicator do?",
+        options: [
+          { id: "a", text: "يساعدنا على ملاحظة نمط في الأرقام", textEn: "Helps us notice a pattern in numbers" },
+          { id: "b", text: "يخفي الأخطاء", textEn: "Hides mistakes" },
+          { id: "c", text: "يغير اللغة", textEn: "Changes the language" },
+          { id: "d", text: "يحذف التقرير", textEn: "Deletes the report" },
+        ],
+        correct: "a",
+      },
+      {
+        id: "fq_5_3",
+        text: "عند قراءة الإيرادات، ما السؤال الهادئ المناسب؟",
+        textEn: "When reading revenue, what calm question helps?",
+        options: [
+          { id: "a", text: "ما الذي دخل إلى الشركة؟", textEn: "What came into the business?" },
+          { id: "b", text: "ما لون الجدول؟", textEn: "What color is the table?" },
+          { id: "c", text: "من كتب الاسم؟", textEn: "Who wrote the name?" },
+          { id: "d", text: "هل نغلق الملف؟", textEn: "Should we close the file?" },
+        ],
+        correct: "a",
+      },
+      {
+        id: "fq_5_4",
+        text: "ما الذي نفعله إذا كان رقم في التقرير غير واضح؟",
+        textEn: "What should we do if a report number is unclear?",
+        options: [
+          { id: "a", text: "نرجع للمصدر أو نسأل قبل القرار", textEn: "Return to the source or ask before deciding" },
+          { id: "b", text: "نخمن بسرعة", textEn: "Guess quickly" },
+          { id: "c", text: "نتركه بلا مراجعة", textEn: "Leave it without review" },
+          { id: "d", text: "نغير كل الأرقام", textEn: "Change all numbers" },
+        ],
+        correct: "a",
+      },
+    ],
   },
   6: {
-    passingScore: 2,
+    passingScore: 3,
     questions: [
-      { id: "fq_6_1", text: "ما معنى الميزانية؟", textEn: "What is a budget?", options: [{id: "a", text: "خطة للدخل والمصروفات", textEn: "A plan for income and expenses"}, {id: "b", text: "قائمة أسماء فقط", textEn: "Only a list of names"}], correct: "a" },
-      { id: "fq_6_2", text: "أي مصروفات نبدأ بها؟", textEn: "Which expenses do we start with?", options: [{id: "a", text: "المصروفات الأساسية", textEn: "Essential expenses"}, {id: "b", text: "المصروفات الاختيارية", textEn: "Optional expenses"}], correct: "a" }
-    ]
+      {
+        id: "fq_6_1",
+        text: "ما معنى الميزانية؟",
+        textEn: "What is a budget?",
+        options: [
+          { id: "a", text: "خطة للدخل والمصروفات", textEn: "A plan for income and expenses" },
+          { id: "b", text: "قائمة أسماء فقط", textEn: "Only a list of names" },
+          { id: "c", text: "صورة للفاتورة", textEn: "A picture of an invoice" },
+          { id: "d", text: "كلمة مرور", textEn: "A password" },
+        ],
+        correct: "a",
+      },
+      {
+        id: "fq_6_2",
+        text: "أي مصروفات نبدأ بها عند التخطيط؟",
+        textEn: "Which expenses do we start with when planning?",
+        options: [
+          { id: "a", text: "المصروفات الأساسية", textEn: "Essential expenses" },
+          { id: "b", text: "المصروفات الاختيارية", textEn: "Optional expenses" },
+          { id: "c", text: "الألوان", textEn: "Colors" },
+          { id: "d", text: "العناوين فقط", textEn: "Titles only" },
+        ],
+        correct: "a",
+      },
+      {
+        id: "fq_6_3",
+        text: "ما فائدة توقع المتبقي؟",
+        textEn: "Why estimate the remaining amount?",
+        options: [
+          { id: "a", text: "لنرى هل الخطة متوازنة أم تحتاج تعديل", textEn: "To see if the plan balances or needs adjustment" },
+          { id: "b", text: "لنمنع كتابة الأرقام", textEn: "To prevent writing numbers" },
+          { id: "c", text: "لا توجد فائدة", textEn: "There is no benefit" },
+          { id: "d", text: "لتغيير اسم الدورة", textEn: "To change the course name" },
+        ],
+        correct: "a",
+      },
+      {
+        id: "fq_6_4",
+        text: "إذا زادت المصروفات عن الدخل، ما التصرف المناسب؟",
+        textEn: "If expenses are higher than income, what is a useful action?",
+        options: [
+          { id: "a", text: "نراجع البنود ونخفض غير الضروري", textEn: "Review items and reduce non-essential costs" },
+          { id: "b", text: "نتجاهل الفرق", textEn: "Ignore the difference" },
+          { id: "c", text: "نحذف الدخل", textEn: "Delete income" },
+          { id: "d", text: "نعتبرها أرباحا", textEn: "Call it profit" },
+        ],
+        correct: "a",
+      },
+    ],
   },
   7: {
-    passingScore: 2,
+    passingScore: 3,
     questions: [
-      { id: "fq_7_1", text: "ما حجم المشروع المناسب للتدريب؟", textEn: "What project size is best for practice?", options: [{id: "a", text: "مشروع صغير وواضح", textEn: "A small clear project"}, {id: "b", text: "مشروع ضخم ومعقد", textEn: "A huge complex project"}], correct: "a" },
-      { id: "fq_7_2", text: "ما الأرقام الثلاثة في المشروع؟", textEn: "What are the three project numbers?", options: [{id: "a", text: "الإيرادات والمصروفات والنتيجة", textEn: "Revenue, expenses, and result"}, {id: "b", text: "الأسماء والألوان والوقت", textEn: "Names, colors, and time"}], correct: "a" }
-    ]
-  }
+      {
+        id: "fq_7_1",
+        text: "ما حجم المشروع المناسب للتدريب النهائي؟",
+        textEn: "What project size is best for final practice?",
+        options: [
+          { id: "a", text: "مشروع صغير وواضح", textEn: "A small clear project" },
+          { id: "b", text: "مشروع ضخم ومعقد", textEn: "A huge complex project" },
+          { id: "c", text: "مشروع بلا أرقام", textEn: "A project without numbers" },
+          { id: "d", text: "مشروع بلا مراجعة", textEn: "A project without review" },
+        ],
+        correct: "a",
+      },
+      {
+        id: "fq_7_2",
+        text: "ما الأرقام الثلاثة الأساسية في المشروع؟",
+        textEn: "What are the three key numbers in the project?",
+        options: [
+          { id: "a", text: "الإيرادات والمصروفات والنتيجة", textEn: "Revenue, expenses, and result" },
+          { id: "b", text: "الأسماء والألوان والوقت", textEn: "Names, colors, and time" },
+          { id: "c", text: "كلمات المرور والملاحظات", textEn: "Passwords and notes" },
+          { id: "d", text: "العناوين فقط", textEn: "Titles only" },
+        ],
+        correct: "a",
+      },
+      {
+        id: "fq_7_3",
+        text: "قبل عرض النتيجة، ما خطوة المراجعة الأهم؟",
+        textEn: "Before presenting the result, what review step matters most?",
+        options: [
+          { id: "a", text: "التأكد أن كل رقم له مصدر", textEn: "Check that every number has a source" },
+          { id: "b", text: "إضافة ألوان كثيرة", textEn: "Add many colors" },
+          { id: "c", text: "حذف المصروفات", textEn: "Delete expenses" },
+          { id: "d", text: "تغيير اللغة عشوائيا", textEn: "Randomly change language" },
+        ],
+        correct: "a",
+      },
+      {
+        id: "fq_7_4",
+        text: "ما الجملة المناسبة لشرح النتيجة؟",
+        textEn: "What is a useful sentence for explaining the result?",
+        options: [
+          { id: "a", text: "الدخل ناقص المصروفات يساوي النتيجة", textEn: "Income minus expenses equals the result" },
+          { id: "b", text: "الأرقام لا تحتاج معنى", textEn: "Numbers do not need meaning" },
+          { id: "c", text: "كل نتيجة صحيحة", textEn: "Every result is correct" },
+          { id: "d", text: "لا نذكر المصدر", textEn: "Do not mention the source" },
+        ],
+        correct: "a",
+      },
+    ],
+  },
 };

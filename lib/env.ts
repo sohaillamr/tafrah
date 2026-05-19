@@ -10,7 +10,9 @@ export function validateEnv() {
   const missing = requiredVars.filter((v) => !process.env[v]);
   if (missing.length > 0) {
     const message = `[TAFRAH] Missing environment variables: ${missing.join(", ")}`;
-    // Skip throwing during build completely to allow static traversal
+    if (process.env.NODE_ENV === "production" && process.env.NEXT_PHASE !== "phase-production-build") {
+      throw new Error(message);
+    }
     console.warn(message);
   }
 

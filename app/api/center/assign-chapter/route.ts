@@ -11,13 +11,16 @@ export async function POST(request: Request) {
     const centerUser = await prisma.user.findUnique({ where: { id: session.userId }, select: { centerId: true } });
     if (!centerUser?.centerId) return NextResponse.json({ error: "No center associated" }, { status: 400 });
     const { studentIds, chapterId } = await request.json();
-    if (!Array.isArray(studentIds) || !chapterId) {
+    const normalizedStudentIds = Array.isArray(studentIds)
+      ? studentIds.map(Number).filter((id) => Number.isInteger(id) && id > 0)
+      : [];
+    if (normalizedStudentIds.length === 0 || !chapterId) {
       return NextResponse.json({ error: "studentIds and chapterId required" }, { status: 400 });
     }
     const chapter = await prisma.chapter.findFirst({ where: { id: Number(chapterId), centerId: centerUser.centerId } });
     if (!chapter) return NextResponse.json({ error: "Chapter not found" }, { status: 404 });
     await prisma.user.updateMany({
-      where: { id: { in: studentIds.map(Number) }, centerId: centerUser.centerId, role: "student" },
+      where: { id: { in: normalizedStudentIds }, centerId: centerUser.centerId, role: "student" },
       data: { chapterId: chapter.id },
     });
     return NextResponse.json({ ok: true });

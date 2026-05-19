@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { email, password, name, phone, role, quizScore, centerName, centerLocation, licenseKey, centerId } = body;
+    const { email, password, name, phone, role, quizScore, centerName, centerLocation, licenseKey } = body;
 
     if (!email || !password || !name) {
       return NextResponse.json(
@@ -58,11 +58,10 @@ export async function POST(req: NextRequest) {
     const safeName = sanitize(clamp(name, 100));
     const safePhone = typeof phone === "string" ? sanitize(clamp(phone, 30)) : null;
     
-
-    const userRole = ["student", "admin", "center_admin"].includes(role) ? role : "student";
+    const userRole = role === "center_admin" ? "center_admin" : "student";
     
     // Create Center for center_admin if needed
-    let resolvedCenterId: number | null = typeof centerId === "number" ? centerId : null;
+    let resolvedCenterId: number | null = null;
     if (userRole === "center_admin") {
       const center = await prisma.center.create({
         data: {

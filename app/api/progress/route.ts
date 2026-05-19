@@ -53,11 +53,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify the course exists
-    const courseExists = await prisma.course.findUnique({ where: { slug: courseSlug }, select: { id: true } });
-    if (!courseExists) {
+    const course = await prisma.course.findUnique({ where: { slug: courseSlug }, select: { id: true, modules: true } });
+    if (!course) {
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 
+    let firstPass = false;
     if (quizPassed === true) {
       const existingUnit = await prisma.progress.findUnique({
         where: {
@@ -69,7 +70,8 @@ export async function POST(req: NextRequest) {
         },
         select: { quizPassed: true },
       });
-      if (!existingUnit?.quizPassed) {
+      firstPass = !existingUnit?.quizPassed;
+      if (firstPass) {
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
         const todayPassed = await prisma.progress.count({
@@ -98,21 +100,21 @@ export async function POST(req: NextRequest) {
       },
       update: {
         stepIndex: stepIndex ?? 0,
-        quizPassed: quizPassed ?? false,
-        quizScore: quizScore ?? null,
+        ...(quizPassed === true ? { quizPassed: true } : {}),
+        ...(quizScore !== undefined ? { quizScore } : {}),
       },
       create: {
         userId: session.userId,
         courseSlug,
         unitIndex,
         stepIndex: stepIndex ?? 0,
-        quizPassed: quizPassed ?? false,
+        quizPassed: quizPassed === true,
         quizScore: quizScore ?? null,
       },
     });
 
     // Update enrollment progress percentage
-    const totalUnits = 7;
+    const totalUnits = Math.max(1, course.modules || 7);
     const allProgress = await prisma.progress.findMany({
       where: { userId: session.userId, courseSlug },
     });
@@ -120,7 +122,6 @@ export async function POST(req: NextRequest) {
     const progressPct = Math.round((passedUnits / totalUnits) * 100);
     const isCompleted = passedUnits >= totalUnits;
 
-    const course = await prisma.course.findUnique({ where: { slug: courseSlug } });
     if (course) {
       await prisma.enrollment.updateMany({
         where: { userId: session.userId, courseId: course.id },
@@ -131,8 +132,27 @@ export async function POST(req: NextRequest) {
         },
       });
 
+      if (firstPass) {
+        await prisma.activityLog.create({
+          data: {
+            userId: session.userId,
+            action: "xp_unit_completed",
+            details: JSON.stringify({ courseSlug, unitIndex, xp: 120, quizScore: quizScore ?? null }),
+          },
+        });
+      }
+
       // Execute Background Worker non-blockingly
       if (isCompleted) {
+        if (firstPass) {
+          await prisma.activityLog.create({
+            data: {
+              userId: session.userId,
+              action: "xp_course_completed",
+              details: JSON.stringify({ courseSlug, xp: 300 }),
+            },
+          });
+        }
         processCourseCompletion(session.userId);
       }
     }

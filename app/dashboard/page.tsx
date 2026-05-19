@@ -36,11 +36,21 @@ const practicePrompts = {
   ],
 };
 
+const decodeMojibake = (value: string) => {
+  if (!value || !/[ØÙÃ]/.test(value)) return value;
+  try {
+    return decodeURIComponent(escape(value));
+  } catch {
+    return value;
+  }
+};
+
 export default function DashboardPage() {
   const { language } = useLanguage();
   const { user, loading: authLoading } = useAuth();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [progress, setProgress] = useState<ProgressItem[]>([]);
+  const [storedXp, setStoredXp] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const isAr = language === "ar";
   const labels = isAr
@@ -102,6 +112,13 @@ export default function DashboardPage() {
       left: "متبقي",
     });
   }
+  Object.keys(labels).forEach((key) => {
+    const value = labels[key as keyof typeof labels];
+    if (typeof value === "string") {
+      (labels as Record<string, string>)[key] = decodeMojibake(value);
+    }
+  });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const activePracticePrompts = isAr
     ? ["اشرح الفكرة بجملة واحدة.", "اختر مثالا بسيطا من حياتك اليومية.", "ما الخطوة الأولى إذا كررت هذا الدرس غدا؟"]
     : practicePrompts.en;
@@ -132,6 +149,11 @@ export default function DashboardPage() {
         })
       );
       setProgress(progressLists.flat());
+      const xpRes = await fetch("/api/xp");
+      if (xpRes.ok) {
+        const xpData = await xpRes.json();
+        setStoredXp(typeof xpData.totalXp === "number" ? xpData.totalXp : null);
+      }
       setLoading(false);
     };
     load().catch(() => setLoading(false));
@@ -141,7 +163,8 @@ export default function DashboardPage() {
   const completedUnits = progress.filter((item) => item.quizPassed);
   const todayCompleted = completedUnits.filter((item) => new Date(item.updatedAt).toDateString() === todayKey);
   const extraPracticeXp = Math.min(todayCompleted.length * 3, 6) * 10;
-  const xp = completedUnits.length * 120 + enrollments.filter((item) => item.completed).length * 300 + extraPracticeXp;
+  const computedXp = completedUnits.length * 120 + enrollments.filter((item) => item.completed).length * 300 + extraPracticeXp;
+  const xp = Math.max(storedXp ?? 0, computedXp);
   const dailyLimitReached = todayCompleted.length >= 2;
   const recentModules = todayCompleted.slice(-2);
 
@@ -150,11 +173,11 @@ export default function DashboardPage() {
     return source.flatMap((module) =>
       activePracticePrompts.map((prompt, index) => ({
         id: `${module.courseSlug}-${module.unitIndex}-${index}`,
-        title: `${module.courseSlug} · ${isAr ? "وحدة" : "Unit"} ${module.unitIndex + 1}`,
-        prompt,
+        title: decodeMojibake(`${module.courseSlug} · ${isAr ? "وحدة" : "Unit"} ${module.unitIndex + 1}`),
+        prompt: decodeMojibake(prompt),
       }))
     );
-  }, [recentModules, completedUnits, language, isAr]);
+  }, [recentModules, completedUnits, activePracticePrompts, isAr]);
 
   if (authLoading || loading) {
     return (
@@ -234,7 +257,7 @@ export default function DashboardPage() {
                 <div className="flex items-start gap-3">
                   <BookOpen className="mt-1 text-[#2E5C8A]" size={22} />
                   <div className="flex-1">
-                    <h3 className="font-semibold text-[#2E5C8A]">{isAr ? enrollment.course.titleAr : enrollment.course.titleEn}</h3>
+                    <h3 className="font-semibold text-[#2E5C8A]">{decodeMojibake(isAr ? enrollment.course.titleAr : enrollment.course.titleEn)}</h3>
                     <div className="mt-3 h-3 rounded-full bg-[#DEE2E6]"><div className="h-3 rounded-full bg-[#2E5C8A]" style={{ width: `${enrollment.progress}%` }} /></div>
                     <p className="mt-2 text-sm text-[#6C757D]">{enrollment.progress}%</p>
                     <Link href={`/courses/${enrollment.course.slug}/learn`} className={`mt-4 inline-flex min-h-11 items-center rounded-sm px-4 font-semibold ${dailyLimitReached ? "border border-[#DEE2E6] text-[#6C757D]" : "bg-[#2E5C8A] text-white"}`}>

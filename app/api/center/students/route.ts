@@ -26,8 +26,15 @@ export async function GET() {
         category: true,
         quizScore: true,
         chapter: { select: { name: true } },
-        enrollments: { select: { progress: true, completed: true, course: { select: { titleEn: true, slug: true } } } },
-        progress: { select: { quizPassed: true, quizScore: true, unitIndex: true, courseSlug: true } },
+        enrollments: {
+          select: {
+            progress: true,
+            completed: true,
+            enrolledAt: true,
+            course: { select: { titleAr: true, titleEn: true, slug: true, modules: true } },
+          },
+        },
+        progress: { select: { quizPassed: true, quizScore: true, unitIndex: true, courseSlug: true, updatedAt: true } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -47,8 +54,12 @@ export async function POST(request: Request) {
     const email = sanitize(clamp(body.email || "", 120)).toLowerCase();
     const phone = sanitize(clamp(body.phone || "", 30));
     const password = String(body.password || "");
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!name || !email || !phone || password.length < 6) {
       return NextResponse.json({ error: "Name, phone, email, and a 6-character password are required" }, { status: 400 });
+    }
+    if (!emailPattern.test(email)) {
+      return NextResponse.json({ error: "A valid email address is required" }, { status: 400 });
     }
     const passwordHash = await bcrypt.hash(password, 12);
     const student = await prisma.user.create({

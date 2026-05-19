@@ -15,7 +15,7 @@ html.assistant-active footer {
   --panel-bg: #ffffff;
   --card-border: #d9e6f2;
   --font-type: "Open Sans", ui-sans-serif, system-ui, sans-serif;
-  --letter-spacing: 0.02em;
+  --letter-spacing: 0;
   --button-padding: 0.5rem 1rem;
 }
 
@@ -54,7 +54,7 @@ html.assistant-active footer {
 /* Spaced Text */
 [data-density="spaced"] {
   line-height: 2.2;
-  --letter-spacing: 0.05em;
+  --letter-spacing: 0;
 }
 
 /* Motor / CP Scaling */
@@ -89,6 +89,14 @@ html.assistant-active footer {
 [data-scale="large"] select,
 [data-scale="large"] textarea {
   min-height: 3.25rem !important;
+}
+[data-large-targets="true"] button,
+[data-large-targets="true"] a,
+[data-large-targets="true"] input,
+[data-large-targets="true"] select,
+[data-large-targets="true"] textarea {
+  min-height: 3.5rem !important;
+  padding: 0.9rem 1.2rem !important;
 }
 [data-reduce-motion="true"] *,
 [data-profile="autism"] * {
@@ -264,6 +272,11 @@ body {
 [data-profile="cp"] :focus-visible {
   outline: 4px solid #FFD700 !important;
   outline-offset: 4px !important;
+}
+
+[data-font="dyslexia"] body,
+[data-font="dyslexia"] .theme-wrapper {
+  font-family: 'OpenDyslexic', 'Comic Sans MS', ui-sans-serif, system-ui, sans-serif !important;
 }
 
 /* focus mode */

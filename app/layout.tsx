@@ -24,7 +24,8 @@ export const metadata: Metadata = {
     default: "طفرة | Tafrah",
     template: "%s | طفرة",
   },
-  description: "منصة طفرة: بيئة عمل وتدريب متخصصة لذوي التوحد. Tafrah: A specialised work & training platform for individuals with autism.",
+  description:
+    "منصة طفرة: بيئة تعلم وتدريب تكيفية للأشخاص على طيف التوحد. Tafrah: an adaptive learning platform for autistic learners.",
 };
 
 export default async function RootLayout({
@@ -35,25 +36,38 @@ export default async function RootLayout({
   const cookieStore = await cookies();
   const stored = cookieStore.get("tafrah_lang")?.value;
   const initialLanguage = stored === "en" || stored === "ar" ? stored : "ar";
-  const htmlDir = initialLanguage === "ar" ? "rtl" : "ltr";  return (
-    <html lang={initialLanguage} dir={htmlDir}>      <head>
+  const htmlDir = initialLanguage === "ar" ? "rtl" : "ltr";
+
+  return (
+    <html lang={initialLanguage} dir={htmlDir}>
+      <head>
         <script
           dangerouslySetInnerHTML={{
-             __html: `
+            __html: `
               try {
                 const prefs = localStorage.getItem('uiPreferences');
                 if (prefs) {
                   const p = JSON.parse(prefs);
-                  if (p.theme) document.documentElement.setAttribute('data-theme', p.theme);
-                  if (p.fontType) document.documentElement.setAttribute('data-font', p.fontType);
-                  if (p.textDensity) document.documentElement.setAttribute('data-density', p.textDensity);
-                  if (p.scale) document.documentElement.setAttribute('data-scale', p.scale);
+                  const highContrast = Boolean(p.highContrastText || p.highContrast);
+                  const attrs = p.computedAttrs || {
+                    'data-profile': 'autism',
+                    'data-theme': highContrast ? 'high-contrast' : p.mutedColors ? 'muted' : 'pastel',
+                    'data-density': (p.simplifiedText || p.extraSpacing || p.density === 'spaced') ? 'spaced' : 'normal',
+                    'data-scale': (p.largeText || p.scale === 'large' || p.scale === 'giant') ? 'large' : 'normal',
+                    'data-focus-mode': p.focusMode ? 'true' : 'false',
+                    'data-reduce-sound': p.reduceSound ? 'true' : 'false',
+                    'data-reduce-motion': p.reduceMotion ? 'true' : 'false',
+                    'data-font': p.dyslexicFont ? 'dyslexia' : 'default',
+                    'data-large-targets': p.largeTargets ? 'true' : 'false'
+                  };
+                  Object.keys(attrs).forEach((key) => document.documentElement.setAttribute(key, attrs[key]));
                 }
               } catch (e) {}
             `,
           }}
         />
-      </head>      <body className={cairo.className}>
+      </head>
+      <body className={cairo.className}>
         <LanguageProvider initialLanguage={initialLanguage}>
           <AuthProvider>
             <ToastProvider>

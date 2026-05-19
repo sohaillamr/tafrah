@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
@@ -71,6 +71,17 @@ type UnitStep = {
 };
 
 type CellData = { value: string; format: "text" | "number" | "date" };
+type QuizQuestion = {
+  id: string;
+  text: string;
+  textEn: string;
+  options: { id: string; text: string; textEn: string }[];
+  correct: string;
+};
+type QuizSet = {
+  passingScore: number;
+  questions: QuizQuestion[];
+};
 
 const buildSteps = (unit: { chapters: { steps: Record<string, unknown>[]; [key: string]: unknown }[]; [key: string]: unknown }): UnitStep[] => {
   return unit.chapters.flatMap((chapter, chapterIndex) =>
@@ -98,13 +109,101 @@ const buildSteps = (unit: { chapters: { steps: Record<string, unknown>[]; [key: 
 };
 
 const cleanArabicText = (value: string, language: string) => {
-  if (!value || language !== "ar" || !/[ØÙÃ]/.test(value)) return value;
+  if (!value || !/[ØÙÃ]/.test(value)) return value;
   try {
     return decodeURIComponent(escape(value));
   } catch {
     return value;
   }
 };
+
+const conceptPlans = {
+  "data-entry-1": {
+    en: [
+      ["Source data", "Know where each row came from before editing it."],
+      ["Cell type", "Separate names, numbers, dates, and notes so the table stays predictable."],
+      ["Validation", "Check one rule at a time instead of trying to inspect the whole file."],
+      ["Cleaning", "Fix blanks, duplicates, mixed formats, and impossible values calmly."],
+      ["Sorting and filtering", "Ask one question, then use the tool that answers only that question."],
+      ["Delivery", "Name files clearly and add a short note about what changed."],
+      ["Quality log", "Record uncertain cells so you do not depend on memory."],
+    ],
+    ar: [
+      ["مصدر البيانات", "اعرف من أين جاء كل صف قبل تعديله."],
+      ["نوع الخلية", "افصل الأسماء والأرقام والتواريخ والملاحظات حتى يبقى الجدول متوقعا."],
+      ["التحقق", "راجع قاعدة واحدة في كل مرة بدلا من فحص الملف كله دفعة واحدة."],
+      ["تنظيف البيانات", "صحح الفراغات والتكرار والصيغ المختلطة والقيم غير المنطقية بهدوء."],
+      ["الفرز والتصفية", "اسأل سؤالا واحدا ثم استخدم الأداة التي تجيب عنه فقط."],
+      ["التسليم", "سم الملفات بوضوح وأضف ملاحظة قصيرة عما تغير."],
+      ["سجل الجودة", "اكتب الخلايا غير المؤكدة حتى لا تعتمد على الذاكرة."],
+    ],
+  },
+  "programming-1": {
+    en: [
+      ["Instruction order", "Python reads one line after another unless control flow changes it."],
+      ["Variables", "A variable is a clear name attached to a value you can reuse."],
+      ["Types", "Text, numbers, lists, and booleans behave differently."],
+      ["Conditionals", "if and else choose one path from a clear question."],
+      ["Loops", "Loops repeat a safe pattern without retyping the same code."],
+      ["Functions", "A function packages steps so you can run them again."],
+      ["Debugging", "Read the smallest error first: line, name, bracket, quote, or indentation."],
+    ],
+    ar: [
+      ["ترتيب التعليمات", "بايثون يقرأ سطرا بعد سطر إلا إذا غير الشرط أو الحلقة المسار."],
+      ["المتغيرات", "المتغير اسم واضح لقيمة محفوظة يمكن استخدامها مرة أخرى."],
+      ["أنواع البيانات", "النصوص والأرقام والقوائم والقيم المنطقية تتصرف بطرق مختلفة."],
+      ["الشروط", "if و else يختاران مسارا واحدا من سؤال واضح."],
+      ["الحلقات", "الحلقة تكرر نمطا آمنا بدون إعادة كتابة نفس الكود."],
+      ["الدوال", "الدالة تجمع خطوات يمكن تشغيلها مرة أخرى."],
+      ["تصحيح الأخطاء", "اقرأ أصغر خطأ أولا: السطر أو الاسم أو القوس أو علامة الاقتباس أو المسافة."],
+    ],
+  },
+  "finance-1": {
+    en: [
+      ["Accounting equation", "Assets, liabilities, and equity must stay balanced."],
+      ["Journal entry", "Record what happened, when it happened, and which accounts changed."],
+      ["Debit and credit", "Use sides as a rule system, not as emotional labels."],
+      ["Ledger", "Group every account movement in one place for review."],
+      ["Financial statements", "Income statement, balance sheet, and cash flow answer different questions."],
+      ["Budgeting", "Plan income, essential expenses, variable expenses, and remaining amount."],
+      ["ERP systems", "Modern finance tools standardize data across departments."],
+    ],
+    ar: [
+      ["معادلة المحاسبة", "الأصول والخصوم وحقوق الملكية يجب أن تبقى متوازنة."],
+      ["قيد اليومية", "سجل ما حدث ومتى حدث وأي حسابات تغيرت."],
+      ["المدين والدائن", "استخدم الجانبين كنظام قواعد وليس ككلمات عاطفية."],
+      ["دفتر الأستاذ", "اجمع حركة كل حساب في مكان واحد للمراجعة."],
+      ["القوائم المالية", "قائمة الدخل والميزانية والتدفقات النقدية تجيب عن أسئلة مختلفة."],
+      ["الميزانية", "خطط للدخل والمصروفات الأساسية والمتغيرة والمبلغ المتبقي."],
+      ["أنظمة ERP", "أدوات المالية الحديثة توحد البيانات بين الأقسام."],
+    ],
+  },
+};
+
+const unitFocus = {
+  "data-entry-1": {
+    en: ["digital setup", "spreadsheet structure", "data cleaning", "email and files", "accuracy and speed", "forms", "final data project"],
+    ar: ["إعداد البيئة الرقمية", "بناء الجدول", "تنظيف البيانات", "البريد والملفات", "الدقة والسرعة", "النماذج", "مشروع البيانات النهائي"],
+  },
+  "programming-1": {
+    en: ["printing and comments", "variables and numbers", "strings", "conditions", "lists", "loops", "functions"],
+    ar: ["الطباعة والتعليقات", "المتغيرات والأرقام", "النصوص", "الشروط", "القوائم", "الحلقات", "الدوال"],
+  },
+  "finance-1": {
+    en: ["language of money", "transactions", "financial statements", "finance systems", "report reading", "budgeting", "mini finance project"],
+    ar: ["لغة المال", "المعاملات", "القوائم المالية", "أنظمة المالية", "قراءة التقارير", "الميزانية", "مشروع مالي مصغر"],
+  },
+};
+
+function getCoursePlan(courseSlug: string, language: string) {
+  const key = courseSlug === "programming-1" ? "programming-1" : courseSlug === "finance-1" ? "finance-1" : "data-entry-1";
+  const lang = language === "ar" ? "ar" : "en";
+  return {
+    key,
+    concepts: conceptPlans[key][lang],
+    unit: unitFocus[key][lang],
+  };
+}
 
 const coursePracticeMap: Record<string, string[]> = {
   "finance-1": [
@@ -151,14 +250,200 @@ const coursePracticeMap: Record<string, string[]> = {
   ],
 };
 
-const buildCoursePracticeSteps = (courseSlug: string, unitNumber: number): UnitStep[] => {
-  const prompts = coursePracticeMap[courseSlug] || coursePracticeMap["data-entry-1"];
-  return prompts.map((instruction, index) => ({
+const coursePracticeMapEn: Record<string, string[]> = {
+  "finance-1": [
+    "From OpenStax: accounting records, summarizes, and communicates financial information. In Tafrah, read it as clear rules, not memorized jargon.",
+    "From CFI: financial statements connect to each other. Income affects equity, and the balance sheet shows a point in time.",
+    "Slow practice: choose one term from this unit and write one correct example and one non-example.",
+    "Check rule: every financial number needs a source. Ask whether it came from an asset, liability, equity, revenue, or expense.",
+    "Table practice: write three columns: item, classification, reason. Fill one row only now.",
+    "Read the equation calmly: Assets = Liabilities + Equity. Do not move forward until both sides make sense.",
+    "If there is an error, do not restart. Go back one step and find where balance changed.",
+    "From Dynamics 365 Finance: modern systems use charts of accounts and dimensions to standardize recording across departments.",
+    "Simple ERP practice: imagine a sales invoice. Which departments are affected: sales, inventory, finance, or all three?",
+    "Write one summary sentence: the goal of this unit is ____.",
+    "Review question: which word needs another example: asset, liability, debit, credit, ledger, or report?",
+    "Cognitive pause: stop for 30 seconds, then review one lesson card only.",
+  ],
+  "programming-1": [
+    "From the Python tutorial: a program runs instructions in order. Read line one, then line two, then predict the output.",
+    "From Microsoft Learn: change one small thing at a time. Do not change the name, number, and logic together.",
+    "Copy the code once exactly. The goal is steady pattern memory, not speed.",
+    "Add one comment that starts with # and says why this line exists.",
+    "Separate name and value: a variable is a name pointing to a stored value.",
+    "When an error appears, read the last line of the error message first.",
+    "Do not focus on Arabic spelling differences inside printed text. Focus on correct code structure.",
+    "Prediction practice: before running, write what the program will print.",
+    "Edit practice: change one value only, then run the code.",
+    "Review practice: check quotes, brackets, and matching variable names.",
+    "Write one summary sentence: this code does ____.",
+    "Cognitive pause: stop for 30 seconds, then return to one line only.",
+  ],
+  "data-entry-1": [
+    "From Microsoft Excel: a workbook contains sheets, and each cell has an address like B2.",
+    "From Google Applied Digital Skills: the practical goal is to organize data so it is easy to read and review.",
+    "Review one row or one cell before moving forward. Accuracy matters more than speed.",
+    "Write one rule that prevents error: number format, date format, name format, or cell address.",
+    "Check three cells only: is each cell text, number, or date?",
+    "If a name is empty, do not guess. Mark it for review or return to the source.",
+    "If a number contains letters, separate the issue before entering it in a number column.",
+    "If a date is impossible, stop and correct it before sorting or filtering.",
+    "Filter practice: ask one question of the data, such as: who starts with M?",
+    "Sort practice: before sorting, make sure the whole column is numbers, not mixed text.",
+    "Write one summary sentence: data quality means ____.",
+    "Cognitive pause: stop for 30 seconds, then review one cell only.",
+  ],
+};
+
+const buildCoursePracticeSteps = (courseSlug: string, unitNumber: number, language: string): UnitStep[] => {
+  const sourceMap = language === "ar" ? coursePracticeMap : coursePracticeMapEn;
+  const prompts = sourceMap[courseSlug] || sourceMap["data-entry-1"];
+  const sourceReviewSteps: UnitStep[] = prompts.map((instruction, index) => ({
     id: `${courseSlug}-unit-${unitNumber}-practice-${index}`,
-    type: "info",
+    type: index % 3 === 2 ? "task" : "info",
     instruction,
+    action:
+      index % 3 === 2
+        ? {
+            kind: "selectOption",
+            label: language === "ar" ? "فهمت الخطوة" : "I understand this step",
+            options:
+              language === "ar"
+                ? ["فهمت الخطوة", "أحتاج مثالا آخر", "سأراجع لاحقا"]
+                : ["I understand this step", "I need another example", "I will review later"],
+          }
+        : undefined,
     chapterTitle: "تدريب تطبيقي ومراجعة من المصادر",
   }));
+  return [...sourceReviewSteps, ...buildDeepExpansionSteps(courseSlug, unitNumber, language)];
+};
+
+const buildDeepExpansionSteps = (courseSlug: string, unitNumber: number, language: string): UnitStep[] => {
+  const plan = getCoursePlan(courseSlug, language);
+  const unitTheme = cleanArabicText(plan.unit[unitNumber - 1] ?? plan.unit[0], language);
+  const concepts = plan.concepts.map(([title, description]) => [
+    cleanArabicText(title, language),
+    cleanArabicText(description, language),
+  ]);
+  const chapterTitle = language === "ar" ? "توسيع معرفي بأسلوب طفرة" : "Tafrah deep learning expansion";
+  const confirmLabel = language === "ar" ? "أستطيع شرحها بخطوة واحدة" : "I can explain it in one step";
+  const helpLabel = language === "ar" ? "أحتاج مثالا أبطأ" : "I need a slower example";
+  const reviewLabel = language === "ar" ? "سأراجعها بعد الاستراحة" : "I will review it after a pause";
+
+  return concepts.flatMap<UnitStep>(([title, description], conceptIndex) => {
+    const prefix = `${courseSlug}-unit-${unitNumber}-deep-${conceptIndex}`;
+    const selectedSteps =
+      language === "ar"
+        ? [
+            `المفهوم ${conceptIndex + 1}: ${title}. ${description} اربطه بموضوع هذه الوحدة: ${unitTheme}.`,
+            "لماذا يهم؟ لأنه يقلل عدد القرارات في نفس اللحظة. اجعل قاعدة واحدة واضحة أمامك ثم طبقها قبل الانتقال للقاعدة التالية.",
+            "ملاحظة من المصادر: قارن شرح الدورة بالمراجع الموثوقة، ثم اكتب أبسط صياغة بكلماتك.",
+            `مثال محلول: اختر حالة صغيرة من ${unitTheme}. حدد ما تعرفه، وما ينقصك، وما يجب التحقق منه.`,
+            "فعل خطوة واحدة: نفذ الخطوة المرئية التالية فقط. لا تحاول حل المهمة كلها في ذهنك قبل البداية.",
+            "خطأ شائع: الاستعجال للإجابة قبل فحص المصدر أو النوع أو القاعدة. توقف وسم القاعدة أولا.",
+            `مراجعة قصيرة: اشرح ${title} بجملة واحدة ومثال واحد ومثال عكسي واحد.`,
+            "استراحة معرفية: انظر بعيدا 20 ثانية، خذ نفسا واحدا، ثم ارجع لنفس السطر أو الخلية.",
+          ]
+        : [
+            `Concept ${conceptIndex + 1}: ${title}. ${description} Connect it to this unit theme: ${unitTheme}.`,
+            "Why it matters: this idea helps you make fewer decisions at once. Keep one rule visible, then apply it before moving to the next rule.",
+            "Source-based note: compare the course explanation with trusted references, then write the simplest version in your own words.",
+            `Worked example: choose one small case from ${unitTheme}. Label what you know, what is missing, and what you must check.`,
+            "One-step action: complete only the next visible action. Do not solve the whole task in your head before starting.",
+            "Common mistake: rushing to the answer before checking the source, the type, or the rule. Pause and name the rule first.",
+            `Reflection: explain ${title} using one sentence, one example, and one non-example.`,
+            "Cognitive pause: look away for 20 seconds, breathe once, then return to the exact line or cell you were using.",
+          ];
+
+    return selectedSteps.map<UnitStep>((instruction, stepIndex) => ({
+      id: `${prefix}-${stepIndex}`,
+      type: stepIndex === 4 || stepIndex === 6 ? "task" : "info",
+      instruction,
+      action:
+        stepIndex === 4 || stepIndex === 6
+          ? {
+              kind: "selectOption",
+              label: confirmLabel,
+              options: [confirmLabel, helpLabel, reviewLabel],
+            }
+          : undefined,
+      chapterTitle,
+    }));
+  });
+};
+
+const buildExpandedQuiz = (courseSlug: string, unitNumber: number, language: string, baseQuiz: QuizSet): QuizSet => {
+  const plan = getCoursePlan(courseSlug, language);
+  const concepts = plan.concepts.map(([title]) => cleanArabicText(title, language));
+  const unitTheme = cleanArabicText(plan.unit[unitNumber - 1] ?? plan.unit[0], language);
+  const courseLabel =
+    courseSlug === "programming-1"
+      ? { en: "Python", ar: "بايثون" }
+      : courseSlug === "finance-1"
+        ? { en: "finance", ar: "المالية" }
+        : { en: "data entry", ar: "إدخال البيانات" };
+  const distractors =
+    courseSlug === "programming-1"
+      ? {
+          en: ["Rewrite everything at once", "Ignore the error message", "Focus on Arabic letter spelling instead of code structure"],
+          ar: ["إعادة كتابة كل شيء مرة واحدة", "تجاهل رسالة الخطأ", "التركيز على اختلافات الحروف العربية بدل بنية الكود"],
+        }
+      : courseSlug === "finance-1"
+        ? {
+            en: ["Guess the number", "Ignore the source document", "Hide the report if it feels hard"],
+            ar: ["تخمين الرقم", "تجاهل مستند المصدر", "إخفاء التقرير إذا كان صعبا"],
+          }
+        : {
+            en: ["Guess missing values", "Change all columns at once", "Skip the final review"],
+            ar: ["تخمين القيم الناقصة", "تعديل كل الأعمدة مرة واحدة", "تخطي المراجعة النهائية"],
+          };
+  const extraQuestions: QuizQuestion[] = Array.from({ length: 12 }, (_, index) => {
+    const concept = concepts[index % concepts.length];
+    const qNumber = index + 1;
+    const textEn =
+      qNumber % 3 === 1
+        ? `In ${courseLabel.en}, what is the safest first step when working with ${concept} in ${unitTheme}?`
+        : qNumber % 3 === 2
+          ? `Which habit best supports an autistic learner while practicing ${concept}?`
+          : `What should you do before moving from ${concept} to the next idea?`;
+    const textAr =
+      qNumber % 3 === 1
+        ? `في ${courseLabel.ar}، ما أول خطوة آمنة عند التعامل مع ${concept} داخل ${unitTheme}؟`
+        : qNumber % 3 === 2
+          ? `أي عادة تساعد المتعلم التوحدي أكثر أثناء تدريب ${concept}؟`
+          : `ماذا تفعل قبل الانتقال من ${concept} إلى الفكرة التالية؟`;
+    const correctEn =
+      qNumber % 3 === 1
+        ? "Check the source and apply one clear rule"
+        : qNumber % 3 === 2
+          ? "Use a predictable small step and a short pause"
+          : "Explain it with one example and one non-example";
+    const correctAr =
+      qNumber % 3 === 1
+        ? "فحص المصدر وتطبيق قاعدة واحدة واضحة"
+        : qNumber % 3 === 2
+          ? "استخدام خطوة صغيرة متوقعة مع استراحة قصيرة"
+          : "شرحها بمثال واحد ومثال عكسي واحد";
+
+    return {
+      id: `expanded-${courseSlug}-${unitNumber}-${index}`,
+      text: textAr,
+      textEn,
+      options: [
+        { id: "a", text: correctAr, textEn: correctEn },
+        { id: "b", text: distractors.ar[0], textEn: distractors.en[0] },
+        { id: "c", text: distractors.ar[1], textEn: distractors.en[1] },
+        { id: "d", text: distractors.ar[2], textEn: distractors.en[2] },
+      ],
+      correct: "a",
+    };
+  });
+  const questions = [...baseQuiz.questions, ...extraQuestions];
+
+  return {
+    passingScore: Math.ceil(questions.length * 0.75),
+    questions,
+  };
 };
 
 type CourseState = {
@@ -258,6 +543,10 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const unitIndexFromUrl = searchParams.get("unit");
   const unitIndex = unitIndexFromUrl ? parseInt(unitIndexFromUrl) : 0;
   const courseKey = courseSlug || String(courseId);
+  const progressStorageKey = useCallback(
+    (unit: number, suffix: "done" | "quiz_passed") => `${courseKey}:unit${unit}:${suffix}`,
+    [courseKey]
+  );
 
   // Initialize course explicitly so we don't mix progression between units or courses
   useEffect(() => {
@@ -503,7 +792,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const financeUnits: { chapters: { steps: Record<string, unknown>[]; [key: string]: unknown }[]; [key: string]: unknown }[] = [financeUnit1Content[0], financeUnit2Content[0], financeUnit3Content[0], financeUnit4Content[0], financeUnit5Content[0], financeUnit6Content[0], financeUnit7Content[0]];
   const allUnits = isPythonCourse ? pythonUnits : isFinanceCourse ? financeUnits : dataEntryUnits;
   const currentUnit = allUnits[unitNumber - 1];
-  const steps = useMemo(() => [...buildSteps(currentUnit), ...buildCoursePracticeSteps(courseKey, unitNumber)], [currentUnit, courseKey, unitNumber]);
+  const steps = useMemo(() => [...buildSteps(currentUnit), ...buildCoursePracticeSteps(courseKey, unitNumber, language)], [currentUnit, courseKey, unitNumber, language]);
   const step = steps[currentStep];
   const canGoNext = validatedSteps[currentStep];
   const isAvailable = true; // previously: courseId === "data-entry-1" || courseId === "programming-1";
@@ -527,8 +816,9 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const shouldShowPassword = !isPythonCourse && !isFinanceCourse && step?.action?.kind === "selectOption" && !step?.action?.options;
   const shouldShowChoiceOptions = !isPythonCourse && step?.action?.kind === "selectOption";
   const shouldShowPythonOptions = isPythonCourse && step?.action?.kind === "selectOption";
-  const shouldShowGridControls = !isPythonCourse && unitNumber >= 2 && step?.type === "task" && !challengeActive;
-  const shouldShowGrid = !isPythonCourse && unitNumber >= 2;
+  const shouldShowGridControls = !isPythonCourse && !isFinanceCourse && unitNumber >= 2 && step?.type === "task" && !challengeActive;
+  const shouldShowGrid = !isPythonCourse && !isFinanceCourse && unitNumber >= 2;
+  const shouldShowFinanceSimulator = isFinanceCourse;
   const shouldShowFormat = unitNumber >= 2 && step?.action?.kind === "setFormat";
   const shouldShowHeaderStyle = unitNumber >= 2 && step?.action?.kind === "styleRow";
   const shouldShowBorders = unitNumber >= 2 && step?.action?.kind === "addBorders";
@@ -657,7 +947,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (isCompleted) {
-      localStorage.setItem(`unit${unitNumber}_done`, "true");
+      localStorage.setItem(progressStorageKey(unitNumber, "done"), "true");
       setUnitsDone((prev) => ({ ...prev, [unitNumber]: true }));
       // Save step progress to backend
       if (user) {
@@ -674,7 +964,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
         }).catch(() => {});
       }
     }
-  }, [isCompleted, unitNumber, user, courseKey, steps.length]);
+  }, [isCompleted, unitNumber, user, courseKey, steps.length, progressStorageKey]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -688,8 +978,8 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
           const progressList = d.progress || [];
           for (let i = 1; i <= 7; i++) {
             const p = progressList.find((pr: { unitIndex: number }) => pr.unitIndex === i - 1);
-            done[i] = p ? p.quizPassed : localStorage.getItem(`unit${i}_done`) === "true";
-            passed[i] = p ? p.quizPassed : localStorage.getItem(`unit${i}_quiz_passed`) === "true";
+            done[i] = p ? p.quizPassed : localStorage.getItem(progressStorageKey(i, "done")) === "true";
+            passed[i] = p ? p.quizPassed : localStorage.getItem(progressStorageKey(i, "quiz_passed")) === "true";
           }
           setUnitsDone(done);
           setQuizzesPassed(passed);
@@ -698,8 +988,8 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
           const done: Record<number, boolean> = {};
           const passed: Record<number, boolean> = {};
           for (let i = 1; i <= 7; i++) {
-            done[i] = localStorage.getItem(`unit${i}_done`) === "true";
-            passed[i] = localStorage.getItem(`unit${i}_quiz_passed`) === "true";
+            done[i] = localStorage.getItem(progressStorageKey(i, "done")) === "true";
+            passed[i] = localStorage.getItem(progressStorageKey(i, "quiz_passed")) === "true";
           }
           setUnitsDone(done);
           setQuizzesPassed(passed);
@@ -708,13 +998,13 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
       const done: Record<number, boolean> = {};
       const passed: Record<number, boolean> = {};
       for (let i = 1; i <= 7; i++) {
-        done[i] = localStorage.getItem(`unit${i}_done`) === "true";
-        passed[i] = localStorage.getItem(`unit${i}_quiz_passed`) === "true";
+        done[i] = localStorage.getItem(progressStorageKey(i, "done")) === "true";
+        passed[i] = localStorage.getItem(progressStorageKey(i, "quiz_passed")) === "true";
       }
       setUnitsDone(done);
       setQuizzesPassed(passed);
     }
-  }, [user, courseKey]);
+  }, [user, courseKey, progressStorageKey]);
 
   useEffect(() => {
     if (unitNumber !== 2) return;
@@ -954,7 +1244,15 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     router.push(`/courses/${courseKey}/learn${query}`);
   };
 
-  const currentQuiz = isPythonCourse ? (pythonQuizzes as Record<number, typeof quizzes[1]>)[unitNumber] : isFinanceCourse ? (financeQuizzes as Record<number, typeof quizzes[1]>)[unitNumber] : quizzes[unitNumber];
+  const baseQuiz = isPythonCourse
+    ? (pythonQuizzes as Record<number, QuizSet>)[unitNumber]
+    : isFinanceCourse
+      ? (financeQuizzes as Record<number, QuizSet>)[unitNumber]
+      : (quizzes as Record<number, QuizSet>)[unitNumber];
+  const currentQuiz = useMemo(
+    () => (baseQuiz ? buildExpandedQuiz(courseKey, unitNumber, language, baseQuiz) : undefined),
+    [baseQuiz, courseKey, unitNumber, language]
+  );
 
   const handleQuizAnswer = (questionId: string, answerId: string) => {
     setQuizAnswers((prev) => ({ ...prev, [questionId]: answerId }));
@@ -968,7 +1266,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     setQuizScore(score);
     setQuizSubmitted(true);
     if (score >= currentQuiz.passingScore) {
-      localStorage.setItem(`unit${unitNumber}_quiz_passed`, "true");
+      localStorage.setItem(progressStorageKey(unitNumber, "quiz_passed"), "true");
       setQuizzesPassed((prev) => ({ ...prev, [unitNumber]: true }));
       // Save to backend
       if (user) {
@@ -1051,7 +1349,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   return (
     <div className="min-h-screen">
       {focusMode ? null : <TopBar />}
-      <main className="mx-auto flex max-w-6xl flex-col gap-8 px-6 py-12 text-[#212529]">
+      <main className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 text-[#212529] sm:px-6 lg:gap-8 lg:py-12">
         {focusMode ? null : (
           <Breadcrumbs
             items={[
@@ -1268,11 +1566,11 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
         ) : (
         <section
           className={`grid gap-5 ${
-            focusMode ? "grid-cols-1 md:grid-cols-2" : "grid-cols-1 md:grid-cols-[240px_1fr_1fr]"
+            focusMode ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1 lg:grid-cols-[220px_minmax(0,1fr)_minmax(0,1fr)]"
           }`}
         >
           {focusMode ? null : (
-            <aside className="flex flex-col gap-1 self-start rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-sm">
+            <aside className="flex max-h-[70vh] flex-col gap-1 overflow-y-auto self-start rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-sm sim-scroll">
               <h2 className="mb-2 font-semibold">{labels.stepsTitle}</h2>
               {currentUnit.chapters.map((chapter, chapterIndex) => {
                 const rawChTitle = (chapter as { title?: string; chapter_title?: string }).title ??
@@ -1305,7 +1603,15 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
           <div className="flex flex-col gap-4 rounded-2xl border border-[#E2E8F0] bg-white p-5 shadow-sm">
             <div className="flex items-center gap-2.5">
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#E3EEF9] text-[#2E5C8A]"><Monitor size={16} /></span>
-              <h2 className="font-semibold">{shouldShowCodeEditor ? (language === "ar" ? "محرر الكود" : "Code Editor") : shouldShowGrid ? labels.gridSimulator : labels.simulator}</h2>
+              <h2 className="font-semibold">
+                {shouldShowCodeEditor
+                  ? language === "ar" ? "محرر الكود" : "Code Editor"
+                  : shouldShowGrid
+                    ? labels.gridSimulator
+                    : shouldShowFinanceSimulator
+                      ? language === "ar" ? "مساحة التدريب المالي" : "Finance practice workspace"
+                      : labels.simulator}
+              </h2>
             </div>
             <div className="rounded-xl border border-[#E2E8F0] bg-[#FAFBFC] p-4">
               {shouldShowCodeEditor ? (
@@ -1515,6 +1821,82 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                       style={{ fontFamily: "Cairo, sans-serif" }}
                     />
                   </div>
+                </div>
+              ) : shouldShowFinanceSimulator ? (
+                <div className="flex flex-col gap-4">
+                  <p className="text-sm text-[#6C757D]">
+                    {language === "ar"
+                      ? "هذه مساحة مالية مبسطة: اقرأ المستند، اختر التصنيف أو القرار، ثم تحقق من خطوة واحدة فقط."
+                      : "This is a focused finance workspace: read the document, choose the classification or decision, then check one step only."}
+                  </p>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <div className="rounded-xl border border-[#D9E6F2] bg-white p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#6C757D]">
+                        {language === "ar" ? "مستند المصدر" : "Source document"}
+                      </p>
+                      <div className="mt-3 rounded-lg border border-dashed border-[#BFD3E6] bg-[#F5F9FF] p-3 text-sm leading-relaxed">
+                        {language === "ar"
+                          ? "فاتورة تدريبية: عملية بيع أو شراء أو مصروف. المطلوب هو فهم الأثر المالي قبل تسجيله."
+                          : "Training invoice: a sale, purchase, or expense. The goal is to understand the financial effect before recording it."}
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-[#D9E6F2] bg-white p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#6C757D]">
+                        {language === "ar" ? "قاعدة التحقق" : "Check rule"}
+                      </p>
+                      <ul className="mt-3 flex flex-col gap-2 text-sm leading-relaxed">
+                        {(language === "ar"
+                          ? ["ما الحساب المتأثر؟", "هل هو أصل أو خصم أو إيراد أو مصروف؟", "هل يوجد مصدر واضح للرقم؟"]
+                          : ["Which account changed?", "Is it an asset, liability, revenue, or expense?", "Is there a clear source for the number?"]
+                        ).map((item) => (
+                          <li key={item} className="rounded-lg bg-[#F8FAFC] px-3 py-2">
+                            {item}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+                    <div className="grid grid-cols-[1fr_1fr_1fr] gap-2 text-center text-sm">
+                      {(language === "ar"
+                        ? ["الحساب", "التصنيف", "سبب القرار"]
+                        : ["Account", "Classification", "Reason"]
+                      ).map((header) => (
+                        <div key={header} className="rounded-lg bg-[#E3EEF9] px-3 py-2 font-semibold text-[#2E5C8A]">
+                          {header}
+                        </div>
+                      ))}
+                      {(language === "ar"
+                        ? ["النقدية / المبيعات / المصروف", "اختر من الإجابات", "راجع المصدر ثم القاعدة"]
+                        : ["Cash / sales / expense", "Choose from the answers", "Review source, then rule"]
+                      ).map((cell) => (
+                        <div key={cell} className="rounded-lg border border-[#E2E8F0] px-3 py-3 text-[#495057]">
+                          {cell}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {shouldShowChoiceOptions ? (
+                    <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+                      <h3 className="font-semibold">{language === "ar" ? "اختر الإجابة الصحيحة" : "Choose the correct answer"}</h3>
+                      <div className="mt-3 flex flex-col gap-2">
+                        {financeChoiceOptions.map((option) => (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => setSelectedChoice(option)}
+                            className={`min-h-11 rounded-xl px-4 text-start text-sm transition-all ${
+                              selectedChoice === option
+                                ? "border-2 border-[#2E5C8A] bg-[#E3EEF9] font-semibold text-[#2E5C8A] shadow-sm"
+                                : "border border-[#E2E8F0] bg-white text-[#495057] hover:bg-[#F8F9FA]"
+                            }`}
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">
@@ -1749,7 +2131,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                 >
                   <span className="flex items-center justify-center gap-2">
                     {isSummarizing ? <Loader2 size={18} className="animate-spin text-teal-700" /> : <Sparkles size={18} className="text-teal-700" />}
-                    Simplify Text with Nour AI
+                    {language === "ar" ? "بسّط النص مع نور" : "Simplify text with Nour AI"}
                   </span>
                 </button>
               )}
@@ -1839,7 +2221,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                     ) : null}
                   </div>
                 </div>
-                {unitNumber === 2 && !isPythonCourse ? (
+                {unitNumber === 2 && !isPythonCourse && !isFinanceCourse ? (
                   <div className="mt-5 flex flex-col gap-3 rounded-xl border border-[#E2E8F0] bg-white p-4">
                     <p className="font-semibold text-[#2E5C8A]"><Target size={14} className="inline me-1" />{labels.accuracyChallenge}</p>
                     <p className="text-sm text-[#495057]">

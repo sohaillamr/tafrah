@@ -7,13 +7,10 @@ import prisma from "@/lib/prisma";
  * Vercel doesn't inject env vars during `next build` page data collection,
  * so we must defer the check to when a route actually runs.
  */
-let _secret: Uint8Array | null = null;
 function getSecret(): Uint8Array {
-  // Always fetch fresh from env to avoid caching the dummy secret across warm starts
   const jwtSecret = process.env.JWT_SECRET;
   if (!jwtSecret) {
-    console.warn("[WARNING] JWT_SECRET is missing dynamically! Using fallback.");
-    return new TextEncoder().encode("dummy-secret-for-build-time-only-123");
+    throw new Error("JWT_SECRET is required at runtime.");
   }
   return new TextEncoder().encode(jwtSecret);
 }

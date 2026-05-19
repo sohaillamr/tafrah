@@ -3,14 +3,19 @@ import { cookies } from 'next/headers';
 import prisma from './prisma';
 
 const ADMIN_COOKIE = '__tafrah_admin_vault';
-const ADMIN_SECRET = new TextEncoder().encode(process.env.ADMIN_JWT_SECRET || process.env.JWT_SECRET || 'fallback_admin_secret_1234');
+
+function getAdminSecret() {
+  const secret = process.env.ADMIN_JWT_SECRET || process.env.JWT_SECRET;
+  if (!secret) throw new Error('ADMIN_JWT_SECRET or JWT_SECRET is required for staff vault sessions.');
+  return new TextEncoder().encode(secret);
+}
 
 export async function createAdminSession(ip: string) {
   const token = await new SignJWT({ role: 'supreme_admin', ip })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('12h')
-    .sign(ADMIN_SECRET);
+    .sign(getAdminSecret());
 
   (await cookies()).set(ADMIN_COOKIE, token, {
     httpOnly: true,
@@ -23,7 +28,7 @@ export async function createAdminSession(ip: string) {
 
 export async function verifyAdminSession(token: string) {
   try {
-    const { payload } = await jwtVerify(token, ADMIN_SECRET);
+    const { payload } = await jwtVerify(token, getAdminSecret());
     return payload.role === 'supreme_admin' ? payload : null;
   } catch {
     return null;

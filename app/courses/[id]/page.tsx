@@ -22,6 +22,15 @@ interface CourseData {
   available: boolean;
 }
 
+const decodeMojibake = (value: string) => {
+  if (!value || !/[ØÙÃ]/.test(value)) return value;
+  try {
+    return decodeURIComponent(escape(value));
+  } catch {
+    return value;
+  }
+};
+
 const skillsArabic: Record<string, string[]> = {
   "data-entry": ["إدخال بيانات الجداول", "تنسيق الأعمدة", "مراجعة الأخطاء"],
   design: ["المحاذاة", "اختيار الألوان", "ملفات التسليم الواضحة"],
@@ -367,6 +376,10 @@ export default function CourseDetailsPage() {
     });
   }
 
+  Object.keys(labels).forEach((key) => {
+    if (typeof labels[key] === "string") labels[key] = decodeMojibake(labels[key]);
+  });
+
   if (loading || authLoading) {
     return (
       <div className="min-h-screen">
@@ -422,10 +435,10 @@ export default function CourseDetailsPage() {
     }
   };
 
-  const title = language === "ar" ? course.titleAr : course.titleEn;
-  const description = language === "ar" ? course.descAr : course.descEn;
+  const title = decodeMojibake(language === "ar" ? course.titleAr : course.titleEn);
+  const description = decodeMojibake(language === "ar" ? course.descAr : course.descEn);
   const skills = language === "ar"
-    ? (skillsArabic[course.category] || skillsArabic["data-entry"])
+    ? (skillsArabic[course.category] || skillsArabic["data-entry"]).map(decodeMojibake)
     : (skillsEnglish[course.category] || skillsEnglish["data-entry"]);
   const isAvailable = course.available;
   const syllabusData = isAvailable ? labels.syllabusData : [];
@@ -433,6 +446,9 @@ export default function CourseDetailsPage() {
     ? (course.difficulty === "beginner" ? "مبتدئ" : course.difficulty === "intermediate" ? "متوسط" : "متقدم")
     : (course.difficulty.charAt(0).toUpperCase() + course.difficulty.slice(1));
   const cleanDifficultyLabel = language === "ar"
+    ? (course.difficulty === "beginner" ? "مبتدئ" : course.difficulty === "intermediate" ? "متوسط" : "متقدم")
+    : difficultyLabel;
+  const renderedDifficultyLabel = language === "ar"
     ? (course.difficulty === "beginner" ? "مبتدئ" : course.difficulty === "intermediate" ? "متوسط" : "متقدم")
     : difficultyLabel;
   const resources = courseResources[course.category as keyof typeof courseResources] || courseResources["data-entry"];
@@ -479,7 +495,7 @@ export default function CourseDetailsPage() {
               <BookOpen size={14} /> {labels.modules}: {course.modules}
             </span>
             <span className="inline-flex items-center gap-2 rounded-full border border-[#D9E6F2] bg-[#F5F9FF] px-4 py-2 text-sm font-medium text-[#2E5C8A]">
-              <BarChart3 size={14} /> {labels.level}: {cleanDifficultyLabel}
+              <BarChart3 size={14} /> {labels.level}: {decodeMojibake(cleanDifficultyLabel)}
             </span>
           </div>
           <div className="flex items-center gap-3 rounded-xl border border-[#D9E6F2] bg-[#F5F9FF] p-4 text-[#2E5C8A]">
@@ -534,14 +550,14 @@ export default function CourseDetailsPage() {
                   <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#2E5C8A] text-sm text-white">
                     {moduleIndex + 1}
                   </span>
-                  <span className="flex-1">{module.title}</span>
+                  <span className="flex-1">{decodeMojibake(module.title)}</span>
                 </summary>
                 <div className="border-t border-[#E2E8F0] px-4 pb-4 pt-3">
                   <ol className="flex flex-col gap-2">
                     {module.lessons.map((lesson, lessonIndex) => (
                       <li key={lesson} className="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-[#495057]">
                         <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#E3EEF9] text-xs font-semibold text-[#2E5C8A]">{lessonIndex + 1}</span>
-                        {lesson}
+                        {decodeMojibake(lesson)}
                       </li>
                     ))}
                   </ol>

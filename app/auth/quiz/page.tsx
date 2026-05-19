@@ -29,6 +29,15 @@ const QUESTIONS = {
   ],
 };
 
+const decodeMojibake = (value: string) => {
+  if (!value || !/[ØÙÃ]/.test(value)) return value;
+  try {
+    return decodeURIComponent(escape(value));
+  } catch {
+    return value;
+  }
+};
+
 export default function QuizPage() {
   const router = useRouter();
   const { language } = useLanguage();
@@ -61,6 +70,13 @@ export default function QuizPage() {
         failed: "We could not save the survey. Please try again.",
         options: ["No", "Sometimes", "Often", "Yes"],
       };
+  Object.keys(labels).forEach((key) => {
+    const value = labels[key as keyof typeof labels];
+    if (typeof value === "string") {
+      (labels as Record<string, string | string[]>)[key] = decodeMojibake(value);
+    }
+  });
+  labels.options = labels.options.map(decodeMojibake);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -105,7 +121,7 @@ export default function QuizPage() {
         <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
           {questions.map((question, index) => (
             <fieldset key={question} className="rounded-sm border border-[#DEE2E6] bg-white p-5">
-              <legend className="px-2 font-semibold">{index + 1}. {question}</legend>
+              <legend className="px-2 font-semibold">{index + 1}. {decodeMojibake(question)}</legend>
               <div className="mt-3 grid gap-2 sm:grid-cols-4">
                 {labels.options.map((option, value) => (
                   <label key={option} className="flex min-h-12 items-center justify-between gap-2 rounded-sm border border-[#DEE2E6] px-3">

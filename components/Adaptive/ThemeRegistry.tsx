@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Volume2, X } from "lucide-react";
 import { usePreferencesStore } from "../../lib/store/usePreferencesStore";
+import { derivePreferenceAttrs } from "../../lib/preferences";
 
 export default function ThemeRegistry({ children }: { children: React.ReactNode }) {
   const { preferences, category, isLoaded, loadPreferences } = usePreferencesStore();
@@ -14,14 +15,10 @@ export default function ThemeRegistry({ children }: { children: React.ReactNode 
 
   useEffect(() => {
     if (!isLoaded) return;
-    document.documentElement.setAttribute("data-profile", category === "AUTISM" ? "autism" : category.toLowerCase());
-    document.documentElement.setAttribute("data-theme", preferences?.highContrastText ? "high-contrast" : preferences?.mutedColors ? "muted" : "pastel");
-    document.documentElement.setAttribute("data-density", preferences?.simplifiedText ? "spaced" : "normal");
-    document.documentElement.setAttribute("data-scale", preferences?.largeText ? "large" : "normal");
-    document.documentElement.setAttribute("data-focus-mode", preferences?.focusMode ? "true" : "false");
-    document.documentElement.setAttribute("data-reduce-sound", preferences?.reduceSound ? "true" : "false");
-    if (preferences?.reduceMotion) document.documentElement.setAttribute("data-reduce-motion", "true");
-    else document.documentElement.removeAttribute("data-reduce-motion");
+    const attrs = derivePreferenceAttrs(category as any, preferences || {});
+    Object.entries(attrs).forEach(([key, value]) => {
+      document.documentElement.setAttribute(key, value);
+    });
   }, [category, preferences, isLoaded]);
 
   useEffect(() => {
@@ -70,6 +67,8 @@ export default function ThemeRegistry({ children }: { children: React.ReactNode 
     preferences?.highContrastText ? "contrast-125 saturate-150" : "",
     preferences?.simplifiedText ? "simplified-mode" : "",
     preferences?.largeText ? "text-[112%]" : "",
+    preferences?.dyslexicFont ? "font-dyslexia" : "",
+    preferences?.largeTargets ? "large-targets" : "",
   ].filter(Boolean).join(" ");
 
   return (

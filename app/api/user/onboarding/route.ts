@@ -3,9 +3,7 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-
-const VALID_CATEGORIES = ["AUTISM", "CP", "LEARNING_HARDENING", "NONE"] as const;
-type ValidCategory = (typeof VALID_CATEGORIES)[number];
+import { mapPreferenceTheme, normalizeCategory, normalizePreferences, VALID_CATEGORIES } from "@/lib/preferences";
 
 export async function PATCH(request: Request) {
   try {
@@ -17,10 +15,10 @@ export async function PATCH(request: Request) {
 
     const userId = session.userId;
     const body = await request.json();
-    const { category, uiPreferences } = body;
+    const category = normalizeCategory(body.category);
+    const uiPreferences = normalizePreferences(body.uiPreferences, category);
 
-    // Validate category against the Prisma enum
-    if (category && !VALID_CATEGORIES.includes(category as ValidCategory)) {
+    if (body.category && !VALID_CATEGORIES.includes(body.category)) {
       return NextResponse.json(
         { error: "Invalid category. Must be one of: AUTISM, CP, LEARNING_HARDENING, NONE" },
         { status: 400 }
@@ -31,8 +29,8 @@ export async function PATCH(request: Request) {
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
-        category: category || "NONE",
-        uiPreferences: uiPreferences || {},
+        category,
+        uiPreferences: uiPreferences as any,
       },
       select: {
         id: true,
@@ -42,8 +40,8 @@ export async function PATCH(request: Request) {
     });
 
     // 2. Upsert the UserPreference record with derived accessibility settings
-    const prefs = uiPreferences || {};
-    const theme = mapTheme(category, prefs);
+    const prefs = uiPreferences;
+    const theme = mapPreferenceTheme(category, prefs);
     const reduceMotion = Boolean(prefs.reduceMotion);
 
     await prisma.userPreference.upsert({
@@ -53,7 +51,7 @@ export async function PATCH(request: Request) {
         theme,
         reduceMotion,
         uiSettings: {
-          highContrast: Boolean(prefs.highContrast),
+          highContrast: Boolean(prefs.highContrastText),
           mutedColors: Boolean(prefs.mutedColors),
           reduceSound: Boolean(prefs.reduceSound),
           focusMode: Boolean(prefs.focusMode),
@@ -74,7 +72,7 @@ export async function PATCH(request: Request) {
         theme,
         reduceMotion,
         uiSettings: {
-          highContrast: Boolean(prefs.highContrast),
+          highContrast: Boolean(prefs.highContrastText),
           mutedColors: Boolean(prefs.mutedColors),
           reduceSound: Boolean(prefs.reduceSound),
           focusMode: Boolean(prefs.focusMode),
@@ -98,7 +96,7 @@ export async function PATCH(request: Request) {
       data: {
         userId,
         action: "onboarding_complete",
-        details: `Profile: ${category || "NONE"}, Preferences set.`,
+        details: `Profile: ${category}, Preferences set.`,
       },
     });
 
@@ -116,19 +114,4 @@ export async function PATCH(request: Request) {
       { status: 500 }
     );
   }
-}
-
-/**
- * Maps category + user prefs to a theme string for UserPreference.theme
- */
-function mapTheme(
-  category: string | undefined,
-  prefs: Record<string, unknown>
-): string {
-  if (category === "AUTISM") {
-    if (prefs.highContrast) return "high-contrast";
-    if (prefs.mutedColors) return "muted";
-    return "pastel";
-  }
-  return "light";
 }

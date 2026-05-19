@@ -6,8 +6,13 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { user, pass } = body;
 
-    const ADMIN_USER = process.env.ADMIN_USER || 'admin';
-    const ADMIN_PASS = process.env.ADMIN_PASS || 'supreme_vault';
+    const ADMIN_USER = process.env.ADMIN_USER;
+    const ADMIN_PASS = process.env.ADMIN_PASS;
+
+    if (!ADMIN_USER || !ADMIN_PASS) {
+      await logAdminAction('misconfigured_login', 'Staff vault credentials are missing', req.headers.get('x-forwarded-for') || 'unknown');
+      return NextResponse.json({ error: 'Staff vault is not configured' }, { status: 503 });
+    }
 
     if (user !== ADMIN_USER || pass !== ADMIN_PASS) {
       await logAdminAction('failed_login', 'Attempted with user: ' + user, req.headers.get('x-forwarded-for') || 'unknown');
