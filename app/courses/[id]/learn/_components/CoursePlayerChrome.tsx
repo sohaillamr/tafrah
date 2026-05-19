@@ -38,8 +38,8 @@ export function CalmCourseHeader({
   unitProgressValue,
 }: CalmHeaderProps) {
   return (
-    <section className="flex flex-col gap-3 border-b border-[#DEE2E6] bg-white px-4 py-4 sm:px-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <section className="border-b border-[#DEE2E6] bg-white px-4 py-3 sm:px-6">
+      <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium text-[#6C757D]">
             {labels.stepLabel} {currentStep + 1} {labels.of} {stepsLength}
@@ -54,7 +54,7 @@ export function CalmCourseHeader({
           {focusMode ? labels.focusOff : labels.focusOn}
         </button>
       </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-[#E9ECEF]">
+      <div className="mx-auto mt-3 h-2 w-full max-w-[1180px] overflow-hidden rounded-full bg-[#E9ECEF]">
         <div className="h-2 rounded-full bg-[#2E5C8A]" style={{ width: `${unitProgressValue}%` }} />
       </div>
     </section>

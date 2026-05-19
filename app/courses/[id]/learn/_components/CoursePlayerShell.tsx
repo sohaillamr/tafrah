@@ -3,12 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import TopBar from "@/app/components/TopBar";
-import Breadcrumbs from "@/app/components/Breadcrumbs";
 import { useLanguage } from "@/app/components/LanguageProvider";
 import { useAuth } from "@/app/components/AuthProvider";
 import { usePreferencesStore } from "@/lib/store/usePreferencesStore";
 import { Target, FileText, Trophy, Star, ArrowRight, RefreshCw, Monitor, FolderOpen, Lightbulb, Pencil, Bot, AlertTriangle, CheckCircle, Volume2, Sparkles, Loader2 } from "lucide-react";
-import { CalmCourseHeader, ProgressSummary, StepProgressDots, UnitNavigation } from "./CoursePlayerChrome";
+import { CalmCourseHeader, StepProgressDots } from "./CoursePlayerChrome";
 import { useCourseStore } from "./coursePlayerStore";
 
 import { buildCourseLengthBalancingSteps, buildCoursePracticeSteps, buildExpandedQuiz, buildSteps, cleanArabicText, getAccuracyChallengeDescription, getBaseQuiz, getCourseUnits, type CellData } from "./coursePlayerContent";
@@ -32,6 +31,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const [nourHelp, setNourHelp] = useState("");
   const [nourWarning, setNourWarning] = useState("");
   const [showNour, setShowNour] = useState(false);
+  const [showNourModes, setShowNourModes] = useState(false);
   const [driveClicked, setDriveClicked] = useState(false);
   const [folderName, setFolderName] = useState("");
   const [folderCreated, setFolderCreated] = useState(false);
@@ -452,6 +452,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     setValidationStatus("");
     setShowHint(false);
     setShowNour(false);
+    setShowNourModes(false);
     setNourWarning("");
     setCodeValue("");
     setCodeOutput("");
@@ -917,13 +918,6 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
       <div className="min-h-screen">
         <TopBar />
         <main className="mx-auto flex max-w-4xl flex-col gap-6 px-6 py-12 text-[#212529]">
-          <Breadcrumbs
-            items={[
-              { label: labels.home, href: "/" },
-              { label: labels.courses, href: "/courses" },
-              { label: labels.learn },
-            ]}
-          />
           <section className="rounded-sm border border-[#DEE2E6] bg-white p-6">
             <h1 className="font-semibold">{labels.title}</h1>
             <p>{labels.comingSoon}</p>
@@ -935,7 +929,6 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
 
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
-      {focusMode ? null : <TopBar />}
       <CalmCourseHeader
         labels={labels}
         unitTitle={cleanArabicText(unitTitle, language)}
@@ -947,37 +940,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
         courseProgressValue={courseProgressValue}
         unitProgressValue={unitProgressValue}
       />
-      <main className="mx-auto flex w-full max-w-[1600px] flex-col gap-4 px-4 py-5 text-[#212529] sm:px-6 lg:px-8 lg:py-6">
-        {focusMode ? null : (
-          <Breadcrumbs
-            items={[
-              { label: labels.home, href: "/" },
-              { label: labels.courses, href: "/courses" },
-              { label: courseKey ? `${labels.course} ${courseKey}` : labels.course },
-              { label: labels.learn },
-            ]}
-          />
-        )}
-
-        {focusMode ? null : (
-          <>
-            <UnitNavigation
-              labels={labels}
-              unitNumber={unitNumber}
-              unitTitle={cleanArabicText(unitTitle, language)}
-              quizzesPassed={quizzesPassed}
-              handleUnitChange={handleUnitChange}
-            />
-            <ProgressSummary
-              labels={labels}
-              currentStep={currentStep}
-              stepsLength={steps.length}
-              completedUnits={completedUnits}
-              courseProgressValue={courseProgressValue}
-              unitProgressValue={unitProgressValue}
-            />
-          </>
-        )}
+      <main className="mx-auto flex w-full max-w-[1180px] flex-col gap-4 px-4 py-5 text-[#212529] sm:px-6 lg:py-6">
 
         {quizMode && currentQuiz ? (
           <section className="mx-auto w-full max-w-3xl">
@@ -1104,41 +1067,10 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
         ) : (
         <section
           className={`grid gap-5 ${
-            focusMode ? "grid-cols-1" : "grid-cols-1 xl:grid-cols-[280px_minmax(0,1.15fr)_minmax(0,1fr)]"
+            "grid-cols-1 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]"
           }`}
         >
-          {focusMode ? null : (
-            <aside className="flex max-h-[70vh] flex-col gap-1 overflow-y-auto self-start rounded-sm border border-[#DEE2E6] bg-white p-4">
-              <h2 className="mb-2 font-semibold">{labels.stepsTitle}</h2>
-              {currentUnit.chapters.map((chapter, chapterIndex) => {
-                const rawChTitle = (chapter as { title?: string; chapter_title?: string }).title ??
-                  (chapter as { chapter_title?: string }).chapter_title ?? "";
-                const chTitle = cleanArabicText(rawChTitle, language);
-                const isActiveChapter = step?.chapterTitle === rawChTitle;
-                return (
-                  <div
-                    key={(chapter as { id?: string; chapter_id?: string }).id ?? (chapter as { chapter_id?: string }).chapter_id}
-                    className={`rounded-xl px-3 py-2.5 text-sm transition-all ${
-                      isActiveChapter
-                        ? "border-s-[3px] border-[#2E5C8A] bg-[#E3EEF9] font-semibold text-[#2E5C8A]"
-                        : "text-[#495057] hover:bg-[#F8F9FA]"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-                        isActiveChapter ? "bg-[#2E5C8A] text-white" : "bg-[#E2E8F0] text-[#6C757D]"
-                      }`}>
-                        {chapterIndex + 1}
-                      </span>
-                      {chTitle}
-                    </span>
-                  </div>
-                );
-              })}
-            </aside>
-          )}
-
-          <div className={`flex flex-col gap-4 rounded-sm border border-[#DEE2E6] bg-white p-4 ${focusMode ? "order-2" : ""}`}>
+          <div className="order-2 flex flex-col gap-3 rounded-sm border border-[#DEE2E6] bg-white p-4">
             <div className="flex items-center gap-2.5">
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#E3EEF9] text-[#2E5C8A]"><Monitor size={16} /></span>
               <h2 className="font-semibold">
@@ -1598,7 +1530,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
             </div>
           </div>
 
-          <div className={`flex flex-col gap-4 rounded-sm border border-[#DEE2E6] bg-white p-4 ${focusMode ? "order-1" : ""}`}>
+          <div className="order-1 flex flex-col gap-4 rounded-sm border border-[#DEE2E6] bg-white p-4">
             <div className="flex flex-col gap-3">
               {focusMode ? null : (
                 <StepProgressDots
@@ -1694,28 +1626,37 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
               </div>
             </div>
             <div className="flex flex-col gap-3">
-              <div className="rounded-sm border border-[#DEE2E6] bg-[#F8F9FA] p-3">
-                <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-[#2E5C8A]">
-                  <Bot size={16} />
-                  {labels.explanationModesTitle}
+              <button
+                type="button"
+                onClick={() => setShowNourModes((prev) => !prev)}
+                className="min-h-11 rounded-sm border border-[#2E5C8A]/25 bg-white px-4 font-medium text-[#2E5C8A]"
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <Bot size={18} className="text-[#2E5C8A]" />
+                  {labels.dontUnderstand}
+                </span>
+              </button>
+              {showNourModes ? (
+                <div className="rounded-sm border border-[#DEE2E6] bg-[#F8F9FA] p-3">
+                  <div className="mb-3 text-sm font-semibold text-[#2E5C8A]">{labels.explanationModesTitle}</div>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {nourModeOptions.map(({ id, label, icon: Icon }) => (
+                      <button
+                        key={id}
+                        type="button"
+                        disabled={isExplaining}
+                        onClick={() => handleNourMode(id)}
+                        className="min-h-11 rounded-sm border border-[#D9E6F2] bg-white px-3 text-sm font-medium text-[#2E5C8A] disabled:opacity-60"
+                      >
+                        <span className="flex items-center justify-center gap-2">
+                          {isExplaining && id !== "read-aloud" ? <Loader2 size={16} className="animate-spin" /> : <Icon size={16} />}
+                          {label}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {nourModeOptions.map(({ id, label, icon: Icon }) => (
-                    <button
-                      key={id}
-                      type="button"
-                      disabled={isExplaining}
-                      onClick={() => handleNourMode(id)}
-                      className="min-h-11 rounded-sm border border-[#2E5C8A]/25 bg-white px-3 text-sm font-medium text-[#2E5C8A] transition-colors hover:bg-[#E3EEF9] disabled:opacity-60"
-                    >
-                      <span className="flex items-center justify-center gap-2">
-                        {isExplaining && id !== "read-aloud" ? <Loader2 size={16} className="animate-spin" /> : <Icon size={16} />}
-                        {label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              ) : null}
               {!focusMode && (userCategory === 'LEARNING_HARDENING' || preferences?.simplifiedText) && (
                 <button
                   type="button"
@@ -1733,17 +1674,6 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                   </span>
                 </button>
               )}
-              <button
-                type="button"
-                disabled={isExplaining}
-                onClick={() => focusMode ? requestCourseExplanation("simple") : setNourHelp(labels.nourHelp)}
-                className="min-h-11 rounded-sm border border-[#2E5C8A]/25 bg-white px-4 font-medium text-[#2E5C8A]"
-              >
-                <span className="flex items-center justify-center gap-2">
-                  {isExplaining && focusMode ? <Loader2 size={18} className="animate-spin text-[#2E5C8A]" /> : <Bot size={18} className="text-[#2E5C8A]" />}
-                  {labels.askNour}
-                </span>
-              </button>
               {nourHelp ? (
                 <div className="rounded-sm border border-[#DEE2E6] bg-[#F8F9FA] p-4">
                   <div className="flex items-start gap-3">
