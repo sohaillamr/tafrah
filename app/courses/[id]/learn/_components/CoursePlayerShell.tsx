@@ -929,6 +929,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
 
   return (
     <div className="min-h-screen bg-[#F8F9FA]">
+      <TopBar />
       <CalmCourseHeader
         labels={labels}
         unitTitle={cleanArabicText(unitTitle, language)}
@@ -940,7 +941,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
         courseProgressValue={courseProgressValue}
         unitProgressValue={unitProgressValue}
       />
-      <main className="mx-auto flex w-full max-w-[1180px] flex-col gap-4 px-4 py-5 text-[#212529] sm:px-6 lg:py-6">
+      <main className="mx-auto flex w-full max-w-[1180px] flex-col gap-4 px-4 pb-20 pt-5 text-[#212529] sm:px-6 lg:pb-24 lg:pt-6">
 
         {quizMode && currentQuiz ? (
           <section className="mx-auto w-full max-w-3xl">
