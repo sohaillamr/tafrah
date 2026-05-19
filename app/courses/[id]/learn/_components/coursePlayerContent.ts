@@ -252,6 +252,86 @@ export function buildCoursePracticeSteps(courseSlug: string, unitNumber: number,
   });
 }
 
+const lengthBalancingStepCounts: Record<string, number[]> = {
+  "programming-1": [0, 8, 10, 8, 9, 10, 7],
+  "finance-1": [0, 0, 0, 0, 3, 3, 2],
+};
+
+const lengthBalancingPrompts = {
+  "programming-1": {
+    en: [
+      ["Trace the code slowly", "Before typing, say what each line will do in order."],
+      ["Name the stored value", "Point to the variable name and the value it is holding."],
+      ["Check the data type", "Decide whether the value is text, number, list, or a true/false result."],
+      ["Predict the output", "Write the printed result in your mind before pressing check."],
+      ["Find one tiny error", "Look only for quotes, brackets, capital letters, or indentation."],
+      ["Change one input", "Change one number or word, then notice what result changes."],
+      ["Explain in plain words", "Describe the code as a short everyday instruction."],
+      ["Keep the step small", "Do one edit, test it, then continue to the next edit."],
+      ["Review the rule", "Connect the example to one rule from this unit."],
+      ["Prepare the next attempt", "If it does not work, return to the last correct line first."],
+    ],
+    ar: [
+      ["تتبع الكود بهدوء", "قبل الكتابة، قل ماذا سيفعل كل سطر بالترتيب."],
+      ["سم القيمة المحفوظة", "حدد اسم المتغير والقيمة التي يحتفظ بها."],
+      ["راجع نوع البيانات", "قرر هل القيمة نص، رقم، قائمة، أو نتيجة صح/خطأ."],
+      ["توقع الناتج", "اكتب الناتج المتوقع في ذهنك قبل الضغط على تحقق."],
+      ["ابحث عن خطأ صغير", "راجع علامات الاقتباس، الأقواس، الحروف، أو المسافات فقط."],
+      ["غير مدخلا واحدا", "غير رقما أو كلمة واحدة، ثم لاحظ ماذا تغير في الناتج."],
+      ["اشرح بكلمات بسيطة", "صف الكود كتعليمة يومية قصيرة وواضحة."],
+      ["اجعل الخطوة صغيرة", "نفذ تعديلا واحدا، اختبره، ثم انتقل للتعديل التالي."],
+      ["راجع القاعدة", "اربط المثال بقاعدة واحدة من هذه الوحدة."],
+      ["استعد للمحاولة التالية", "إذا لم يعمل الكود، ارجع إلى آخر سطر صحيح أولا."],
+    ],
+  },
+  "finance-1": {
+    en: [
+      ["Read the source first", "Name the document before classifying the number."],
+      ["Classify one item", "Choose one category only: asset, liability, equity, revenue, or expense."],
+      ["Check the balance", "Make sure the accounting equation still makes sense."],
+      ["Use one example", "Compare the term with a simple real-life example."],
+      ["Mark uncertainty", "If the number is unclear, write a review note instead of guessing."],
+      ["Connect to a report", "Decide which report will use this number later."],
+      ["Separate cash from profit", "Ask whether money was received now or only recorded on paper."],
+      ["Review the final story", "Say what happened, what changed, and what should be checked next."],
+    ],
+    ar: [
+      ["اقرأ المصدر أولا", "سم المستند قبل تصنيف الرقم."],
+      ["صنف بندا واحدا", "اختر فئة واحدة فقط: أصل، خصم، حقوق ملكية، إيراد، أو مصروف."],
+      ["راجع التوازن", "تأكد أن معادلة المحاسبة ما زالت منطقية."],
+      ["استخدم مثالا واحدا", "قارن المصطلح بمثال بسيط من الحياة اليومية."],
+      ["ضع علامة مراجعة", "إذا كان الرقم غير واضح، اكتب ملاحظة مراجعة بدلا من التخمين."],
+      ["اربطه بتقرير", "حدد أي تقرير سيستخدم هذا الرقم لاحقا."],
+      ["افصل النقد عن الربح", "اسأل هل تم استلام المال الآن أم تم تسجيله فقط."],
+      ["راجع القصة النهائية", "قل ماذا حدث، ماذا تغير، وما الذي يجب فحصه بعد ذلك."],
+    ],
+  },
+};
+
+export function buildCourseLengthBalancingSteps(courseSlug: string, unitNumber: number, language: string): UnitStep[] {
+  const key = courseKeyFor(courseSlug);
+  const extraCount = lengthBalancingStepCounts[key]?.[unitNumber - 1] ?? 0;
+  if (extraCount === 0) return [];
+
+  const lang = language === "ar" ? "ar" : "en";
+  const prompts = lengthBalancingPrompts[key][lang];
+  const chapterTitle = lang === "ar" ? "مراجعة تطبيقية إضافية" : "Additional applied review";
+  const doneLabel = lang === "ar" ? "تمت المراجعة" : "Review complete";
+  const slowerLabel = lang === "ar" ? "أحتاج مثالا أبطأ" : "I need a slower example";
+  const repeatLabel = lang === "ar" ? "سأكرر الخطوة" : "I will repeat the step";
+
+  return Array.from({ length: extraCount }, (_, index) => {
+    const [title, prompt] = prompts[index % prompts.length];
+    return {
+      id: `${key}-unit-${unitNumber}-length-review-${index}`,
+      type: "task",
+      instruction: `${title}: ${prompt}`,
+      action: { kind: "selectOption", label: doneLabel, options: [doneLabel, slowerLabel, repeatLabel] },
+      chapterTitle,
+    };
+  });
+}
+
 export function getBaseQuiz(courseSlug: string, unitNumber: number, isPythonCourse: boolean, isFinanceCourse: boolean): QuizSet | undefined {
   if (isPythonCourse) return (pythonQuizzes as Record<number, QuizSet>)[unitNumber];
   if (isFinanceCourse) return (financeQuizzes as Record<number, QuizSet>)[unitNumber];

@@ -11,7 +11,7 @@ import { Target, FileText, Trophy, Star, ArrowRight, RefreshCw, Monitor, FolderO
 import { CalmCourseHeader, ProgressSummary, StepProgressDots, UnitNavigation } from "./CoursePlayerChrome";
 import { useCourseStore } from "./coursePlayerStore";
 
-import { buildCoursePracticeSteps, buildExpandedQuiz, buildSteps, cleanArabicText, getAccuracyChallengeDescription, getBaseQuiz, getCourseUnits, type CellData } from "./coursePlayerContent";
+import { buildCourseLengthBalancingSteps, buildCoursePracticeSteps, buildExpandedQuiz, buildSteps, cleanArabicText, getAccuracyChallengeDescription, getBaseQuiz, getCourseUnits, type CellData } from "./coursePlayerContent";
 
 const initialTabs = [
   { id: "instructions", label: "التعليمات" },
@@ -296,7 +296,14 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const isFinanceCourse = courseSlug === "finance-1" || category === "finance";
   const allUnits = getCourseUnits(courseKey, category);
   const currentUnit = allUnits[unitNumber - 1];
-  const steps = useMemo(() => [...buildSteps(currentUnit), ...buildCoursePracticeSteps(courseKey, unitNumber, language)], [currentUnit, courseKey, unitNumber, language]);
+  const steps = useMemo(
+    () => [
+      ...buildSteps(currentUnit),
+      ...buildCourseLengthBalancingSteps(courseKey, unitNumber, language),
+      ...buildCoursePracticeSteps(courseKey, unitNumber, language),
+    ],
+    [currentUnit, courseKey, unitNumber, language]
+  );
   const step = steps[currentStep];
   const canGoNext = validatedSteps[currentStep];
   const isAvailable = true; // previously: courseId === "data-entry-1" || courseId === "programming-1";
