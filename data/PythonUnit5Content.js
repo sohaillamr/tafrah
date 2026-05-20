@@ -22,7 +22,7 @@ export const pythonUnit5Content = [
         },
         {
           "type": "task",
-          "instruction": "يمكننا طباعة عنصر محدد بإعطاء رقم ترتيبه (حيث يبدأ العد من الصفر):\nprint(emp[1])",
+          "instruction": "يمكننا طباعة عنصر محدد بإعطاء رقم ترتيبه (حيث يبدأ العد من الصفر). اكتب القائمة ثم اطبع العنصر رقم 1:\nemp = [\"أحمد\", \"سارة\", \"علي\"]\nprint(emp[1])",
           "action": {
             "kind": "writeCode",
             "expected": "emp = [\"أحمد\", \"سارة\", \"علي\"]\nprint(emp[1])"

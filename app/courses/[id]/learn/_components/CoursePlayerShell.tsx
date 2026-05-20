@@ -6,7 +6,7 @@ import TopBar from "@/app/components/TopBar";
 import { useLanguage } from "@/app/components/LanguageProvider";
 import { useAuth } from "@/app/components/AuthProvider";
 import { usePreferencesStore } from "@/lib/store/usePreferencesStore";
-import { Target, FileText, Trophy, Star, ArrowRight, RefreshCw, Monitor, FolderOpen, Lightbulb, Pencil, Bot, AlertTriangle, CheckCircle, Volume2, Sparkles, Loader2 } from "lucide-react";
+import { Target, FileText, Trophy, Star, ArrowRight, RefreshCw, Monitor, FolderOpen, Lightbulb, Pencil, Bot, AlertTriangle, CheckCircle, Volume2, Sparkles, Loader2, X, Minimize2, Maximize2 } from "lucide-react";
 import { CalmCourseHeader, StepProgressDots } from "./CoursePlayerChrome";
 import { useCourseStore } from "./coursePlayerStore";
 
@@ -29,6 +29,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const [validationMessage, setValidationMessage] = useState("");
   const [validationStatus, setValidationStatus] = useState<"success" | "error" | "">("");
   const [nourHelp, setNourHelp] = useState("");
+  const [nourHelpCollapsed, setNourHelpCollapsed] = useState(false);
   const [nourWarning, setNourWarning] = useState("");
   const [showNour, setShowNour] = useState(false);
   const [showNourModes, setShowNourModes] = useState(false);
@@ -48,7 +49,8 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   } = useCourseStore();
 
   const unitIndexFromUrl = searchParams.get("unit");
-  const unitIndex = unitIndexFromUrl ? parseInt(unitIndexFromUrl) : 0;
+  const unitNumber = Math.max(1, Math.min(7, Number(unitIndexFromUrl) || 1));
+  const unitIndex = unitNumber - 1;
   const courseKey = courseSlug || String(courseId);
   const progressStorageKey = useCallback(
     (unit: number, suffix: "done" | "quiz_passed") => `${courseKey}:unit${unit}:${suffix}`,
@@ -68,7 +70,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
       try {
         const payload = {
           courseSlug,
-          unitIndex,
+          unitIndex: unitNumber - 1,
           stepIndex: currentStep,
           quizPassed: validatedSteps[currentStep] || false,
         };
@@ -85,7 +87,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
 
     const timer = setTimeout(syncProgress, 30000);
     return () => clearTimeout(timer);
-  }, [currentStep, validatedSteps, needsSync, user, courseSlug, unitIndex, markSynced]);
+  }, [currentStep, validatedSteps, needsSync, user, courseSlug, unitNumber, markSynced]);
   const [activeTab, setActiveTab] = useState(initialTabs[0].id);
   const [selectedPassword, setSelectedPassword] = useState("");
   const [selectedChoice, setSelectedChoice] = useState("");
@@ -154,6 +156,9 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
           nourHelp: "الشرح المبسط: اقرأ المطلوب ونفذه خطوة خطوة.",
           dontUnderstand: "لا أفهم",
           explanationModesTitle: "اختر طريقة شرح نور",
+          closeNour: "إغلاق شرح نور",
+          shrinkNour: "تصغير شرح نور",
+          expandNour: "إظهار شرح نور",
           explainSlower: "أبطأ",
           explainExample: "مثال",
           explainVisual: "جدول بصري",
@@ -250,6 +255,9 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
           nourHelp: "Simple explanation: read the task and follow each step.",
           dontUnderstand: "I don't understand",
           explanationModesTitle: "Choose Nour explanation mode",
+          closeNour: "Close Nour explanation",
+          shrinkNour: "Collapse Nour explanation",
+          expandNour: "Expand Nour explanation",
           explainSlower: "Slower",
           explainExample: "Example",
           explainVisual: "Visual table",
@@ -306,8 +314,6 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
             "You now have technical auditing skills, a skill requested by companies like Raya and Amazon.",
         };
 
-  const unitParam = searchParams?.get("unit");
-  const unitNumber = Math.max(1, Math.min(7, Number(unitParam) || 1));
   const isPythonCourse = courseSlug === "programming-1" || category === "python" || category === "البرمجة";
   const isFinanceCourse = courseSlug === "finance-1" || category === "finance";
   const allUnits = getCourseUnits(courseKey, category);
@@ -454,6 +460,8 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     setShowHint(false);
     setShowNour(false);
     setShowNourModes(false);
+    setNourHelp("");
+    setNourHelpCollapsed(false);
     setNourWarning("");
     setCodeValue("");
     setCodeOutput("");
@@ -463,7 +471,12 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     const timer = setTimeout(() => {
       setShowNour(true);
     }, 60000);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
   }, [currentStep]);
 
   useEffect(() => {
@@ -589,10 +602,22 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const normalizeDigits = (value: string) =>
     value.replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)));
 
-  const isNumericValue = (value: string) => /^[0-9]+$/.test(normalizeDigits(value.trim()));
+  const normalizeDigitsForValidation = (value: string) =>
+    value
+      .replace(/[\u0660-\u0669]/g, (digit) => String(digit.charCodeAt(0) - 0x0660))
+      .replace(/[\u06F0-\u06F9]/g, (digit) => String(digit.charCodeAt(0) - 0x06F0));
+
+  const normalizeTextAnswer = (value: string) =>
+    normalizeDigitsForValidation(cleanArabicText(value, language))
+      .trim()
+      .replace(/[أإآٱ]/g, "ا")
+      .replace(/ة/g, "ه")
+      .replace(/\s+/g, " ");
+
+  const isNumericValue = (value: string) => /^[0-9]+$/.test(normalizeDigitsForValidation(value.trim()));
 
   const isDateValue = (value: string) => {
-    const normalized = normalizeDigits(value.trim());
+    const normalized = normalizeDigitsForValidation(value.trim());
     return (
       /^\d{4}[-/]\d{2}[-/]\d{2}$/.test(normalized) ||
       /^\d{1,2}[-/]\d{1,2}[-/]\d{4}$/.test(normalized)
@@ -679,7 +704,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
       isValid = driveClicked;
     }
     if (step.action?.kind === "inputText") {
-      isValid = folderCreated && folderName.trim() === step.action.expected;
+      isValid = folderCreated && normalizeTextAnswer(folderName) === normalizeTextAnswer(step.action.expected ?? "");
     }
     if (step.action?.kind === "closeTabs") {
       const required = ["instructions", "sheet", "reference"];
@@ -703,7 +728,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
       const userCode = codeValue.trim().replace(/\r\n/g, "\n");
       const expectedCode = cleanArabicText(step.action.expected ?? "", language).trim().replace(/\r\n/g, "\n");
       const normalizeCodeForValidation = (s: string) =>
-        normalizeDigits(s)
+        normalizeDigitsForValidation(s)
           .replace(/[\u2018\u2019]/g, "'")
           .replace(/[\u201C\u201D]/g, '"')
           .replace(/[ةه]/g, "ه")
@@ -725,9 +750,11 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
           ? cells[step.extraAction.target ?? ""]?.value ?? ""
           : "";
       if (step.extraAction?.kind === "typeCell") {
-        isValid = firstValue === step.action.value && secondValue === step.extraAction.value;
+        isValid =
+          normalizeTextAnswer(firstValue) === normalizeTextAnswer(step.action.value ?? "") &&
+          normalizeTextAnswer(secondValue) === normalizeTextAnswer(step.extraAction.value ?? "");
       } else {
-        isValid = firstValue === step.action.value;
+        isValid = normalizeTextAnswer(firstValue) === normalizeTextAnswer(step.action.value ?? "");
       }
     }
     if (step.action?.kind === "setFormat") {
@@ -1151,6 +1178,28 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
               ) : shouldShowGrid ? (
                 <div className="flex flex-col gap-4">
                   <p className="text-sm text-[#6C757D]">{labels.gridHint}</p>
+                  {shouldShowChoiceOptions && !shouldShowPassword ? (
+                    <div className="rounded-xl border border-[#D9E6F2] bg-white p-4">
+                      <h3 className="font-semibold">{language === "ar" ? "اختر الإجابة الصحيحة" : "Choose the correct answer"}</h3>
+                      <p className="mt-1 text-sm leading-relaxed text-[#6C757D]">{currentInstruction}</p>
+                      <div className="mt-3 flex flex-col gap-2">
+                        {financeChoiceOptions.map((option) => (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => setSelectedChoice(option)}
+                            className={`min-h-11 rounded-sm px-4 text-start text-sm transition-all ${
+                              selectedChoice === option
+                                ? "border-2 border-[#2E5C8A] bg-[#F5F9FF] font-semibold text-[#2E5C8A]"
+                                : "border border-[#D9E6F2] bg-white text-[#212529]"
+                            }`}
+                          >
+                            {cleanArabicText(option, language)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                   {shouldShowGridControls ? (
                     <div className="flex flex-wrap gap-2">
                       {shouldShowFormat ? (
@@ -1301,6 +1350,14 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                       ? "هذه مساحة مالية مبسطة: اقرأ المستند، اختر التصنيف أو القرار، ثم تحقق من خطوة واحدة فقط."
                       : "This is a focused finance workspace: read the document, choose the classification or decision, then check one step only."}
                   </p>
+                  {currentInstruction ? (
+                    <div className="rounded-xl border border-[#D9E6F2] bg-white p-4">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#6C757D]">
+                        {language === "ar" ? "المطلوب الآن" : "Current task"}
+                      </p>
+                      <p className="mt-2 leading-relaxed text-[#212529]">{currentInstruction}</p>
+                    </div>
+                  ) : null}
                   <div className="grid gap-3 2xl:grid-cols-2">
                     <div className="rounded-xl border border-[#D9E6F2] bg-white p-4">
                       <p className="text-xs font-semibold uppercase tracking-wide text-[#6C757D]">
@@ -1677,11 +1734,46 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                 </button>
               )}
               {nourHelp ? (
-                <div className="rounded-sm border border-[#DEE2E6] bg-[#F8F9FA] p-4">
-                  <div className="flex items-start gap-3">
-                    <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#2E5C8A] text-sm font-bold text-white">ن</span>
-                    <p className="leading-relaxed text-[#212529]">{nourHelp}</p>
+                <div className="rounded-sm border border-[#BFD3E6] bg-white p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3 border-b border-[#E2E8F0] pb-3">
+                    <div className="flex items-center gap-2 font-semibold text-[#2E5C8A]">
+                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-[#2E5C8A] text-sm font-bold text-white">ن</span>
+                      <span>{language === "ar" ? "شرح نور" : "Nour explanation"}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setNourHelpCollapsed((prev) => !prev)}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-[#D9E6F2] bg-[#F8FAFC] text-[#2E5C8A]"
+                        aria-label={nourHelpCollapsed ? labels.expandNour : labels.shrinkNour}
+                        title={nourHelpCollapsed ? labels.expandNour : labels.shrinkNour}
+                      >
+                        {nourHelpCollapsed ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNourHelp("");
+                          setNourHelpCollapsed(false);
+                          setShowNourModes(false);
+                          if (typeof window !== "undefined" && "speechSynthesis" in window) {
+                            window.speechSynthesis.cancel();
+                          }
+                        }}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-[#D9E6F2] bg-[#F8FAFC] text-[#2E5C8A]"
+                        aria-label={labels.closeNour}
+                        title={labels.closeNour}
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
                   </div>
+                  {nourHelpCollapsed ? null : (
+                  <div className="flex max-h-64 items-start gap-3 overflow-auto sim-scroll">
+                    <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#2E5C8A] text-sm font-bold text-white">ن</span>
+                    <p className="whitespace-pre-wrap leading-relaxed text-[#212529]">{nourHelp}</p>
+                  </div>
+                  )}
                 </div>
               ) : null}
               {nourWarning ? (
