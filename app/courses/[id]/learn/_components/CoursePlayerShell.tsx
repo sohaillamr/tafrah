@@ -10,7 +10,7 @@ import { Target, FileText, Trophy, Star, ArrowRight, RefreshCw, Monitor, FolderO
 import { CalmCourseHeader, StepProgressDots } from "./CoursePlayerChrome";
 import { useCourseStore } from "./coursePlayerStore";
 
-import { buildCourseLengthBalancingSteps, buildCoursePracticeSteps, buildExpandedQuiz, buildSteps, cleanArabicText, getAccuracyChallengeDescription, getBaseQuiz, getCourseUnits, type CellData } from "./coursePlayerContent";
+import { buildCourseInteractiveLabSteps, buildCourseLengthBalancingSteps, buildCoursePracticeSteps, buildExpandedQuiz, buildSteps, cleanArabicText, getAccuracyChallengeDescription, getBaseQuiz, getCourseUnits, type CellData } from "./coursePlayerContent";
 
 const initialTabs = [
   { id: "instructions", label: "التعليمات" },
@@ -321,6 +321,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const steps = useMemo(
     () => [
       ...buildSteps(currentUnit),
+      ...buildCourseInteractiveLabSteps(courseKey, unitNumber, language),
       ...buildCourseLengthBalancingSteps(courseKey, unitNumber, language),
       ...buildCoursePracticeSteps(courseKey, unitNumber, language),
     ],
@@ -350,7 +351,10 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const shouldShowChoiceOptions = !isPythonCourse && step?.action?.kind === "selectOption";
   const shouldShowPythonOptions = isPythonCourse && step?.action?.kind === "selectOption";
   const shouldShowGridControls = !isPythonCourse && !isFinanceCourse && unitNumber >= 2 && step?.type === "task" && !challengeActive;
-  const shouldShowGrid = !isPythonCourse && !isFinanceCourse && unitNumber >= 2;
+  const shouldShowGrid =
+    !isPythonCourse &&
+    !isFinanceCourse &&
+    (unitNumber >= 2 || ["clickCell", "typeCell", "setFormat", "styleRow", "addBorders", "filterNames", "sortNumbers"].includes(step?.action?.kind ?? ""));
   const shouldShowFinanceSimulator = isFinanceCourse;
   const shouldShowFormat = unitNumber >= 2 && step?.action?.kind === "setFormat";
   const shouldShowHeaderStyle = unitNumber >= 2 && step?.action?.kind === "styleRow";
@@ -396,6 +400,18 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     if (explicitOptions?.length) return explicitOptions;
     return [correct, ...targetedDecoys.filter((option) => option && option !== correct)].slice(0, 4);
   }, [step?.action?.label, step?.action?.options, step?.instruction, language]);
+
+  const pythonChoiceOptions = useMemo(() => {
+    const correct = cleanArabicText(step?.action?.label ?? "", language);
+    const explicitOptions = step?.action?.options?.map((option) => cleanArabicText(option, language)).filter(Boolean);
+    if (explicitOptions?.length) return explicitOptions;
+    return [
+      language === "ar" ? "رسم صورة على الشاشة" : "Drawing an image on screen",
+      correct,
+      language === "ar" ? "تشغيل الكاميرا" : "Turning on the camera",
+      language === "ar" ? "حذف الملفات" : "Deleting files",
+    ].filter(Boolean);
+  }, [step?.action?.label, step?.action?.options, language]);
 
   const columns = useMemo(() => ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"], []);
   const rows = useMemo(() => Array.from({ length: 10 }, (_, index) => index + 1), []);
@@ -1149,12 +1165,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                   ) : shouldShowPythonOptions ? (
                     <div className="flex flex-col gap-2">
                       <h3 className="font-semibold">{language === "ar" ? "اختر الإجابة الصحيحة" : "Select the correct answer"}</h3>
-                      {[
-                        language === "ar" ? "رسم صورة على الشاشة" : "Drawing an image on screen",
-                        step?.action?.label ?? "",
-                        language === "ar" ? "تشغيل الكاميرا" : "Turning on the camera",
-                        language === "ar" ? "حذف الملفات" : "Deleting files",
-                      ].map((option) => (
+                      {pythonChoiceOptions.map((option) => (
                         <button
                           key={option}
                           type="button"
@@ -1623,12 +1634,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                 {shouldShowPythonOptions ? (
                   <div className="mt-4 flex flex-col gap-2">
                     <h3 className="text-base font-semibold">{language === "ar" ? "اختر الإجابة الصحيحة" : "Select the correct answer"}</h3>
-                    {[
-                      language === "ar" ? "رسم صورة على الشاشة" : "Drawing an image on screen",
-                      step?.action?.label ?? "",
-                      language === "ar" ? "تشغيل الكاميرا" : "Turning on the camera",
-                      language === "ar" ? "حذف الملفات" : "Deleting files",
-                    ].map((option) => (
+                    {pythonChoiceOptions.map((option) => (
                       <button
                         key={option}
                         type="button"

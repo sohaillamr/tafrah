@@ -215,6 +215,126 @@ function courseKeyFor(courseSlug: string) {
   return courseSlug === "programming-1" || courseSlug === "finance-1" ? courseSlug : "data-entry-1";
 }
 
+const choiceStep = (
+  id: string,
+  chapterTitle: string,
+  instruction: string,
+  label: string,
+  options: string[]
+): UnitStep => ({
+  id,
+  type: "task",
+  instruction,
+  action: { kind: "selectOption", label, options },
+  chapterTitle,
+});
+
+export function buildCourseInteractiveLabSteps(courseSlug: string, unitNumber: number, language: string): UnitStep[] {
+  const key = courseKeyFor(courseSlug);
+  const lang = language === "ar" ? "ar" : "en";
+  const chapterTitle = lang === "ar" ? "مختبر تفاعلي هادئ" : "Calm interactive lab";
+  const prefix = `${key}-unit-${unitNumber}-interactive-lab`;
+
+  if (key === "data-entry-1") {
+    if (unitNumber === 1) {
+      return lang === "ar"
+        ? [
+            { id: `${prefix}-context`, type: "info", instruction: "ستتدرب الآن كموظف إدخال بيانات: تستقبل ملف عميل، تجهز مساحة العمل، تتحقق من رقم هاتف، ثم تكتب القيمة الصحيحة داخل الخلية. خذ خطوة واحدة فقط في كل مرة.", chapterTitle },
+            { id: `${prefix}-close-tabs`, type: "task", instruction: "أغلق التبويبات المشتتة واترك فقط: التعليمات، جدول البيانات، والمرجع.", action: { kind: "closeTabs" }, chapterTitle },
+            { id: `${prefix}-sheet-tab`, type: "task", instruction: "اختر تبويب جدول البيانات حتى تعمل داخل المكان الصحيح.", action: { kind: "selectTab" }, chapterTitle },
+            { id: `${prefix}-drive`, type: "task", instruction: "افتح Google Drive في مساحة الملفات لأن ملف العميل سيحفظ هناك.", action: { kind: "clickIcon" }, chapterTitle },
+            { id: `${prefix}-folder`, type: "task", instruction: "أنشئ مجلدا واضح الاسم: تاسكات طفرة 2026", action: { kind: "inputText", expected: "تاسكات طفرة 2026" }, chapterTitle },
+            choiceStep(`${prefix}-phone-format`, chapterTitle, "العميل أرسل رقم هاتف. اختر النسخة النظيفة التي تصلح للإدخال في الجدول.", "0501234567", ["0501234 - riyadh", "0501234567", "050 1234567 - RIYADH"]),
+            { id: `${prefix}-select-phone-cell`, type: "task", instruction: "اضغط على الخلية B2 لأنها مكان رقم الهاتف في سجل العميل.", action: { kind: "clickCell", target: "B2" }, chapterTitle },
+            { id: `${prefix}-type-phone`, type: "task", instruction: "اكتب رقم الهاتف النظيف داخل B2: 0501234567", action: { kind: "typeCell", target: "B2", value: "0501234567" }, chapterTitle },
+            choiceStep(`${prefix}-missing-value`, chapterTitle, "إذا كان تاريخ التسجيل غير موجود في المصدر، ما التصرف المهني الصحيح؟", "أضع علامة مراجعة ولا أخمن", ["أخمن تاريخا قريبا", "أضع علامة مراجعة ولا أخمن", "أترك الملف كله", "أحذف اسم العميل"]),
+          ]
+        : [
+            { id: `${prefix}-context`, type: "info", instruction: "You will now work like a data-entry assistant: receive a client file, prepare the workspace, check a phone number, and enter the clean value into the right cell. One step at a time.", chapterTitle },
+            { id: `${prefix}-close-tabs`, type: "task", instruction: "Close distracting tabs and keep only Instructions, Spreadsheet, and Reference.", action: { kind: "closeTabs" }, chapterTitle },
+            { id: `${prefix}-sheet-tab`, type: "task", instruction: "Choose the Spreadsheet tab so you are working in the correct place.", action: { kind: "selectTab" }, chapterTitle },
+            { id: `${prefix}-drive`, type: "task", instruction: "Open Google Drive in the file area because the client file will be saved there.", action: { kind: "clickIcon" }, chapterTitle },
+            { id: `${prefix}-folder`, type: "task", instruction: "Create a clear folder named: Tafrah Tasks 2026", action: { kind: "inputText", expected: "Tafrah Tasks 2026" }, chapterTitle },
+            choiceStep(`${prefix}-phone-format`, chapterTitle, "The client sent a phone number. Choose the clean version that belongs in the sheet.", "0501234567", ["0501234 - riyadh", "0501234567", "050 1234567 - RIYADH"]),
+            { id: `${prefix}-select-phone-cell`, type: "task", instruction: "Click cell B2 because it is the phone-number cell in the client record.", action: { kind: "clickCell", target: "B2" }, chapterTitle },
+            { id: `${prefix}-type-phone`, type: "task", instruction: "Type the clean phone number into B2: 0501234567", action: { kind: "typeCell", target: "B2", value: "0501234567" }, chapterTitle },
+            choiceStep(`${prefix}-missing-value`, chapterTitle, "If the registration date is missing from the source, what is the professional action?", "Mark for review and do not guess", ["Guess a nearby date", "Mark for review and do not guess", "Stop the whole file", "Delete the client name"]),
+          ];
+    }
+
+    const targetCell = unitNumber % 2 === 0 ? "D4" : "E3";
+    const targetValue = lang === "ar" ? "تمت المراجعة" : "Reviewed";
+    return [
+      {
+        id: `${prefix}-cell-note`,
+        type: "task",
+        instruction:
+          lang === "ar"
+            ? `اكتب ملاحظة جودة قصيرة في الخلية ${targetCell}: ${targetValue}`
+            : `Type a short quality note in cell ${targetCell}: ${targetValue}`,
+        action: { kind: "typeCell", target: targetCell, value: targetValue },
+        chapterTitle,
+      },
+      choiceStep(
+        `${prefix}-quality-choice`,
+        chapterTitle,
+        lang === "ar" ? "قبل تسليم ملف بيانات، ما أفضل فحص أخير؟" : "Before delivering a data file, what is the best final check?",
+        lang === "ar" ? "أراجع المصدر ونوع البيانات وخانة فارغة واحدة على الأقل" : "Review the source, data type, and at least one empty cell",
+        lang === "ar"
+          ? ["أراجع المصدر ونوع البيانات وخانة فارغة واحدة على الأقل", "أغير كل التنسيقات دفعة واحدة", "أحذف الصفوف غير المفهومة", "أرسل الملف دون مراجعة"]
+          : ["Review the source, data type, and at least one empty cell", "Change every format at once", "Delete unclear rows", "Send the file without review"]
+      ),
+    ];
+  }
+
+  if (key === "programming-1") {
+    const codeLabs: Record<number, { instruction: string; expected: string }> = {
+      1: { instruction: "اكتب رسالة واضحة ثم اطبعها:\nmessage = \"جاهز للتدريب\"\nprint(message)", expected: "message = \"جاهز للتدريب\"\nprint(message)" },
+      2: { instruction: "احسب مجموع رقمين واحفظ النتيجة:\nfirst = 40\nsecond = 15\ntotal = first + second\nprint(total)", expected: "first = 40\nsecond = 15\ntotal = first + second\nprint(total)" },
+      3: { instruction: "ادمج كلمتين برسالة مفهومة:\ncourse = \"Data\"\nskill = \"Entry\"\nprint(course + \" \" + skill)", expected: "course = \"Data\"\nskill = \"Entry\"\nprint(course + \" \" + skill)" },
+      4: { instruction: "اكتب شرطا بسيطا للتأكد من النتيجة:\nscore = 85\nif score >= 80:\n    print(\"ناجح\")", expected: "score = 85\nif score >= 80:\n    print(\"ناجح\")" },
+      5: { instruction: "اطبع أول عنصر في قائمة مهام:\ntasks = [\"مراجعة\", \"إدخال\", \"تسليم\"]\nprint(tasks[0])", expected: "tasks = [\"مراجعة\", \"إدخال\", \"تسليم\"]\nprint(tasks[0])" },
+      6: { instruction: "استخدم حلقة لطباعة كل اسم:\nnames = [\"Sara\", \"Ali\"]\nfor name in names:\n    print(name)", expected: "names = [\"Sara\", \"Ali\"]\nfor name in names:\n    print(name)" },
+      7: { instruction: "اكتب دالة تعطي رسالة جاهزية:\ndef ready():\n    print(\"Ready\")\n\nready()", expected: "def ready():\n    print(\"Ready\")\n\nready()" },
+    };
+    const lab = codeLabs[unitNumber] ?? codeLabs[1];
+    return [
+      { id: `${prefix}-code`, type: "task", instruction: lab.instruction, action: { kind: "writeCode", expected: lab.expected }, chapterTitle },
+      choiceStep(
+        `${prefix}-debug-choice`,
+        chapterTitle,
+        lang === "ar" ? "إذا لم يعمل الكود، ما أول فحص هادئ؟" : "If the code does not work, what is the first calm check?",
+        lang === "ar" ? "أراجع سطرا واحدا: الأقواس أو علامات الاقتباس أو المسافات" : "Review one line: brackets, quotes, or indentation",
+        lang === "ar"
+          ? ["أراجع سطرا واحدا: الأقواس أو علامات الاقتباس أو المسافات", "أحذف الكود كله", "أضغط تحقق بسرعة", "أغير عدة أسطر معا"]
+          : ["Review one line: brackets, quotes, or indentation", "Delete all the code", "Press check quickly", "Change several lines together"]
+      ),
+    ];
+  }
+
+  const financeCorrect = lang === "ar" ? "أقرأ المستند ثم أصنف بندا واحدا فقط" : "Read the document, then classify one item only";
+  return [
+    choiceStep(
+      `${prefix}-scenario`,
+      chapterTitle,
+      lang === "ar" ? "وصل مستند مالي جديد. ما أول خطوة آمنة؟" : "A new finance document arrived. What is the first safe step?",
+      financeCorrect,
+      lang === "ar"
+        ? [financeCorrect, "أسجل الرقم دون مصدر", "أغير اسم الحساب عشوائيا", "أجمع كل الأرقام مرة واحدة"]
+        : [financeCorrect, "Record the number without a source", "Rename the account randomly", "Add every number at once"]
+    ),
+    choiceStep(
+      `${prefix}-review-note`,
+      chapterTitle,
+      lang === "ar" ? "إذا لم تفهم تصنيف الرقم، ماذا تفعل؟" : "If you do not understand a number's classification, what should you do?",
+      lang === "ar" ? "أكتب ملاحظة مراجعة وأطلب مثالا" : "Write a review note and ask for an example",
+      lang === "ar"
+        ? ["أكتب ملاحظة مراجعة وأطلب مثالا", "أخمن التصنيف", "أخفي الرقم", "أكرر نفس الخطأ"]
+        : ["Write a review note and ask for an example", "Guess the classification", "Hide the number", "Repeat the same error"]
+    ),
+  ];
+}
+
 export function buildCoursePracticeSteps(courseSlug: string, unitNumber: number, language: string): UnitStep[] {
   const key = courseKeyFor(courseSlug);
   const lang = language === "ar" ? "ar" : "en";
