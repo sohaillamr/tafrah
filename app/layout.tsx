@@ -62,7 +62,7 @@ export default async function RootLayout({
                   const highContrast = Boolean(p.highContrastText || p.highContrast);
                   const attrs = p.computedAttrs || {
                     'data-profile': 'autism',
-                    'data-theme': highContrast ? 'high-contrast' : p.mutedColors ? 'muted' : 'pastel',
+                    'data-theme': highContrast ? 'high-contrast' : p.darkMode ? 'dark' : p.mutedColors ? 'muted' : 'pastel',
                     'data-density': (p.simplifiedText || p.extraSpacing || p.density === 'spaced') ? 'spaced' : 'normal',
                     'data-scale': (p.largeText || p.scale === 'large' || p.scale === 'giant') ? 'large' : 'normal',
                     'data-focus-mode': p.focusMode ? 'true' : 'false',
@@ -71,6 +71,9 @@ export default async function RootLayout({
                     'data-font': p.dyslexicFont ? 'dyslexia' : 'default',
                     'data-large-targets': p.largeTargets ? 'true' : 'false'
                   };
+                  if (highContrast) attrs['data-theme'] = 'high-contrast';
+                  else if (p.darkMode) attrs['data-theme'] = 'dark';
+                  attrs['data-font'] = p.dyslexicFont ? 'dyslexia' : (attrs['data-font'] || 'default');
                   Object.keys(attrs).forEach((key) => document.documentElement.setAttribute(key, attrs[key]));
                 }
               } catch (e) {}

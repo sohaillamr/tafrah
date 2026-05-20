@@ -4,6 +4,7 @@ export type UiPreferences = {
   highContrastText?: boolean;
   highContrast?: boolean;
   mutedColors?: boolean;
+  darkMode?: boolean;
   reduceMotion?: boolean;
   reduceSound?: boolean;
   focusMode?: boolean;
@@ -37,6 +38,7 @@ export function normalizePreferences(input: unknown, category: UserCategory = "A
     highContrastText,
     highContrast: highContrastText,
     mutedColors: Boolean(prefs.mutedColors),
+    darkMode: Boolean(prefs.darkMode),
     reduceMotion: Boolean(prefs.reduceMotion),
     reduceSound: Boolean(prefs.reduceSound),
     focusMode: Boolean(prefs.focusMode),
@@ -60,7 +62,7 @@ export function normalizePreferences(input: unknown, category: UserCategory = "A
 export function derivePreferenceAttrs(category: UserCategory, prefs: UiPreferences) {
   return {
     "data-profile": category === "AUTISM" ? "autism" : category.toLowerCase(),
-    "data-theme": prefs.highContrastText ? "high-contrast" : prefs.mutedColors ? "muted" : "pastel",
+    "data-theme": prefs.highContrastText ? "high-contrast" : prefs.darkMode ? "dark" : prefs.mutedColors ? "muted" : "pastel",
     "data-density": prefs.simplifiedText || prefs.extraSpacing ? "spaced" : "normal",
     "data-scale": prefs.largeText ? "large" : "normal",
     "data-focus-mode": prefs.focusMode ? "true" : "false",
@@ -74,6 +76,7 @@ export function derivePreferenceAttrs(category: UserCategory, prefs: UiPreferenc
 export function mapPreferenceTheme(category: UserCategory, prefs: UiPreferences): string {
   if (category === "AUTISM") {
     if (prefs.highContrastText) return "high-contrast";
+    if (prefs.darkMode) return "dark";
     if (prefs.mutedColors) return "muted";
     return "pastel";
   }

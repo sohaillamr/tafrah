@@ -37,6 +37,15 @@ html.assistant-active footer {
   --card-border: #bfbfbf;
 }
 
+/* Dark Theme */
+[data-theme="dark"] {
+  --bg-color: #0f172a;
+  --text-color: #e5edf7;
+  --accent-color: #93c5fd;
+  --panel-bg: #111827;
+  --card-border: #334155;
+}
+
 /* Pastel Theme */
 [data-theme="pastel"] {
   --bg-color: #fdfbf7;
@@ -212,6 +221,72 @@ body {
 [data-theme="muted"] [class*="bg-[#F5F9FF]"],
 [data-theme="muted"] [class*="bg-[#FAFBFC]"] {
   background-color: var(--panel-bg) !important;
+}
+
+[data-theme="dark"] body,
+[data-theme="dark"] .theme-wrapper,
+[data-theme="dark"] main,
+[data-theme="dark"] section,
+[data-theme="dark"] article,
+[data-theme="dark"] aside,
+[data-theme="dark"] header,
+[data-theme="dark"] footer {
+  background-color: var(--bg-color) !important;
+  color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .bg-white,
+[data-theme="dark"] [class*="bg-[#F8F9FA]"],
+[data-theme="dark"] [class*="bg-[#F5F9FF]"],
+[data-theme="dark"] [class*="bg-[#FAFBFC]"],
+[data-theme="dark"] [class*="bg-[#E3EEF9]"],
+[data-theme="dark"] [class*="bg-gray-100"] {
+  background-color: var(--panel-bg) !important;
+  color: var(--text-color) !important;
+}
+
+[data-theme="dark"] [class*="text-[#212529]"],
+[data-theme="dark"] [class*="text-[#495057]"],
+[data-theme="dark"] [class*="text-[#6C757D]"],
+[data-theme="dark"] [class*="text-gray-"],
+[data-theme="dark"] p,
+[data-theme="dark"] li,
+[data-theme="dark"] label,
+[data-theme="dark"] span {
+  color: var(--text-color) !important;
+}
+
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] a,
+[data-theme="dark"] [class*="text-[#2E5C8A]"] {
+  color: var(--accent-color) !important;
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select,
+[data-theme="dark"] button,
+[data-theme="dark"] [class*="border-[#"],
+[data-theme="dark"] .border {
+  border-color: var(--card-border) !important;
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background-color: #0b1220 !important;
+  color: var(--text-color) !important;
+}
+
+[data-theme="dark"] [class*="bg-[#2E5C8A]"] {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] [class*="bg-[#2E5C8A]"] * {
+  color: #ffffff !important;
 }
 
 [data-theme="high-contrast"] .theme-wrapper,

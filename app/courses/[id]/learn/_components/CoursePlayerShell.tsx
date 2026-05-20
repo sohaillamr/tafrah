@@ -623,9 +623,17 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
       .replace(/[\u0660-\u0669]/g, (digit) => String(digit.charCodeAt(0) - 0x0660))
       .replace(/[\u06F0-\u06F9]/g, (digit) => String(digit.charCodeAt(0) - 0x06F0));
 
+  const stripArabicAnswerMarks = (value: string) =>
+    value
+      .normalize("NFKC")
+      .replace(/[\u064B-\u065F\u0670]/g, "")
+      .replace(/\u0640/g, "");
+
   const normalizeTextAnswer = (value: string) =>
-    normalizeDigitsForValidation(cleanArabicText(value, language))
+    stripArabicAnswerMarks(normalizeDigitsForValidation(cleanArabicText(value, language)))
       .trim()
+      .replace(/[\u0623\u0625\u0622\u0671]/g, "\u0627")
+      .replace(/\u0629/g, "\u0647")
       .replace(/[أإآٱ]/g, "ا")
       .replace(/ة/g, "ه")
       .replace(/\s+/g, " ");
@@ -733,9 +741,9 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
     }
     if (step.action?.kind === "selectOption") {
       if (isPythonCourse) {
-        isValid = pythonSelectOption === step.action.label;
+        isValid = normalizeTextAnswer(pythonSelectOption) === normalizeTextAnswer(step.action.label ?? "");
       } else if (isFinanceCourse || step.action.options) {
-        isValid = selectedChoice === cleanArabicText(step.action.label ?? "", language);
+        isValid = normalizeTextAnswer(selectedChoice) === normalizeTextAnswer(step.action.label ?? "");
       } else {
         isValid = selectedPassword === "Tafrah#2026!Success";
       }
@@ -745,6 +753,11 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
       const expectedCode = cleanArabicText(step.action.expected ?? "", language).trim().replace(/\r\n/g, "\n");
       const normalizeCodeForValidation = (s: string) =>
         normalizeDigitsForValidation(s)
+          .normalize("NFKC")
+          .replace(/[\u064B-\u065F\u0670]/g, "")
+          .replace(/\u0640/g, "")
+          .replace(/[\u0629\u0647]/g, "\u0647")
+          .replace(/[\u0623\u0625\u0622\u0671]/g, "\u0627")
           .replace(/[\u2018\u2019]/g, "'")
           .replace(/[\u201C\u201D]/g, '"')
           .replace(/[ةه]/g, "ه")

@@ -88,13 +88,14 @@ export default function DashboardPage() {
         savingPreferences: "جاري الحفظ...",
         prefsSaved: "تم حفظ التفضيلات.",
         mutedColors: "ألوان هادئة",
+        darkMode: "الوضع الداكن",
         reduceMotion: "تقليل الحركة",
         ttsEnabled: "قراءة النص المحدد بصوت نور",
         largeText: "نص أكبر",
         simplifiedText: "شرح مختصر وخطوات واضحة",
         largeTargets: "أزرار ومساحات ضغط أكبر",
         highContrastText: "تباين أعلى للنص",
-        dyslexicFont: "خط أسهل للقراءة",
+        dyslexicFont: "خط OpenDyslexic للقراءة",
       }
     : {
         title: "My Learning Dashboard",
@@ -125,13 +126,14 @@ export default function DashboardPage() {
         savingPreferences: "Saving...",
         prefsSaved: "Preferences saved.",
         mutedColors: "Calmer colors",
+        darkMode: "Dark mode",
         reduceMotion: "Reduce motion",
         ttsEnabled: "Read selected text with Nour",
         largeText: "Larger text",
         simplifiedText: "Shorter explanations and clear steps",
         largeTargets: "Larger buttons and touch targets",
         highContrastText: "Higher text contrast",
-        dyslexicFont: "Easier reading font",
+        dyslexicFont: "OpenDyslexic reading font",
       };
 
   useEffect(() => {
@@ -336,6 +338,7 @@ export default function DashboardPage() {
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {[
               ["mutedColors", labels.mutedColors],
+              ["darkMode", labels.darkMode],
               ["reduceMotion", labels.reduceMotion],
               ["ttsEnabled", labels.ttsEnabled],
               ["largeText", labels.largeText],

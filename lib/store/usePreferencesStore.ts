@@ -5,6 +5,7 @@ interface UiPreferences {
   // Autism
   highContrastText?: boolean;
   mutedColors?: boolean;
+  darkMode?: boolean;
   reduceMotion?: boolean;
   reduceSound?: boolean;
   focusMode?: boolean;
