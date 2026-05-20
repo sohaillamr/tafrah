@@ -59,7 +59,7 @@ export default function Footer() {
       <div className="mx-auto grid max-w-6xl gap-8 px-6 py-8 text-[#212529] md:grid-cols-[1.4fr_1fr_1fr]">
         <div className="flex flex-col gap-3">
           <Link href="/" className="flex w-fit items-center gap-3">
-            <Image src="/logo.png" alt={labels.brand} width={44} height={44} className="h-11 w-11 rounded-sm bg-white/90 object-contain p-1" />
+            <Image src="/logo.png" alt={labels.brand} width={44} height={44} className="tafrah-logo-mark h-11 w-11 rounded-sm object-contain p-1" />
           </Link>
           <p className="max-w-md leading-relaxed text-[#495057]">{labels.tagline}</p>
           <p className="text-sm font-semibold text-[#2E5C8A]">{labels.note}</p>

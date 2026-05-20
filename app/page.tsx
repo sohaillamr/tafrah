@@ -202,25 +202,25 @@ export default function HomePage() {
             <p className="text-sm text-[#495057]">{labels.partnersSubtitle}</p>
           </div>
           <div className="grid gap-4 lg:grid-cols-2">
-            <a href="https://www.ershadacademy.com" target="_blank" rel="noopener noreferrer" className="group flex flex-col gap-5 rounded-sm border border-[#D9E6F2] bg-white p-6 hover:border-[#2E5C8A] md:flex-row md:items-center">
+            <a href="https://www.ershadacademy.com" target="_blank" rel="noopener noreferrer" className="partner-card group flex flex-col gap-5 rounded-sm border border-[#D9E6F2] bg-white p-6 hover:border-[#2E5C8A] md:flex-row md:items-center">
               <div className="w-fit rounded-sm border border-[#D9E6F2] bg-white p-3">
                 <Image src="/ershad-logo.png" alt={labels.ershadName} width={120} height={120} className="object-contain" />
               </div>
               <div className="flex flex-col gap-2">
-                <h3 className="text-lg font-semibold text-[#2E5C8A]">{labels.ershadName}</h3>
+                <h3 className="partner-card-title text-lg font-semibold text-[#2E5C8A]">{labels.ershadName}</h3>
                 <p className="leading-relaxed text-[#495057]">{labels.ershadDesc}</p>
-                <span className="font-semibold text-[#2E5C8A] group-hover:underline">{labels.ershadCta}</span>
+                <span className="partner-card-link font-semibold text-[#2E5C8A] group-hover:underline">{labels.ershadCta}</span>
               </div>
             </a>
 
-            <article className="flex flex-col gap-5 rounded-sm border border-[#D9E6F2] bg-white p-6 md:flex-row md:items-center">
+            <article className="partner-card flex flex-col gap-5 rounded-sm border border-[#D9E6F2] bg-white p-6 md:flex-row md:items-center">
               <div className="w-fit rounded-sm border border-[#D9E6F2] bg-white p-3">
                 <Image src="/pioneers-academy-logo.png" alt={labels.pioneersName} width={120} height={120} className="object-contain" />
               </div>
               <div className="flex flex-col gap-2">
-                <h3 className="text-lg font-semibold text-[#2E5C8A]">{labels.pioneersName}</h3>
+                <h3 className="partner-card-title text-lg font-semibold text-[#2E5C8A]">{labels.pioneersName}</h3>
                 <p className="leading-relaxed text-[#495057]">{labels.pioneersDesc}</p>
-                <span className="font-semibold text-[#2E5C8A]">{labels.pioneersCta}</span>
+                <span className="partner-card-link font-semibold text-[#2E5C8A]">{labels.pioneersCta}</span>
               </div>
             </article>
           </div>

@@ -218,6 +218,12 @@ body {
   color: var(--text-color);
 }
 
+.tafrah-logo-mark {
+  background-color: rgba(248, 250, 252, 0.78);
+  border: 1px solid rgba(217, 230, 242, 0.72);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+}
+
 [data-theme="muted"] .theme-wrapper,
 [data-theme="muted"] main,
 [data-theme="muted"] section {
@@ -316,8 +322,7 @@ body {
   color: var(--text-color) !important;
 }
 
-[data-theme="dark"] button:not([class*="bg-[#2E5C8A]"]):not([class*="bg-[#2E7D32]"]):not([class*="bg-[#10b981]"]):not([class*="bg-[#71618E]"]) *,
-[data-theme="dark"] a:not([class*="bg-[#2E5C8A]"]):not([class*="bg-[#2E7D32]"]) * {
+[data-theme="dark"] button:not([class*="bg-[#2E5C8A]"]):not([class*="bg-[#2E7D32]"]):not([class*="bg-[#10b981]"]):not([class*="bg-[#71618E]"]) * {
   color: inherit !important;
 }
 
@@ -332,6 +337,17 @@ body {
 
 [data-theme="dark"] [class*="bg-[#2E5C8A]"] * {
   color: #ffffff !important;
+}
+
+[data-theme="dark"] .tafrah-logo-mark {
+  background-color: rgba(226, 232, 240, 0.68) !important;
+  border-color: rgba(147, 197, 253, 0.22) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+}
+
+[data-theme="dark"] .partner-card-title,
+[data-theme="dark"] .partner-card-link {
+  color: var(--accent-color) !important;
 }
 
 [data-theme="dark"] .assistant-shell,

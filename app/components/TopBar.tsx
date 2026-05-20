@@ -74,7 +74,7 @@ export default function TopBar() {
       <nav className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-3 text-[#2E5C8A] sm:px-6 md:flex-row md:items-center md:justify-between" aria-label={labels.navLabel}>
         <div className="flex items-center justify-between gap-4">
           <Link href="/" className="inline-flex items-center">
-            <Image src="/logo.png" alt={labels.logoAlt} width={48} height={48} priority className="h-12 w-12 rounded-sm bg-white/90 object-contain p-1" />
+            <Image src="/logo.png" alt={labels.logoAlt} width={48} height={48} priority className="tafrah-logo-mark h-12 w-12 rounded-sm object-contain p-1" />
           </Link>
           <button type="button" onClick={() => setIsOpen((prev) => !prev)} className="min-h-12 rounded-sm border border-[#DEE2E6] px-4 md:hidden" aria-expanded={isOpen} aria-controls="mobile-nav-list">
             {labels.menu}
