@@ -245,17 +245,40 @@ body {
 
 [data-theme="dark"] .bg-white,
 [data-theme="dark"] [class*="bg-[#F8F9FA]"],
+[data-theme="dark"] [class*="bg-[#F8FAFC]"],
+[data-theme="dark"] [class*="bg-[#F8FAFB]"],
 [data-theme="dark"] [class*="bg-[#F5F9FF]"],
 [data-theme="dark"] [class*="bg-[#FAFBFC]"],
 [data-theme="dark"] [class*="bg-[#E3EEF9]"],
+[data-theme="dark"] [class*="bg-[#E2E8F0]"],
+[data-theme="dark"] [class*="bg-[#E9ECEF]"],
+[data-theme="dark"] [class*="bg-[#F0FDF4]"],
+[data-theme="dark"] [class*="bg-[#E8F5E9]"],
+[data-theme="dark"] [class*="bg-[#F1F8E9]"],
+[data-theme="dark"] [class*="bg-[#FFF3E0]"],
+[data-theme="dark"] [class*="bg-[#FFF8E1]"],
+[data-theme="dark"] [class*="bg-teal-50"],
 [data-theme="dark"] [class*="bg-gray-100"] {
   background-color: var(--panel-bg) !important;
   color: var(--text-color) !important;
 }
 
+[data-theme="dark"] [class*="from-[#E8F5E9]"],
+[data-theme="dark"] [class*="to-[#F1F8E9]"],
+[data-theme="dark"] [class*="from-[#F5F9FF]"],
+[data-theme="dark"] [class*="to-[#F8F9FA]"] {
+  background-image: none !important;
+  background-color: var(--panel-bg) !important;
+}
+
 [data-theme="dark"] [class*="text-[#212529]"],
 [data-theme="dark"] [class*="text-[#495057]"],
 [data-theme="dark"] [class*="text-[#6C757D]"],
+[data-theme="dark"] [class*="text-[#ADB5BD]"],
+[data-theme="dark"] [class*="text-[#1B5E20]"],
+[data-theme="dark"] [class*="text-[#166534]"],
+[data-theme="dark"] [class*="text-[#A66700]"],
+[data-theme="dark"] [class*="text-teal-700"],
 [data-theme="dark"] [class*="text-gray-"],
 [data-theme="dark"] p,
 [data-theme="dark"] li,
@@ -286,6 +309,20 @@ body {
 [data-theme="dark"] select {
   background-color: #0b1220 !important;
   color: var(--text-color) !important;
+}
+
+[data-theme="dark"] button:not([class*="bg-[#2E5C8A]"]):not([class*="bg-[#2E7D32]"]):not([class*="bg-[#10b981]"]):not([class*="bg-[#71618E]"]),
+[data-theme="dark"] a:not([class*="bg-[#2E5C8A]"]):not([class*="bg-[#2E7D32]"]) {
+  color: var(--text-color) !important;
+}
+
+[data-theme="dark"] button:not([class*="bg-[#2E5C8A]"]):not([class*="bg-[#2E7D32]"]):not([class*="bg-[#10b981]"]):not([class*="bg-[#71618E]"]) *,
+[data-theme="dark"] a:not([class*="bg-[#2E5C8A]"]):not([class*="bg-[#2E7D32]"]) * {
+  color: inherit !important;
+}
+
+[data-theme="dark"] button:disabled {
+  opacity: 0.85 !important;
 }
 
 [data-theme="dark"] [class*="bg-[#2E5C8A]"] {

@@ -13,6 +13,8 @@ export async function GET(
   { params }: RouteContext
 ) {
   try {
+    const session = await getSession();
+    const isAdmin = session?.role === "admin" || session?.role === "supreme_admin";
     const { id: rawId } = await params;
     const id = parseInt(rawId);
     const course = await prisma.course.findFirst({
@@ -21,6 +23,9 @@ export async function GET(
     });
 
     if (!course) {
+      return NextResponse.json({ error: "Course not found" }, { status: 404 });
+    }
+    if (!isAdmin && (!course.available || course.isArchived)) {
       return NextResponse.json({ error: "Course not found" }, { status: 404 });
     }
 

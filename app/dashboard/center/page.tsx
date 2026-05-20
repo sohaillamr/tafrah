@@ -363,7 +363,7 @@ export default function CenterDashboard() {
               ["name", labels.name, "text"],
               ["phone", labels.phone, "tel"],
               ["email", labels.email, "email"],
-              ["password", labels.password, "text"],
+              ["password", labels.password, "password"],
             ].map(([key, label, type]) => (
               <label key={key} className="flex flex-col gap-1 text-sm font-semibold text-[#495057]">
                 {label}
