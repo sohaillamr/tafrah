@@ -351,6 +351,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
   const shouldShowBorders = unitNumber >= 2 && step?.action?.kind === "addBorders";
   const shouldShowFilter = unitNumber >= 2 && step?.action?.kind === "filterNames";
   const shouldShowSort = unitNumber >= 2 && step?.action?.kind === "sortNumbers";
+  const currentInstruction = cleanArabicText(step?.instruction ?? "", language);
   const safeStepCount = steps.length || 1;
   const unitProgressValue = Math.round(
     ((currentStep + (validatedSteps[currentStep] ? 1 : 0)) / safeStepCount) * 100
@@ -1118,7 +1119,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                         </div>
                       ) : null}
                     </div>
-                  ) : false ? (
+                  ) : shouldShowPythonOptions ? (
                     <div className="flex flex-col gap-2">
                       <h3 className="font-semibold">{language === "ar" ? "اختر الإجابة الصحيحة" : "Select the correct answer"}</h3>
                       {[
@@ -1347,7 +1348,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                       ))}
                     </div>
                   </div>
-                  {false ? (
+                  {step?.action?.kind === "selectOption" ? (
                     <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
                       <h3 className="font-semibold">{language === "ar" ? "اختر الإجابة الصحيحة" : "Choose the correct answer"}</h3>
                       <div className="mt-3 flex flex-col gap-2">
@@ -1505,7 +1506,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                       </div>
                     </div>
                   ) : null}
-                  {false ? (
+                  {shouldShowChoiceOptions && !shouldShowPassword ? (
                     <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
                       <h3 className="font-semibold">{language === "ar" ? "اختر الإجابة الصحيحة" : "Choose the correct answer"}</h3>
                       <div className="mt-3 flex flex-col gap-2">
@@ -1561,7 +1562,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
                     {step?.type === "info" ? labels.infoOnly : labels.taskLabel}
                   </span>
                 </div>
-                <p className="text-lg leading-relaxed">{cleanArabicText(step?.instruction || "", language)}</p>
+                <p className="text-lg leading-relaxed">{currentInstruction}</p>
                 {shouldShowPythonOptions ? (
                   <div className="mt-4 flex flex-col gap-2">
                     <h3 className="text-base font-semibold">{language === "ar" ? "اختر الإجابة الصحيحة" : "Select the correct answer"}</h3>
