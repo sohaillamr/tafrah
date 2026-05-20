@@ -447,7 +447,7 @@ export default function AssistantPage() {
      Subtract that so the chat container fits inside the remaining viewport. */
   return (
     <div
-      className="flex flex-col bg-[#F8FAFB] overflow-hidden"
+      className="assistant-shell flex flex-col bg-[#F8FAFB] overflow-hidden"
       style={{ height: "calc(100dvh - 2.375rem)" }}
     >
       <TopBar />
@@ -460,7 +460,7 @@ export default function AssistantPage() {
         />
       )}
 
-      <div className="flex flex-1 overflow-hidden min-h-0">
+      <div className="assistant-layout flex flex-1 overflow-hidden min-h-0">
         {/* Sidebar — always visible on desktop, slide-in drawer on mobile */}
         <aside className="hidden md:flex w-72 shrink-0 flex-col bg-white border-e border-[#E2E8F0]">
           <div className="flex items-center justify-between gap-3 border-b border-[#E2E8F0] p-4">
@@ -586,9 +586,9 @@ export default function AssistantPage() {
         </aside>
 
         {/* Main chat area — takes remaining space */}
-        <div className="flex flex-1 flex-col min-h-0 min-w-0">
+        <div className="assistant-main flex flex-1 flex-col min-h-0 min-w-0">
           {/* Chat header */}
-          <div className="flex items-center gap-3 border-b border-[#E2E8F0] bg-white px-4 py-3 shrink-0">
+          <div className="assistant-chat-header flex items-center gap-3 border-b border-[#E2E8F0] bg-white px-4 py-3 shrink-0">
             <button
               type="button"
               onClick={() => setSidebarOpen(true)}
@@ -626,7 +626,7 @@ export default function AssistantPage() {
           </div>
 
           {activeChat?.mode === "voice" ? (
-            <div className="flex-1 flex flex-col items-center justify-center space-y-8 min-h-0 bg-white">
+            <div className="assistant-voice-panel flex-1 flex flex-col items-center justify-center space-y-8 min-h-0 bg-white">
               <div 
                 className={"flex h-48 w-48 cursor-pointer items-center justify-center rounded-full shadow-2xl transition-all duration-300 " + 
                   (isRecording ? "scale-105 bg-[#4A90C4] shadow-[#4A90C4]/50 animate-pulse" : 
@@ -661,9 +661,9 @@ export default function AssistantPage() {
               )}
             </div>
           ) : (
-            <div className="flex-1 flex flex-col min-h-0 min-w-0">
+            <div className="assistant-chat-panel flex-1 flex flex-col min-h-0 min-w-0">
               {/* Messages */}
-          <div className="flex-1 overflow-y-auto sim-scroll">
+          <div className="assistant-message-scroll flex-1 overflow-y-auto sim-scroll">
             <div className="mx-auto flex max-w-3xl flex-col gap-1 px-4 py-6">
               {activeMessages.map((message, index) => (
                 <div
@@ -679,10 +679,10 @@ export default function AssistantPage() {
                     layout
                     initial={{ opacity: 0, y: 10, scale: 0.98 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    className={`max-w-[80%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed ${
+                    className={`assistant-bubble max-w-[80%] rounded-2xl px-4 py-3 text-[15px] leading-relaxed ${
                       message.role === "user"
-                        ? "bg-[#71618E] text-white rounded-ee-md"
-                        : "bg-white border border-[#E2E8F0] text-[#3d3d42] rounded-es-md shadow-sm prose prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-[#F3F4F6]"
+                        ? "assistant-bubble-user bg-[#71618E] text-white rounded-ee-md"
+                        : "assistant-bubble-nour bg-white border border-[#E2E8F0] text-[#3d3d42] rounded-es-md shadow-sm prose prose-sm max-w-none prose-p:leading-relaxed prose-pre:bg-[#F3F4F6]"
                     }`}
                   >
                     {message.role === "user" ? (
@@ -737,7 +737,7 @@ export default function AssistantPage() {
           )}
 
           {/* Input area */}
-          <form onSubmit={handleFormSubmit} className="shrink-0 border-t border-[#E2E8F0] bg-white px-4 py-4">
+          <form onSubmit={handleFormSubmit} className="assistant-input-bar shrink-0 border-t border-[#E2E8F0] bg-white px-4 py-4">
             <div className="mx-auto flex max-w-3xl items-end gap-3">
               <div className="relative flex-1">
                 <textarea

@@ -7,6 +7,8 @@
     "build": "npx prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
+    "load:test": "node scripts/load-test.mjs",
+    "prod:check": "node scripts/production-readiness.mjs",
     "db:generate": "npx prisma generate",
     "db:migrate": "npx prisma migrate dev",
     "db:migrate:deploy": "npx prisma migrate deploy",

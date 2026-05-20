@@ -308,6 +308,8 @@ Main app scripts:
 | `build` | `npx prisma generate && next build` | Generate Prisma client and build app |
 | `start` | `next start` | Start production server after build |
 | `lint` | `next lint` | Run Next linting |
+| `prod:check` | `node scripts/production-readiness.mjs` | Check required production env and DB pooling signals |
+| `load:test` | `node scripts/load-test.mjs` | Run a lightweight HTTP load test against public/health routes |
 | `db:generate` | `npx prisma generate` | Generate Prisma client |
 | `db:migrate` | `npx prisma migrate dev` | Create/apply local migration |
 | `db:migrate:deploy` | `npx prisma migrate deploy` | Apply migrations in deployment |
@@ -328,8 +330,15 @@ The repository includes:
 Before deploying:
 
 - Ensure production `DATABASE_URL`, `DIRECT_URL`, and `JWT_SECRET` are configured.
+- Use a pooled runtime `DATABASE_URL` for serverless traffic. Keep `DIRECT_URL` for migrations/direct administrative access.
 - Configure Groq keys if assistant features should be available.
+- Run `npm run prod:check` with production-like environment variables before deployment.
 - Run `npm run build` locally before pushing a release.
+- Run a smoke load test after deployment, for example:
+
+```bash
+TAFRAH_LOAD_URL="https://your-domain.example" TAFRAH_LOAD_SECONDS=60 TAFRAH_LOAD_CONCURRENCY=50 npm run load:test
+```
 
 ## Known Issues
 

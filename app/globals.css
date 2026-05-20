@@ -334,6 +334,43 @@ body {
   color: #ffffff !important;
 }
 
+[data-theme="dark"] .assistant-shell,
+[data-theme="dark"] .assistant-layout,
+[data-theme="dark"] .assistant-main,
+[data-theme="dark"] .assistant-chat-panel,
+[data-theme="dark"] .assistant-message-scroll,
+[data-theme="dark"] .assistant-voice-panel,
+[data-theme="dark"] .assistant-chat-header,
+[data-theme="dark"] .assistant-input-bar {
+  background-color: var(--bg-color) !important;
+  color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .assistant-bubble-nour {
+  background-color: #111827 !important;
+  border-color: #334155 !important;
+  color: #e5edf7 !important;
+}
+
+[data-theme="dark"] .assistant-bubble-nour * {
+  color: #e5edf7 !important;
+}
+
+[data-theme="dark"] .assistant-bubble-user,
+[data-theme="dark"] .assistant-bubble-user * {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .assistant-input-bar textarea {
+  background-color: #0b1220 !important;
+  border-color: #334155 !important;
+  color: #e5edf7 !important;
+}
+
+[data-theme="dark"] .assistant-input-bar textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
 [data-theme="high-contrast"] .theme-wrapper,
 [data-theme="high-contrast"] main,
 [data-theme="high-contrast"] section,

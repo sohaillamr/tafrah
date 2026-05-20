@@ -4,6 +4,18 @@ const requiredVars = ["DATABASE_URL", "JWT_SECRET"];
 
 let _validated = false;
 
+function isLikelyPooledDatabaseUrl(value?: string) {
+  if (!value) return false;
+  const lower = value.toLowerCase();
+  return (
+    lower.includes("pgbouncer=true") ||
+    lower.includes("pooler") ||
+    lower.includes("supavisor") ||
+    lower.includes("accelerate.prisma") ||
+    lower.includes("connection_limit=")
+  );
+}
+
 export function validateEnv() {
   if (_validated) return;
 
@@ -14,6 +26,16 @@ export function validateEnv() {
       throw new Error(message);
     }
     console.warn(message);
+  }
+
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.DATABASE_URL &&
+    !isLikelyPooledDatabaseUrl(process.env.DATABASE_URL)
+  ) {
+    console.warn(
+      "[TAFRAH] Production DATABASE_URL does not look pooled. Use a pooled runtime URL for serverless traffic and keep DIRECT_URL for migrations."
+    );
   }
 
   _validated = true;

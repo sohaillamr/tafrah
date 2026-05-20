@@ -43,8 +43,13 @@ function redirectToLogin(req: NextRequest, pathname: string, langCookie: string)
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const langCookie = req.cookies.get("tafrah_lang")?.value || "ar";
+  const requestId =
+    req.headers.get("x-request-id") ||
+    req.headers.get("x-vercel-id") ||
+    crypto.randomUUID();
   const response = NextResponse.next();
   response.headers.set("x-tafrah-lang", langCookie);
+  response.headers.set("x-request-id", requestId);
 
   const method = req.method.toUpperCase();
   if (

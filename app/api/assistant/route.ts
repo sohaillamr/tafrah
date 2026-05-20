@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { errorSummary, getRequestId, logEvent } from "@/lib/observability";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,10 +12,11 @@ const MAX_CONVERSATION_MESSAGES = 15;
 const GROQ_TIMEOUT_MS = 25000;
 
 export async function POST(request: Request) {
+  const requestId = getRequestId(request.headers);
   const session = await getSession();
-  if (!session) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "unauthorized", requestId }, { status: 401 });
   if (session.role === "center_admin") {
-    return NextResponse.json({ error: "center_accounts_use_dashboard_insights" }, { status: 403 });
+    return NextResponse.json({ error: "center_accounts_use_dashboard_insights", requestId }, { status: 403 });
   }
 
   const ip = getClientIp(request);
@@ -22,7 +24,7 @@ export async function POST(request: Request) {
   
   if (!rl?.allowed) {
     return NextResponse.json(
-      { error: "rate_limited", message: "Too many requests. Please slow down." },
+      { error: "rate_limited", message: "Too many requests. Please slow down.", requestId },
       { status: 429 }
     );
   }
@@ -30,7 +32,8 @@ export async function POST(request: Request) {
   const primaryKey = process.env.GROQ_API_KEY?.replace(/^["']|["']$/g, '');
     const secondaryKey = process.env.GROQ_API_KEY_VOICE?.replace(/^["']|["']$/g, '') || process.env.GROQ_API_KEY_SECONDARY?.replace(/^["']|["']$/g, '');
   if (!primaryKey && !secondaryKey) {
-    return NextResponse.json({ error: "missing_api_key" }, { status: 500 });
+    logEvent("error", "assistant_missing_api_key", { requestId, userId: session.userId });
+    return NextResponse.json({ error: "missing_api_key", requestId }, { status: 500 });
   }
 
 
@@ -45,7 +48,8 @@ export async function POST(request: Request) {
       : [primaryKey, secondaryKey].filter(Boolean);
 
     if (keysToTry.length === 0) {
-      return NextResponse.json({ error: "missing_api_key" }, { status: 500 });
+      logEvent("error", "assistant_missing_api_key", { requestId, userId: session.userId });
+      return NextResponse.json({ error: "missing_api_key", requestId }, { status: 500 });
     }
 
     // We upgrade both models to llama-3.3-70b-versatile to ensure high intelligence for text and voice, 
@@ -60,7 +64,7 @@ export async function POST(request: Request) {
       }))
       .slice(-MAX_CONVERSATION_MESSAGES);
 
-    if (messages.length === 0) return NextResponse.json({ error: "no_messages" }, { status: 400 });
+    if (messages.length === 0) return NextResponse.json({ error: "no_messages", requestId }, { status: 400 });
 
     let currentProgress = null;
     let userPreferences = null;
@@ -78,7 +82,11 @@ export async function POST(request: Request) {
         where: { userId: session.userId }
       });
     } catch (dbError) {
-      console.error("[TAFRAH] Failed to fetch progress/preferences for AI fallback:", dbError);
+      logEvent("warn", "assistant_context_lookup_failed", {
+        requestId,
+        userId: session.userId,
+        error: errorSummary(dbError),
+      });
     }
 
     const settings = ObjectBody.settings || { length: "concise" };
@@ -138,52 +146,69 @@ ${isFrustrated ? `4. CALM MODE ACTIVE: The user appears frustrated. Acknowledge 
 
       if (!res.ok) {
         const errorText = await res.text();
-        console.error("Groq API Error details:", res.status, errorText);
-        throw new Error("Groq API Error: " + errorText);
+        logEvent("warn", "assistant_provider_error", {
+          requestId,
+          userId: session.userId,
+          status: res.status,
+          model: modelToUse,
+          body: errorText.slice(0, 500),
+        });
+        throw new Error("assistant_provider_error");
       }
       return res;
     };
 
-for (const key of keysToTry) {
+    for (const key of keysToTry) {
       if (!key) continue;
       try {
-        console.log("Trying key for Groq...");
         const streamResponse = await fetchGroqStream(key, activeModel);
-        console.log("Stream fetched OK with active model.");
         return new Response(streamResponse.body, {
           headers: {
             "Content-Type": "text/event-stream",
             "Cache-Control": "no-cache, no-transform",
-            "Connection": "keep-alive"
+            "Connection": "keep-alive",
+            "X-Request-Id": requestId,
           }
         });
       } catch (err: any) {
-        console.error(`Active model failed with key, trying backup model:`, err.message);
+        logEvent("warn", "assistant_active_model_failed", {
+          requestId,
+          userId: session.userId,
+          error: errorSummary(err),
+        });
         try {
           const streamResponse = await fetchGroqStream(key, backupModel);
-          console.log("Stream fetched OK with backup model.");
           return new Response(streamResponse.body, {
             headers: {
               "Content-Type": "text/event-stream",
               "Cache-Control": "no-cache, no-transform",
-              "Connection": "keep-alive"
+              "Connection": "keep-alive",
+              "X-Request-Id": requestId,
             }
           });
         } catch (backupErr: any) {
-          console.error(`Backup model also failed for this key:`, backupErr.message);
+          logEvent("warn", "assistant_backup_model_failed", {
+            requestId,
+            userId: session.userId,
+            error: errorSummary(backupErr),
+          });
           // Loop continues to try the next key
         }
       }
     }
 
     return NextResponse.json(
-      { message: "Service unavailable at the moment. Please try again later.", error: "All keys and models failed." },
+      { message: "Service unavailable at the moment. Please try again later.", error: "All keys and models failed.", requestId },
       { status: 503 }
     );
 
   } catch (err) {
-    console.error("Assistant Error:", err);
-    return NextResponse.json({ error: "server error" }, { status: 500 });
+    logEvent("error", "assistant_unhandled_error", {
+      requestId,
+      userId: session.userId,
+      error: errorSummary(err),
+    });
+    return NextResponse.json({ error: "server error", requestId }, { status: 500 });
   }
 }
 
