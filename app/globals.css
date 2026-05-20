@@ -204,6 +204,14 @@ body {
   --container-pad: 20%;
 }
 
+[data-profile="autism"][data-theme="dark"] {
+  --bg-color: #0f172a;
+  --text-color: #e5edf7;
+  --accent-color: #93c5fd;
+  --panel-bg: #111827;
+  --card-border: #334155;
+}
+
 .theme-wrapper {
   min-height: 100vh;
   background-color: var(--bg-color);
