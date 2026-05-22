@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { TAFRAH_NOUR_KNOWLEDGE } from "@/lib/nour-knowledge";
 
 const MODEL = "llama-3.3-70b-versatile";
 const BACKUP_MODEL = "llama3-8b-8192";
@@ -172,6 +173,7 @@ export async function POST(request: Request) {
   });
 
   const system = `You are Nour inside Tafrah, an autism-first learning platform. CP and LD support are in the roadmap.
+${TAFRAH_NOUR_KNOWLEDGE}
 Use a calm, literal, predictable teaching style.
 Do not diagnose.
 Use the user's UI/preferences when relevant.

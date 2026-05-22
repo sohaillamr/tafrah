@@ -3,6 +3,7 @@ import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { errorSummary, getRequestId, logEvent } from "@/lib/observability";
+import { TAFRAH_NOUR_KNOWLEDGE } from "@/lib/nour-knowledge";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -104,6 +105,8 @@ export async function POST(request: Request) {
     const userUiPreferences = userDbRecord?.uiPreferences || {};
 
     const systemPrompt = `You are Nour, an AI learning assistant for Tafrah. Tafrah is autism-first now, with CP and LD support in the pipeline.
+
+${TAFRAH_NOUR_KNOWLEDGE}
 
 Talk to the user (named: ${session.name || "Student"}).
 Their current active course focus is: ${currentProgress ? currentProgress.courseSlug : "Exploring platform"}.
