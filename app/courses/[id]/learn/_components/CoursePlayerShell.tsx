@@ -1001,7 +1001,7 @@ export default function CoursePlayerShell({ courseId, courseSlug, initialSteps, 
       <main className="mx-auto flex w-full max-w-[1180px] flex-col gap-4 px-4 pb-20 pt-5 text-[#212529] sm:px-6 lg:pb-24 lg:pt-6">
 
         {quizMode && currentQuiz ? (
-          <section className="mx-auto w-full max-w-3xl">
+          <section className="mx-auto w-full max-w-5xl">
             <div className="rounded-2xl border-2 border-[#2E5C8A]/20 bg-gradient-to-br from-[#F5F9FF] to-white p-6 md:p-10 shadow-lg">
               <div className="flex items-center gap-4 mb-6">
                 <span className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#2E5C8A] text-white shadow-md"><FileText size={24} /></span>

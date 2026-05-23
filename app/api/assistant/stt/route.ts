@@ -15,6 +15,7 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
     const file = formData.get("file") as Blob | null;
+    const requestedLanguage = formData.get("language") === "en" ? "en" : "ar";
 
     if (!file) {
       return NextResponse.json({ error: "no_file_provided" }, { status: 400 });
@@ -23,8 +24,13 @@ export async function POST(request: Request) {
     const groqFormData = new FormData();
     groqFormData.append("file", file, "audio.webm");
     groqFormData.append("model", "whisper-large-v3");
-    groqFormData.append("language", "ar");
-    groqFormData.append("prompt", "تكلم باللهجة المصرية العامية. يا باشا، إزيك، عامل إيه؟");
+    groqFormData.append("language", requestedLanguage);
+    groqFormData.append(
+      "prompt",
+      requestedLanguage === "en"
+        ? "The speaker is answering a job interview question in clear English."
+        : "تكلم باللهجة المصرية العامية أو العربية الفصحى."
+    );
 
     const res = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
       method: "POST",
