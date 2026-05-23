@@ -548,7 +548,7 @@ export default function AssistantPage() {
     <div className="assistant-shell flex min-h-screen flex-col bg-[#F8FAFB]">
       <TopBar />
 
-      <main className="assistant-layout mx-auto grid min-h-[calc(100dvh-5.5rem)] w-full max-w-7xl grid-cols-1 overflow-hidden border-x border-[#E2E8F0] bg-white text-[#212529] md:grid-cols-[300px_1fr]">
+      <main className="assistant-layout mx-auto grid min-h-[calc(100dvh-5.5rem)] w-full grid-cols-1 overflow-hidden border-x border-[#E2E8F0] bg-white text-[#212529] md:grid-cols-[360px_1fr]">
         <aside className="flex flex-col border-b border-[#E2E8F0] bg-[#F8FAFB] md:border-b-0 md:border-e">
           <div className="border-b border-[#E2E8F0] p-4">
             <div className="mb-3 flex rounded-sm border border-[#D9E6F2] bg-white p-1">
@@ -678,11 +678,11 @@ export default function AssistantPage() {
           {viewMode === "chat" ? (
             <div className="flex min-h-0 flex-1 flex-col">
               <div className="min-h-0 flex-1 overflow-y-auto bg-[#F8FAFB] sim-scroll">
-                <div className="mx-auto flex max-w-4xl flex-col gap-3 px-5 py-6">
+                <div className="assistant-content-wide mx-auto flex w-full flex-col gap-3 px-5 py-6">
                   {activeMessages.map((message, index) => (
                     <div key={`${message.role}-${index}`} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
                       <article
-                        className={`max-w-[82%] rounded-sm border px-4 py-3 text-[15px] leading-relaxed ${
+                        className={`max-w-[88%] rounded-sm border px-4 py-3 text-[15px] leading-relaxed ${
                           message.role === "user"
                             ? "border-[#71618E] bg-[#71618E] text-white"
                             : "border-[#D9E6F2] bg-white text-[#212529]"
@@ -717,7 +717,7 @@ export default function AssistantPage() {
               </div>
 
               {isNewChat && !isLoading ? (
-                <div className="mx-auto flex max-w-4xl flex-wrap justify-center gap-2 px-5 py-3">
+                <div className="assistant-content-wide mx-auto flex w-full flex-wrap justify-center gap-2 px-5 py-3">
                   {t.suggestions.map((suggestion) => (
                     <button
                       key={suggestion}
@@ -732,7 +732,7 @@ export default function AssistantPage() {
               ) : null}
 
               {errorMessage ? (
-                <div className="mx-auto w-full max-w-4xl px-5 pb-2">
+                <div className="assistant-content-wide mx-auto w-full px-5 pb-2">
                   <div className="rounded-sm border border-[#FFCC80] bg-[#FFF8E1] px-4 py-2 text-sm text-[#7A4F01]">
                     {errorMessage}
                   </div>
@@ -746,7 +746,7 @@ export default function AssistantPage() {
                 }}
                 className="shrink-0 border-t border-[#E2E8F0] bg-white px-5 py-4"
               >
-                <div className="mx-auto flex max-w-4xl items-end gap-3">
+                <div className="assistant-content-wide mx-auto flex w-full items-end gap-3">
                   <textarea
                     ref={inputRef}
                     value={input}
@@ -785,10 +785,10 @@ export default function AssistantPage() {
               </form>
             </div>
           ) : (
-            <div className="grid min-h-0 flex-1 gap-0 lg:grid-cols-[1fr_380px]">
+            <div className="grid min-h-0 flex-1 gap-0 lg:grid-cols-[minmax(0,1fr)_460px]">
               <div className="flex min-h-0 flex-col bg-[#F8FAFB]">
                 {!activeInterview ? (
-                  <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-5 py-8">
+                  <div className="assistant-content-wide mx-auto flex w-full flex-col gap-4 px-5 py-8">
                     <div className="rounded-sm border border-[#D9E6F2] bg-white p-6">
                       <h2 className="text-2xl font-semibold text-[#2E5C8A]">{t.interviewTitle}</h2>
                       <p className="mt-2 text-[#495057]">{t.interviewIntro}</p>
@@ -851,11 +851,11 @@ export default function AssistantPage() {
                     </div>
 
                     <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5 sim-scroll">
-                      <div className="mx-auto flex max-w-4xl flex-col gap-3">
+                      <div className="assistant-content-wide mx-auto flex w-full flex-col gap-3">
                         {transcript.map((message, index) => (
                           <article
                             key={`${message.role}-${index}`}
-                            className={`max-w-[86%] rounded-sm border px-4 py-3 ${
+                            className={`max-w-[90%] rounded-sm border px-4 py-3 ${
                               message.role === "candidate"
                                 ? "ms-auto border-[#71618E] bg-[#71618E] text-white"
                                 : "me-auto border-[#D9E6F2] bg-white text-[#212529]"
@@ -887,7 +887,7 @@ export default function AssistantPage() {
 
                     {activeInterview.status !== "completed" ? (
                       <div className="shrink-0 border-t border-[#E2E8F0] bg-white px-5 py-4">
-                        <div className="mx-auto flex max-w-4xl items-end gap-3">
+                        <div className="assistant-content-wide mx-auto flex w-full items-end gap-3">
                           <textarea
                             value={typedAnswer}
                             onChange={(event) => {

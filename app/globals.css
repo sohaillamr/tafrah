@@ -17,6 +17,8 @@ html.assistant-active footer {
   --font-type: "Open Sans", ui-sans-serif, system-ui, sans-serif;
   --letter-spacing: 0;
   --button-padding: 0.5rem 1rem;
+  --tafrah-page-max: 1600px;
+  --tafrah-page-pad: clamp(1rem, 3vw, 3rem);
 }
 
 /* High Contrast Theme */
@@ -426,7 +428,28 @@ body {
 }
 
 [data-focus-mode="true"] .theme-wrapper main {
-  max-width: 920px;
+  max-width: min(var(--tafrah-page-max), calc(100vw - (var(--tafrah-page-pad) * 2)));
+}
+
+.theme-wrapper > main,
+.theme-wrapper main.mx-auto,
+.theme-wrapper header nav.mx-auto,
+.theme-wrapper footer > div.mx-auto {
+  max-width: min(var(--tafrah-page-max), calc(100vw - (var(--tafrah-page-pad) * 2)));
+}
+
+.theme-wrapper main.mx-auto,
+.theme-wrapper header nav.mx-auto,
+.theme-wrapper footer > div.mx-auto {
+  width: 100%;
+}
+
+.assistant-layout {
+  max-width: min(1720px, calc(100vw - 2rem)) !important;
+}
+
+.assistant-content-wide {
+  max-width: min(1180px, 100%) !important;
 }
 
 /* CP / MOTOR ADAPTIVE MODE */
