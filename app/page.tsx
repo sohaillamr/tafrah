@@ -30,7 +30,7 @@ export default function HomePage() {
         serviceTitle: "هل تحتاج مساعدة في بطاقة الخدمات المتكاملة؟",
         serviceText:
           "طفرة لا تقدم بديلاً عن الجهات الرسمية، لكنها تساعدك على فهم الخطوات، تجهيز الأسئلة، والوصول إلى جهات دعم متخصصة.",
-        serviceCta: "تواصل معنا",
+        serviceCta: "افتح دليل البطاقة",
         centerTitle: "للمراكز التعليمية والتأهيلية",
         centerText:
           "حساب المركز لا يدخل الدورات بدلاً من الطلاب. دوره تسجيل الطلاب، متابعة تقدمهم، قراءة الإحصاءات، والحصول على توصيات نور من البيانات.",
@@ -77,7 +77,7 @@ export default function HomePage() {
         serviceTitle: "Need help with the Integrated Services Card?",
         serviceText:
           "Tafrah does not replace official channels, but helps learners understand steps, prepare questions, and reach specialized support.",
-        serviceCta: "Contact us",
+        serviceCta: "Open the service card guide",
         centerTitle: "For learning and therapy centers",
         centerText:
           "Centers do not take courses for students. They create connected student accounts, monitor progress, review statistics, and receive Nour recommendations from the data.",
@@ -168,7 +168,7 @@ export default function HomePage() {
           <article className="rounded-sm border border-[#D9E6F2] bg-[#F5F9FF] p-6">
             <h2 className="text-xl font-semibold text-[#2E5C8A]">{labels.serviceTitle}</h2>
             <p className="mt-3 leading-relaxed text-[#495057]">{labels.serviceText}</p>
-            <Link href="/contact" className="mt-4 inline-flex min-h-12 items-center justify-center rounded-sm bg-[#2E5C8A] px-5 font-semibold text-white">
+            <Link href="/services-card" className="mt-4 inline-flex min-h-12 items-center justify-center rounded-sm bg-[#2E5C8A] px-5 font-semibold text-white">
               {labels.serviceCta}
             </Link>
           </article>

@@ -41,6 +41,7 @@ model User {
   activityLogs     ActivityLog[]
   preferences      UserPreference?
   skillProfile     SkillProfile?
+  serviceCardSimulations ServiceCardSimulation[]
   centerId         Int?
   center           Center?       @relation(fields: [centerId], references: [id])
   chapterId        Int?
@@ -235,6 +236,30 @@ model AuditLog {
   @@index([action])
   @@index([admin])
   @@index([createdAt])
+}
+
+model ServiceCardSimulation {
+  id                 Int      @id @default(autoincrement())
+  userId             Int?
+  user               User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  applicantName      String?
+  age                Int?
+  governorate        String?
+  disabilityType     String
+  documentReadiness  Int
+  supportNeedScore   Int
+  cognitiveScore     Int?
+  readinessScore     Int
+  pathway            String
+  answers            Json?
+  documents          Json?
+  recommendations    Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([disabilityType])
 }
 
 

@@ -15,6 +15,7 @@ export default function Footer() {
         note: "التوحد متاح الآن. دعم CP و LD ضمن خارطة الطريق.",
         home: "الرئيسية",
         courses: "الدورات",
+        serviceCard: "دليل بطاقة الخدمات",
         methodology: "منهجيتنا",
         privacy: "الخصوصية",
         contact: "اتصل بنا",
@@ -33,6 +34,7 @@ export default function Footer() {
         note: "Autism support is live. CP and LD support are in the roadmap.",
         home: "Home",
         courses: "Courses",
+        serviceCard: "Service card guide",
         methodology: "Methodology",
         privacy: "Privacy",
         contact: "Contact",
@@ -49,6 +51,7 @@ export default function Footer() {
   const links = [
     ["/", labels.home],
     ["/courses", labels.courses],
+    ["/services-card", labels.serviceCard],
     ["/methodology", labels.methodology],
     ["/privacy", labels.privacy],
     ["/contact", labels.contact],
